@@ -1,0 +1,14 @@
+{
+  "name": "firebase-auth-loader",
+  "version": "1.0.0",
+  "description": "",
+  "author": "neumark.peter@gmail.com",
+  "license": "Apache-2.0",
+  "packageManager": "yarn@3.1.1",
+  "workspaces": {
+    "packages": [
+      "packages/auth-page",
+      "packages/webpack-config"
+    ]
+  }
+}

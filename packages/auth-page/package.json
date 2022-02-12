@@ -1,0 +1,14 @@
+{
+  "name": "@firebase-auth-loader/auth-page",
+  "description": "In-browser trusted code running outside the sandbox",
+  "version": "0.0.0",
+  "private": true,
+  "author": "Peter Neumark",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "firebase": "^9.6.6",
+    "typescript": "^4.5.5",
+    "webpack": "^5.68.0",
+    "webpack-cli": "^4.9.2"
+  }
+}

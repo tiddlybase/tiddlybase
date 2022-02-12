@@ -1,0 +1,16 @@
+{
+  "name": "@firebase-auth-loader/webpack-config",
+  "description": "In-browser trusted code running outside the sandbox",
+  "version": "0.0.0",
+  "private": true,
+  "author": "Peter Neumark",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "terser-webpack-plugin": "^5.3.1",
+    "ts-loader": "^9.2.6",
+    "typescript": "^4.5.5",
+    "webpack": "^5.68.0",
+    "webpack-cli": "^4.9.2",
+    "webpack-node-externals": "^3.0.0"
+  }
+}
