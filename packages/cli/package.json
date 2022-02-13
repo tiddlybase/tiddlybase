@@ -1,0 +1,21 @@
+{
+  "name": "@firebase-auth-loader/cli",
+  "description": "In-browser trusted code running outside the sandbox",
+  "version": "0.0.0",
+  "private": true,
+  "author": "Peter Neumark",
+  "license": "Apache-2.0",
+  "scripts": {
+    "cli": "ts-node src/cli.ts"
+  },
+  "devDependencies": {
+    "@types/yargs": "^17.0.8",
+    "firebase": "^9.6.6",
+    "typescript": "^4.5.5"
+  },
+  "dependencies": {
+    "firebase-admin": "^10.0.2",
+    "ts-node": "^10.5.0",
+    "yargs": "^17.3.1"
+  }
+}

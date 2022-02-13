@@ -1,6 +1,7 @@
 const webpack = require('webpack');
 const path = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
+const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 const fs = require('fs');
 
 const PROJECT_ROOT = path.resolve(__dirname, '..', "..");
@@ -40,6 +41,7 @@ const getBaseConfig = ({
   resolve: {
     modules: [MODULES_DIR],
     extensions: ['.json', '.js', '.tsx', '.ts'],
+    plugins: [ new TsconfigPathsPlugin() ]
   },
   plugins: [],
 });
@@ -76,6 +78,12 @@ const getFrontendConfig = (baseOptions) => {
   Object.assign(config.output, {
     library: { type: 'window' }
   });
+  config.optimization = config.mode === 'production'
+    ? {
+        minimize: true,
+        minimizer: [new TerserPlugin()]
+      }
+    : { minimize: false };
   return config;
 };
 

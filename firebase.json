@@ -1,0 +1,26 @@
+{
+  "storage": {
+    "rules": "etc/storage.rules"
+  },
+  "firestore": {
+    "rules": "etc/firestore.rules"
+  },
+  "hosting": [
+    {
+      "site": "pn-wiki",
+      "public": "public",
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ],
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**",
+        "etc/**"
+      ]
+    }
+  ]
+}

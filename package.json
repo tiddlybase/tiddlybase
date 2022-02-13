@@ -8,7 +8,12 @@
   "workspaces": {
     "packages": [
       "packages/auth-page",
-      "packages/webpack-config"
+      "packages/webpack-config",
+      "packages/cli",
+      "packages/rpc"
     ]
+  },
+  "devDependencies": {
+    "firebase-tools": "^10.2.0"
   }
 }
