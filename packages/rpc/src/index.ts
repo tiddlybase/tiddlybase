@@ -1,4 +1,6 @@
 import { MiniIframeRPC } from 'mini-iframe-rpc';
+export {ParentAPI} from './parent-api';
+export {ChildAPI} from './child-api';
 
 export const makeRPC = () =>
   new MiniIframeRPC({

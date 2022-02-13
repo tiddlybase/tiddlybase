@@ -58,7 +58,19 @@ __metadata:
     "@firebase-auth-loader/rpc": ^0.0.0
     firebase: ^9.6.6
     firebaseui: ^6.0.0
-    mini-iframe-rpc: 1.7.0
+    mini-iframe-rpc: 1.7.3
+    typescript: ^4.5.5
+    webpack: ^5.68.0
+    webpack-cli: ^4.9.2
+  languageName: unknown
+  linkType: soft
+
+"@firebase-auth-loader/child-iframe@workspace:packages/child-iframe":
+  version: 0.0.0-use.local
+  resolution: "@firebase-auth-loader/child-iframe@workspace:packages/child-iframe"
+  dependencies:
+    "@firebase-auth-loader/rpc": ^0.0.0
+    "@firebase-auth-loader/webpack-config": ^0.0.0
     typescript: ^4.5.5
     webpack: ^5.68.0
     webpack-cli: ^4.9.2
@@ -82,11 +94,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@firebase-auth-loader/rpc@workspace:packages/rpc"
   dependencies:
-    mini-iframe-rpc: 1.7.0
+    mini-iframe-rpc: 1.7.3
   languageName: unknown
   linkType: soft
 
-"@firebase-auth-loader/webpack-config@workspace:packages/webpack-config":
+"@firebase-auth-loader/webpack-config@^0.0.0, @firebase-auth-loader/webpack-config@workspace:packages/webpack-config":
   version: 0.0.0-use.local
   resolution: "@firebase-auth-loader/webpack-config@workspace:packages/webpack-config"
   dependencies:
@@ -5377,10 +5389,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mini-iframe-rpc@npm:1.7.0":
-  version: 1.7.0
-  resolution: "mini-iframe-rpc@npm:1.7.0"
-  checksum: 45713aedec1a3781e66d84ca3f145238c0aa1435192be3a2a2abfad0bd2fd147afdd592d886bcef43c1f0fba442d4077a77878f1ce8a8e4e9f2bc4a8ef032ae9
+"mini-iframe-rpc@npm:1.7.3":
+  version: 1.7.3
+  resolution: "mini-iframe-rpc@npm:1.7.3"
+  checksum: ae9f27ab06a57f1e095d36fd1e4c3ff05ad8be85dfabb8ab488f9ec66bd015dfa0c6c2161df57f6430977ea9b62cbfaa66a7ef465442c74d7c260e4178fe77e9
   languageName: node
   linkType: hard
 

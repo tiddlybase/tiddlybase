@@ -7,6 +7,6 @@
   "author": "Peter Neumark",
   "license": "Apache-2.0",
   "devDependencies": {
-    "mini-iframe-rpc": "1.7.0"
+    "mini-iframe-rpc": "1.7.3"
   }
 }

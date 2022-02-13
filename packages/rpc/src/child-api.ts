@@ -1,3 +1,3 @@
 export interface ChildAPI {
-  // nothing here just yet
+  testParentChild: (message:string)=>Promise<void>;
 }
