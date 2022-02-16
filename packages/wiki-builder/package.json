@@ -6,7 +6,8 @@
   "author": "Peter Neumark",
   "license": "Apache-2.0",
   "scripts": {
-    "build": "TIDDLYWIKI_PLUGIN_PATH=../../dist/plugins tiddlywiki . --output ../../dist --build wiki --verbose"
+    "build": "TIDDLYWIKI_PLUGIN_PATH=../../dist/plugins tiddlywiki . --output ../../dist --build wiki --verbose",
+    "build:dev": "MODE=development TIDDLYWIKI_PLUGIN_PATH=../../dist/plugins tiddlywiki . --output ../../dist --build wiki --verbose"
   },
   "dependencies": {
     "@firebase-auth-loader/plugin-storage-file": "^0.0.0"

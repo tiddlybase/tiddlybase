@@ -6,7 +6,8 @@
   "author": "Peter Neumark",
   "license": "Apache-2.0",
   "scripts": {
-    "build": "webpack"
+    "build": "webpack",
+    "build:dev": "MODE=development webpack"
   },
   "devDependencies": {
     "@firebase-auth-loader/rpc": "^0.0.0",

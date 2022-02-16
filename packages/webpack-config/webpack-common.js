@@ -8,12 +8,14 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const PROJECT_ROOT = path.resolve(__dirname, '..', "..");
 const MODULES_DIR = path.resolve(PROJECT_ROOT, 'node_modules');
 
+console.log("MODE is " + process.env['MODE']);
+
 const getBaseConfig = ({
   input,
   outputFilename,
   outputDir = 'dist', // relative output dir (to project root)
   tsConfig = path.resolve(PROJECT_ROOT, 'tsconfig.json'),
-  mode = 'production',
+  mode = process.env['MODE'] ?? 'production',
 }) => ({
   mode,
   entry: path.resolve(PROJECT_ROOT, input),
