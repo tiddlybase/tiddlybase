@@ -6,7 +6,7 @@
   "license": "Apache-2.0",
   "packageManager": "yarn@3.1.1",
   "scripts": {
-    "build": "yarn workspace @firebase-auth-loader/auth-page webpack && yarn workspace @firebase-auth-loader/child-iframe webpack && cp dist/*js public/ && cp dist/*js.map public/sourcemaps/ && cp static/* public/"
+    "build": "yarn workspaces foreach -p -t run build"
   },
   "workspaces": {
     "packages": [
@@ -14,7 +14,9 @@
       "packages/child-iframe",
       "packages/webpack-config",
       "packages/cli",
-      "packages/rpc"
+      "packages/rpc",
+      "packages/tw5-types",
+      "packages/plugin-storage-embed"
     ]
   },
   "devDependencies": {

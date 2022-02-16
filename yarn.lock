@@ -90,11 +90,30 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@firebase-auth-loader/plugin-storage-embed@workspace:packages/plugin-storage-embed":
+  version: 0.0.0-use.local
+  resolution: "@firebase-auth-loader/plugin-storage-embed@workspace:packages/plugin-storage-embed"
+  dependencies:
+    "@firebase-auth-loader/rpc": ^0.0.0
+    "@firebase-auth-loader/tw5-types": ^0.0.0
+    "@firebase-auth-loader/webpack-config": ^0.0.0
+    typescript: ^4.5.5
+    webpack: ^5.68.0
+    webpack-cli: ^4.9.2
+  languageName: unknown
+  linkType: soft
+
 "@firebase-auth-loader/rpc@^0.0.0, @firebase-auth-loader/rpc@workspace:packages/rpc":
   version: 0.0.0-use.local
   resolution: "@firebase-auth-loader/rpc@workspace:packages/rpc"
   dependencies:
     mini-iframe-rpc: 1.7.3
+  languageName: unknown
+  linkType: soft
+
+"@firebase-auth-loader/tw5-types@^0.0.0, @firebase-auth-loader/tw5-types@workspace:packages/tw5-types":
+  version: 0.0.0-use.local
+  resolution: "@firebase-auth-loader/tw5-types@workspace:packages/tw5-types"
   languageName: unknown
   linkType: soft
 

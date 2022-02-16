@@ -87,23 +87,22 @@ const getFrontendConfig = (baseOptions) => {
   return config;
 };
 
-const getTW5PluginConfig = (baseOptions) => {
-  const pluginConfig = getBaseConfig(baseOptions);
-  const isProduction = pluginConfig.mode !== 'development';
+const getTW5PluginConfig = (options) => {
+  const config = getFrontendConfig(options);
   const getBanner = () => {
     let banner = '';
-    const bannerFile = `${pluginConfig.entry}.meta`;
+    const bannerFile = `${config.entry}.meta`;
     if (fs.existsSync(bannerFile)) {
       banner = fs.readFileSync(bannerFile, { encoding: 'utf-8' });
     }
     return `/*\\\n${banner}\n\\*/\n`;
   };
-  Object.assign(pluginConfig, {
+  Object.assign(config, {
     externals: [
       {
         // make firebase and firebase-ui external
-        firebase: 'global firebase',
-        firebaseui: 'global firebaseui',
+        // firebase: 'global firebase',
+        // firebaseui: 'global firebaseui',
       },
       function ({ context, request }, callback) {
         // console.log("externals", context, request);
@@ -116,45 +115,12 @@ const getTW5PluginConfig = (baseOptions) => {
       },
     ],
   });
-  Object.assign(pluginConfig.output, {
+  Object.assign(config.output, {
     library: { type: 'commonjs' },
     globalObject: 'globalThis',
   });
-  // override loaders to include babel and non TS sources (js, css):
-  pluginConfig.module.rules = [
-    {
-      test: /\.tsx?$/,
-      use: [
-        {
-          loader: 'ts-loader',
-          options: {
-            configFile: path.resolve(__dirname, 'tsconfig-browser.json'),
-          },
-        },
-      ],
-      exclude: /node_modules/,
-    }
-  ];
-  pluginConfig.plugins.push(
-    new webpack.SourceMapDevToolPlugin({
-      filename: '[file].map',
-      publicPath: '/sourcemaps/',
-      //fileContext: 'dist',
-    }),
-  );
-  // BannerPlugin is only used in dev mode
-  if (!isProduction) {
-    pluginConfig.plugins.push(
-      new webpack.BannerPlugin({
-        banner: getBanner(),
-        raw: true,
-      }),
-    );
-  }
-  pluginConfig.optimization = isProduction
-    ? {
-        minimize: true,
-        minimizer: [
+  if (config.mode === 'production') {
+      config.optimization.minimizer = [
           new TerserPlugin({
             terserOptions: {
               output: {
@@ -164,31 +130,18 @@ const getTW5PluginConfig = (baseOptions) => {
             },
             extractComments: false,
           }),
-        ],
-      }
-    : { minimize: false };
-  return pluginConfig;
-};
-
-const getDefaultWikiLocation = () => {
-    const buildConfig = JSON.parse(process.env.BUILD_CONFIG ?? '{}');
-    return buildConfig.defaultWikiLocation ?? {};
-}
-
-const getTW5PrebootConfig = (pluginOptions) => {
-  const prebootConfig = getTW5PluginConfig(pluginOptions);
-  prebootConfig.output.library.type = 'window';
-  return prebootConfig;
-};
-
-const getOuterConfig = (pluginOptions) => {
-  const config = getTW5PluginConfig(pluginOptions);
-  config.plugins.push(
-    new webpack.DefinePlugin(
-      '__DEFAULT_WIKI_LOCATION__',
-      JSON.stringify(getDefaultWikiLocation())));
-  config.output.library.type = 'window';
+        ]
+  } else { // dev build
+      // BannerPlugin is only used in dev mode
+      config.plugins.push(
+        new webpack.BannerPlugin({
+          banner: getBanner(),
+          raw: true,
+        }),
+      );
+  }
+  
   return config;
 };
 
-module.exports = { getNodeConfig, getFrontendConfig, getTW5PluginConfig, getTW5PrebootConfig, getOuterConfig };
+module.exports = { getNodeConfig, getFrontendConfig, getTW5PluginConfig };
