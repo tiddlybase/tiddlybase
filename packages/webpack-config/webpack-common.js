@@ -3,7 +3,8 @@ const path = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
 const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 const fs = require('fs');
-
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+ 
 const PROJECT_ROOT = path.resolve(__dirname, '..', "..");
 const MODULES_DIR = path.resolve(PROJECT_ROOT, 'node_modules');
 
@@ -119,6 +120,11 @@ const getTW5PluginConfig = (options) => {
     library: { type: 'commonjs' },
     globalObject: 'globalThis',
   });
+  config.plugins.push(new CopyWebpackPlugin({
+    patterns: [
+      { from: 'static' }
+    ]
+  }));
   if (config.mode === 'production') {
       config.optimization.minimizer = [
           new TerserPlugin({

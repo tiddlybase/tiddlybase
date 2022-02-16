@@ -1,6 +1,6 @@
 {
-  "title": "$:/plugins/firebase-auth-loader/storage-embed",
-  "name": "Clock widget",
+  "title": "$:/plugins/firebase-auth-loader/storage-file",
+  "name": "Storage file",
   "description": "Example typescript widget module",
   "contributor": "Peter Neumark",
   "list": ""

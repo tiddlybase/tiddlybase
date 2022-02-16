@@ -6,7 +6,8 @@
   "license": "Apache-2.0",
   "packageManager": "yarn@3.1.1",
   "scripts": {
-    "build": "yarn workspaces foreach -p -t run build"
+    "build": "yarn workspaces foreach -p -t run build",
+    "clean": "rm -rf dist/*"
   },
   "workspaces": {
     "packages": [
@@ -16,7 +17,8 @@
       "packages/cli",
       "packages/rpc",
       "packages/tw5-types",
-      "packages/plugin-storage-embed"
+      "packages/plugin-storage-file",
+      "packages/wiki-builder"
     ]
   },
   "devDependencies": {
