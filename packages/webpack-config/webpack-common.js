@@ -78,6 +78,15 @@ const getFrontendConfig = (baseOptions) => {
       publicPath: '/sourcemaps/',
     }),
   );
+  // if static dif exists, copy files from static to dist dir
+  const staticDir = path.resolve(process.cwd(), "static");
+  if (fs.existsSync(staticDir)) {
+    config.plugins.push(new CopyWebpackPlugin({
+      patterns: [
+        { from: 'static' }
+      ]
+    }));
+  }
   Object.assign(config.output, {
     library: { type: 'window' }
   });
@@ -122,11 +131,6 @@ const getTW5PluginConfig = (options) => {
     library: { type: 'commonjs' },
     globalObject: 'globalThis',
   });
-  config.plugins.push(new CopyWebpackPlugin({
-    patterns: [
-      { from: 'static' }
-    ]
-  }));
   if (config.mode === 'production') {
       config.optimization.minimizer = [
           new TerserPlugin({

@@ -6,6 +6,7 @@
   "license": "Apache-2.0",
   "packageManager": "yarn@3.1.1",
   "scripts": {
+    "move_sourcemaps": "mkdir -p dist/sourcemaps && find dist -type f -name '*.js.map'  -not -path 'dist/sourcemaps/*' -exec mv '{}' dist/sourcemaps/ \\;",
     "build": "MODE=production yarn workspaces foreach -p -t run build",
     "build:dev": "MODE=development yarn workspaces foreach -t run build:dev",
     "clean": "rm -rf dist/*"
