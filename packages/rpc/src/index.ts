@@ -25,3 +25,5 @@ export const apiDefiner =
   <T>(rpc: MiniIframeRPC) =>
   <K extends keyof FuncFields<T>>(procedureName: K, implementation: FuncFields<T>[K]): void =>
     rpc.register(procedureName as string, implementation);
+
+export type RPCClient<T> = <K extends keyof FuncFields<T>>(method: K, args: Parameters<FuncFields<T>[K]>) => ReturnType<FuncFields<T>[K]>;

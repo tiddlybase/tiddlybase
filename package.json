@@ -1,11 +1,12 @@
 {
-  "name": "firebase-auth-loader",
+  "name": "@firebase-auth-loader/root",
   "version": "1.0.0",
   "description": "",
   "author": "neumark.peter@gmail.com",
   "license": "Apache-2.0",
   "packageManager": "yarn@3.1.1",
   "scripts": {
+    "start": "run serve -n -d --no-port-switching --symlinks -p 8080 dist",
     "move_sourcemaps": "mkdir -p dist/sourcemaps && find dist -type f -name '*.js.map'  -not -path 'dist/sourcemaps/*' -exec mv '{}' dist/sourcemaps/ \\;",
     "build": "MODE=production yarn workspaces foreach -p -t run build",
     "build:dev": "MODE=development yarn workspaces foreach -t run build:dev",
@@ -24,6 +25,7 @@
     ]
   },
   "devDependencies": {
-    "firebase-tools": "^10.2.0"
+    "firebase-tools": "^10.2.0",
+    "serve": "^13.0.2"
   }
 }

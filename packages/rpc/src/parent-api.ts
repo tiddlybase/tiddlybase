@@ -1,4 +1,8 @@
+export interface ChildInitProps {
+  userName: string
+}
+
 export interface ParentAPI {
-  childIframeReady: () => Promise<void>;
+  childIframeReady: () => Promise<ChildInitProps>;
   getDownloadURL: (filename:string) => Promise<string>;
 }

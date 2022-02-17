@@ -10,7 +10,7 @@ const createWikiIframe = () => {
   // see: https://stackoverflow.com/questions/25387977/typescript-iframe-sandbox-property-undefined-domsettabletokenlist-has-no-cons
   (<any>iframe).sandbox = 'allow-scripts';
   // todo: this could be configurable to use a different tw5 build for eg mobile devices / translations, etc
-  iframe.src = 'child-frame.html';
+  iframe.src = 'wiki.html';
   iframe.frameBorder="0"
   iframe.allowFullscreen=true
   iframe.style.cssText="position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; border-radius: 1px; pointer-events: auto; background-color: white;"

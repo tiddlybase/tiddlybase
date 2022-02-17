@@ -1,0 +1,12 @@
+title: $:/preboot
+type: text/vnd.tiddlywiki
+tags: $:/tags/RawMarkup
+
+<script>
+window.$tw = {
+    boot: {
+        suppressBoot: true
+    }
+};
+</script>
+<script src="child-frame.js"></script>
