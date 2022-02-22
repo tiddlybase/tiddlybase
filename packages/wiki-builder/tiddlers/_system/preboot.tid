@@ -8,5 +8,24 @@ window.$tw = {
         suppressBoot: true
     }
 };
+
+const loadScript = (src) => {
+  const elem = document.createElement("script");
+  const elemAttr = { async: "", src };
+  Object.entries(elemAttr).forEach(([key, value]) =>
+    elem.setAttribute(key, value)
+  );
+  const firstScript = document.getElementsByTagName("script")[0];
+  const parent =
+    firstScript && firstScript.parentNode ? firstScript.parentNode : document.body;
+  const ret = new Promise((resolve) => {
+    elem.onload = (ev) => resolve(ev);
+  });
+  parent.insertBefore(elem, firstScript);
+  return ret;
+};
+
+const scriptURL = `${window.name}child-frame.js`;
+console.log(`loading script ${scriptURL}`);
+loadScript(scriptURL);
 </script>
-<script src="child-frame.js"></script>

@@ -106,3 +106,5 @@ dist
 .yarn/cache
 public/
 *.swp
+
+.firebase

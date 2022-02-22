@@ -1,5 +1,8 @@
 {
     "description": "Empty edition",
+    "includeWikis": [
+		{"path": "/Users/neumark/secure-synced/wikis/csaladi_naplo/", "read-only": true}
+	],
     "plugins": [
         "tiddlywiki/markdown",
         "tiddlywiki/highlight",

@@ -8,7 +8,7 @@
   "hosting": [
     {
       "site": "pn-wiki",
-      "public": "public",
+      "public": "dist",
       "rewrites": [
         {
           "source": "**",
@@ -16,6 +16,7 @@
         }
       ],
       "ignore": [
+        "dist/wiki.html",
         "firebase.json",
         "**/.*",
         "**/node_modules/**",

@@ -2,15 +2,16 @@ import { firebaseApp, ui } from './init';
 import { deleteAccount, handleConfigChange, handleSignedInUser, handleSignedOutUser, signInWithPopup } from './login';
 import {getAuth, User} from '@firebase/auth'
 import {makeRPC} from '@firebase-auth-loader/rpc'
-import { createParentApi } from './parent-api';
+import { createParentApi, getDownloadURL } from './parent-api';
 
-const createWikiIframe = () => {
+const createWikiIframe = async () => {
   const parentElement = document.getElementById('wiki-frame-parent');
   const iframe = document.createElement('iframe');
   // see: https://stackoverflow.com/questions/25387977/typescript-iframe-sandbox-property-undefined-domsettabletokenlist-has-no-cons
   (<any>iframe).sandbox = 'allow-scripts';
   // todo: this could be configurable to use a different tw5 build for eg mobile devices / translations, etc
-  iframe.src = 'wiki.html';
+  iframe.src = await getDownloadURL('csaladwiki/wiki.html');
+  iframe.name = window.location.href;
   iframe.frameBorder="0"
   iframe.allowFullscreen=true
   iframe.style.cssText="position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; border-radius: 1px; pointer-events: auto; background-color: white;"
@@ -33,7 +34,7 @@ const initApp = async () => {
 
   const startTW5 = async (user: User) => {
     const rpc = makeRPC();
-    const iframe = createWikiIframe();
+    const iframe = await createWikiIframe();
     createParentApi(rpc, user, iframe.contentWindow!);
     console.log("child iframe created");
   };

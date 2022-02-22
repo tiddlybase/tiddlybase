@@ -1,10 +1,15 @@
 import MiniIframeRPC from "mini-iframe-rpc";
 import { apiDefiner, ParentAPI } from "@firebase-auth-loader/rpc";
-import {getDownloadURL,getStorage, ref} from '@firebase/storage';
+import {getDownloadURL as _getDownloadURL, getStorage, ref} from '@firebase/storage';
 import { firebaseApp } from './init';
 import {User} from '@firebase/auth'
 
 const storage = getStorage(firebaseApp);
+
+export const getDownloadURL = async (filename:string) => {
+  const fileRef = ref(storage, filename);
+  return await _getDownloadURL(fileRef);
+};
 
 export const createParentApi = (rpc:MiniIframeRPC, user:User, iframe:Window) => {
   // const childClient = makeAPIClient<ChildAPI>(rpc, iframe);
@@ -14,10 +19,5 @@ export const createParentApi = (rpc:MiniIframeRPC, user:User, iframe:Window) => 
       userName: user.displayName!
     }
   });
-  def('getDownloadURL', async (filename:string) => {
-    const fileRef = ref(storage, filename);
-    const url = await getDownloadURL(fileRef);
-    console.log(`download url for ${filename} is ${url}`)
-    return url;
-  });
+  def('getDownloadURL', getDownloadURL);
 }
