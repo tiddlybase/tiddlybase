@@ -208,7 +208,7 @@ export interface Widget {
   execute(): void;
   findFirstDomNode(): HTMLElement | null;
   findNextSiblingDomNode(startIndex: number): HTMLElement | null;
-  getAttribute(name: string, defaultText: any): any;
+  getAttribute(name: string, defaultText?: string): any;
   getStateQualifier(name: string): string;
   getVariable(name: string, options: any): any;
   getVariableInfo(name: string, options: any): any;
@@ -222,8 +222,7 @@ export interface Widget {
   makeChildWidgets(parseTreeNodes: ParseTree[]): void;
   nextSibling(): HTMLElement | null;
   previousSibling(): HTMLElement | null;
-  refresh(changedTiddlers: Tiddler[]): boolean;
-  refresh(changedTiddlers: Tiddler[]): void;
+  refresh(changedTiddlers: Record<string, boolean>): boolean;
   refreshChildren(changedTiddlers: Tiddler[]): void;
   refreshSelf(): void;
   removeChildDomNodes(): void;

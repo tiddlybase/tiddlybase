@@ -25,6 +25,9 @@ const getBaseConfig = ({
     filename: outputFilename,
     globalObject: 'globalThis',
   },
+  stats: {
+    errorDetails: true,
+  },
   module: {
     rules: [
       {

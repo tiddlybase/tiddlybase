@@ -99,6 +99,11 @@ __metadata:
     "@firebase-auth-loader/rpc": ^0.0.0
     "@firebase-auth-loader/tw5-types": ^0.0.0
     "@firebase-auth-loader/webpack-config": ^0.0.0
+    "@types/jasmine": ^3.10.3
+    cross-env: ^7.0.3
+    jasmine: ^4.0.2
+    jasmine-spec-reporter: ^7.0.0
+    jasmine-ts: ^0.4.0
     typescript: ^4.5.5
     webpack: ^5.68.0
     webpack-cli: ^4.9.2
@@ -1096,6 +1101,13 @@ __metadata:
     "@types/qs": "*"
     "@types/serve-static": "*"
   checksum: 12a2a0e6c4b993fc0854bec665906788aea0d8ee4392389d7a98a5de1eefdd33c9e1e40a91f3afd274011119c506f7b4126acb97fae62ae20b654974d44cba12
+  languageName: node
+  linkType: hard
+
+"@types/jasmine@npm:^3.10.3":
+  version: 3.10.3
+  resolution: "@types/jasmine@npm:3.10.3"
+  checksum: c2603f30307d53e8231f6c46148beb3680579c340c21857b3a58b12ba2e41e36e1edbf4b8a217d25f4c41271b276b392089f132f08592453f8c7a30fc7e099ad
   languageName: node
   linkType: hard
 
@@ -2740,6 +2752,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cross-env@npm:^7.0.3":
+  version: 7.0.3
+  resolution: "cross-env@npm:7.0.3"
+  dependencies:
+    cross-spawn: ^7.0.1
+  bin:
+    cross-env: src/bin/cross-env.js
+    cross-env-shell: src/bin/cross-env-shell.js
+  checksum: 26f2f3ea2ab32617f57effb70d329c2070d2f5630adc800985d8b30b56e8bf7f5f439dd3a0358b79cee6f930afc23cf8e23515f17ccfb30092c6b62c6b630a79
+  languageName: node
+  linkType: hard
+
 "cross-spawn@npm:^6.0.0, cross-spawn@npm:^6.0.5":
   version: 6.0.5
   resolution: "cross-spawn@npm:6.0.5"
@@ -4062,7 +4086,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"glob@npm:^7.1.2, glob@npm:^7.1.3, glob@npm:^7.1.4":
+"glob@npm:^7.1.2, glob@npm:^7.1.3, glob@npm:^7.1.4, glob@npm:^7.1.6":
   version: 7.2.0
   resolution: "glob@npm:7.2.0"
   dependencies:
@@ -4841,6 +4865,49 @@ __metadata:
   version: 0.1.2
   resolution: "isstream@npm:0.1.2"
   checksum: 1eb2fe63a729f7bdd8a559ab552c69055f4f48eb5c2f03724430587c6f450783c8f1cd936c1c952d0a927925180fcc892ebd5b174236cf1065d4bd5bdb37e963
+  languageName: node
+  linkType: hard
+
+"jasmine-core@npm:^4.0.0":
+  version: 4.0.1
+  resolution: "jasmine-core@npm:4.0.1"
+  checksum: f097bf2c681acb55e03fb56a1569a9dfa8fcdf7c291aeb8786cb693c3a803ba2a59d6bac4c1facd239d778cc6f643d0a78920d9d278cba5d0cd46779b2546822
+  languageName: node
+  linkType: hard
+
+"jasmine-spec-reporter@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "jasmine-spec-reporter@npm:7.0.0"
+  dependencies:
+    colors: 1.4.0
+  checksum: d5dd5ee26aad98158653776111231889b21b6cffa136d712a814058ad099301045fa2b95f887fcdeaa20e2a82c3896ffd43b47e25190ddfc921782b09088224e
+  languageName: node
+  linkType: hard
+
+"jasmine-ts@npm:^0.4.0":
+  version: 0.4.0
+  resolution: "jasmine-ts@npm:0.4.0"
+  dependencies:
+    yargs: ^17.0.1
+  peerDependencies:
+    jasmine: ">=3.4"
+    ts-node: ">=3.2.0 <=11"
+    typescript: ">=3.5.2"
+  bin:
+    jasmine-ts: lib/index.js
+  checksum: b58a40f21efab619f534411e4b7e93cfd54cc27bce93181ac38f56ffc898eb8f9d1b2eb7ab571cb29a3939daa92e0a14a7fe4d7219d8f6af7c718aefdd87426a
+  languageName: node
+  linkType: hard
+
+"jasmine@npm:^4.0.2":
+  version: 4.0.2
+  resolution: "jasmine@npm:4.0.2"
+  dependencies:
+    glob: ^7.1.6
+    jasmine-core: ^4.0.0
+  bin:
+    jasmine: bin/jasmine.js
+  checksum: a65e1cf0deb6c54044004b4562461e29ebc7c6cf4b2edd2d7e06cd60a300c391761d2b5674aa7405d40307edb66316a8f9e496d538b5a86ea75447b63e40615f
   languageName: node
   linkType: hard
 
@@ -8624,7 +8691,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yargs@npm:^17.3.1":
+"yargs@npm:^17.0.1, yargs@npm:^17.3.1":
   version: 17.3.1
   resolution: "yargs@npm:17.3.1"
   dependencies:

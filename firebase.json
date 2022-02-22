@@ -16,7 +16,8 @@
         }
       ],
       "ignore": [
-        "dist/wiki.html",
+        "**/wiki.html",
+        "**/types/**",
         "firebase.json",
         "**/.*",
         "**/node_modules/**",
