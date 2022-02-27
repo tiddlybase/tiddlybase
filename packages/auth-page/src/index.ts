@@ -4,17 +4,23 @@ import {getAuth, User} from '@firebase/auth'
 import {makeRPC} from '@firebase-auth-loader/rpc'
 import { createParentApi, getDownloadURL } from './parent-api';
 
+const getWikiURL = async () => {
+  const useLocal = window.location.hostname === 'localhost' && new URLSearchParams(window.location.search).get('local_wiki') === 'true';
+  return useLocal ? 'wiki.html' : await getDownloadURL('csaladwiki/wiki.html');
+}
+
+const getParentUrl = () => `${window.location.protocol}//${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}${window.location.pathname}`
+
 const createWikiIframe = async () => {
   const parentElement = document.getElementById('wiki-frame-parent');
   const iframe = document.createElement('iframe');
   // see: https://stackoverflow.com/questions/25387977/typescript-iframe-sandbox-property-undefined-domsettabletokenlist-has-no-cons
   (<any>iframe).sandbox = 'allow-scripts';
   // todo: this could be configurable to use a different tw5 build for eg mobile devices / translations, etc
-  iframe.src = await getDownloadURL('csaladwiki/wiki.html');
-  iframe.name = window.location.href;
+  iframe.src = await getWikiURL();
+  iframe.name = getParentUrl();
   iframe.frameBorder="0"
   iframe.allowFullscreen=true
-  iframe.style.cssText="position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; border-radius: 1px; pointer-events: auto; background-color: white;"
   /*
   iframe.width = String(
     window.innerWidth ?? window.document?.documentElement?.clientWidth ?? window.document?.body?.clientWidth,
