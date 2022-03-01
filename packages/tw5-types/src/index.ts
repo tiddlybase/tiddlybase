@@ -485,6 +485,7 @@ export interface TW {
     error: (message: string) => void;
     domMaker: (tag: string, options: DomMakerOptions) => HTMLElement;
     formatDateString(date: Date, format: string): string;
+    getLocationPath: () => string;
   };
   boot: {
     boot: () => void;
