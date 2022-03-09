@@ -7,7 +7,8 @@
   "license": "Apache-2.0",
   "scripts": {
     "build": "yarn workspace @firebase-auth-loader/root run move_sourcemaps && TIDDLYWIKI_PLUGIN_PATH=../../dist/plugins tiddlywiki . --output ../../dist --build wiki --verbose",
-    "build:dev": "yarn run build"
+    "build:dev": "yarn run build",
+    "build:debug": "NODE_OPTIONS=--inspect-brk TIDDLYWIKI_PLUGIN_PATH=../../dist/plugins tiddlywiki . --output ../../dist --build wiki --verbose"
   },
   "dependencies": {
     "@firebase-auth-loader/plugin-storage-file": "^0.0.0"
