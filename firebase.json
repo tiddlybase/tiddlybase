@@ -6,7 +6,8 @@
     "rules": "etc/firestore.rules"
   },
   "functions": {
-    "source": "dist/functions"
+    "source": "dist/functions",
+    "ignore": ["**/.runtimeconfig.json", "**/node_modules/**"]
   },
   "hosting": [
     {

@@ -13,3 +13,8 @@ export type AddNumbers = CallableFunctionType<{
   operator: string,
   operationResult: number,
 }>
+
+export type NotifyAdmin = CallableFunctionType<{
+  subject: string,
+  body: string
+}, void>

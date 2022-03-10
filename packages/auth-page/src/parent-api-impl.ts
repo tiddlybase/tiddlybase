@@ -40,4 +40,5 @@ export const createParentApi = (rpc:MiniIframeRPC, user:User, iframe:Window) => 
   });
   def('getDownloadURL', getDownloadURL);
   exposeCallable('addNumbers');
+  exposeCallable('notifyAdmin');
 }

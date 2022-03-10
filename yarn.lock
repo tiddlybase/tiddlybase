@@ -99,6 +99,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@firebase-auth-loader/auth-page@workspace:packages/auth-page"
   dependencies:
+    "@firebase-auth-loader/functions": ^0.0.0
     "@firebase-auth-loader/rpc": ^0.0.0
     firebase: ^9.6.6
     firebaseui: ^6.0.0
@@ -136,11 +137,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@firebase-auth-loader/functions@workspace:packages/functions":
+"@firebase-auth-loader/functions@^0.0.0, @firebase-auth-loader/functions@workspace:packages/functions":
   version: 0.0.0-use.local
   resolution: "@firebase-auth-loader/functions@workspace:packages/functions"
   dependencies:
     "@firebase-auth-loader/webpack-config": ^0.0.0
+    "@types/nodemailer": ^6.4.4
     "@typescript-eslint/eslint-plugin": ^3.9.1
     "@typescript-eslint/parser": ^3.8.0
     eslint: ^7.6.0
@@ -150,6 +152,7 @@ __metadata:
     firebase-admin: ^10.0.2
     firebase-functions: ^3.18.1
     firebase-functions-test: ^0.2.0
+    nodemailer: ^6.7.2
     source-map-support: ^0.5.21
     tslib: ^2.3.1
     typescript: ^4.5.5
@@ -1261,6 +1264,15 @@ __metadata:
   version: 17.0.17
   resolution: "@types/node@npm:17.0.17"
   checksum: 8ddba2829acdf1684fbd8fd248ec13f033efb70ecd1085677b547c40ef8e936a006b95eac3bdc28c47939c62526f3f027afeb4a930e30e4394923bbae4626476
+  languageName: node
+  linkType: hard
+
+"@types/nodemailer@npm:^6.4.4":
+  version: 6.4.4
+  resolution: "@types/nodemailer@npm:6.4.4"
+  dependencies:
+    "@types/node": "*"
+  checksum: 16ed1bad2cd8471fd3b026471e234da33ba3b65935dc44b31be3145eff7bdb067eb4d08ec4b41d23339b988075299abc1a0c0fe77b99f04ca235827bca95af81
   languageName: node
   linkType: hard
 
@@ -6783,6 +6795,13 @@ __metadata:
   version: 2.0.2
   resolution: "node-releases@npm:2.0.2"
   checksum: da858bf86b4d512842379749f5a5e4196ddab05ba18ffcf29f05bf460beceaca927f070f4430bb5046efec18941ddbc85e4c5fdbb83afc28a38dd6069a2f255e
+  languageName: node
+  linkType: hard
+
+"nodemailer@npm:^6.7.2":
+  version: 6.7.2
+  resolution: "nodemailer@npm:6.7.2"
+  checksum: 3c37a40928448e2f5118a9f2f016c7a4f32228d0e6b7cc7d1834b8001374cc77280dc077a83239420f6daea4c898d9a1f336dfc2273bb7eddaf51a36bd126f72
   languageName: node
   linkType: hard
 

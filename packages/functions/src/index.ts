@@ -1,7 +1,9 @@
 import 'source-map-support/register';
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { AddNumbers, CallableFunctionHandler } from './apis';
+import { AddNumbers, CallableFunctionHandler, NotifyAdmin } from './apis';
+import { assertAuthenticated } from './utils';
+import { sendEmail } from './mailer';
 
 // based on: https://github.com/firebase/quickstart-js/blob/master/functions/functions/index.js
 
@@ -27,4 +29,15 @@ const addNumbers:CallableFunctionHandler<AddNumbers> = async (data, context) => 
   };
 }
 
+const notifyAdmin:CallableFunctionHandler<NotifyAdmin> = async ({subject, body}, context) => {
+  assertAuthenticated(context);
+  await sendEmail({
+    from: "peter.neumark.jetfabric@gmail.com",
+    to: "peter@peterneumark.com",
+    subject,
+    text: body,
+    html: body});
+};
+
 exports.addNumbers = functions.region('europe-west3').https.onCall(addNumbers);
+exports.notifyAdmin = functions.region('europe-west3').https.onCall(notifyAdmin);
