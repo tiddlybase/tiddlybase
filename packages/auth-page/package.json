@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "@firebase-auth-loader/rpc": "^0.0.0",
+    "@firebase-auth-loader/functions": "^0.0.0",
     "firebase": "^9.6.6",
     "firebaseui": "^6.0.0",
     "mini-iframe-rpc": "1.7.3",

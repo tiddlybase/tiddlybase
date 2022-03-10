@@ -7,7 +7,7 @@
   "packageManager": "yarn@3.1.1",
   "scripts": {
     "start": "run serve -n -d --no-port-switching --symlinks -p 8080 dist",
-    "move_sourcemaps": "mkdir -p dist/sourcemaps && find dist -type f -name '*.js.map'  -not -path 'dist/sourcemaps/*' -exec mv '{}' dist/sourcemaps/ \\;",
+    "move_sourcemaps": "mkdir -p dist/sourcemaps && find dist -type f -name '*.js.map' -not -path 'dist/sourcemaps/*' -not -path 'dist/functions/*' -exec mv '{}' dist/sourcemaps/ \\;",
     "test": "yarn workspaces foreach -t run test",
     "build": "MODE=production yarn workspaces foreach -p -t run build",
     "build:dev": "MODE=development yarn workspaces foreach -t run build:dev",
@@ -15,6 +15,7 @@
     "deploy:files": "gsutil -D -m rsync -r -d ../csaladi_naplo/files gs://peterneumark-com.appspot.com/csaladwiki/files",
     "deploy:wiki": "gsutil cp dist/wiki.html gs://peterneumark-com.appspot.com/csaladwiki/",
     "deploy:firebase": "firebase deploy --debug --only storage:rules,hosting:pn-wiki",
+    "deploy:functions": "firebase deploy --only functions:addNumbers",
     "deploy": "yarn deploy:wiki && yarn deploy:firebase && yarn deploy:files"
   },
   "workspaces": {
@@ -26,7 +27,8 @@
       "packages/rpc",
       "packages/tw5-types",
       "packages/plugin-storage-file",
-      "packages/wiki-builder"
+      "packages/wiki-builder",
+      "packages/functions"
     ]
   },
   "devDependencies": {

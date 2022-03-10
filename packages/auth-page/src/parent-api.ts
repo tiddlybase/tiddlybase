@@ -1,15 +1,29 @@
 import MiniIframeRPC from "mini-iframe-rpc";
 import { apiDefiner, ParentAPI } from "@firebase-auth-loader/rpc";
+import type { CallableFunctionType} from "@firebase-auth-loader/functions/src/apis";
 import {getDownloadURL as _getDownloadURL, getStorage, ref} from '@firebase/storage';
+import { getFunctions, httpsCallable, HttpsCallable } from "@firebase/functions";
 import { firebaseApp } from './init';
 import {User} from '@firebase/auth'
 
 const storage = getStorage(firebaseApp);
+const functions = getFunctions(firebaseApp, 'europe-west3');
 
 export const getDownloadURL = async (filename:string) => {
   const fileRef = ref(storage, filename);
   return await _getDownloadURL(fileRef);
 };
+
+type StubFunction<T extends CallableFunctionType> = HttpsCallable<Parameters<T>, Awaited<ReturnType<T>>>
+
+const getStub = <P extends CallableFunctionType>(functionName:string):P => {
+  const stub:StubFunction<P> = httpsCallable(functions, functionName)
+  const invoker =  async (request: Parameters<P>[0]):Promise<Awaited<ReturnType<P>>> => {
+    const result = await stub(request);
+    return result.data as Awaited<ReturnType<P>>;
+  };
+  return invoker as P;
+}
 
 export const createParentApi = (rpc:MiniIframeRPC, user:User, iframe:Window) => {
   // const childClient = makeAPIClient<ChildAPI>(rpc, iframe);
@@ -20,4 +34,5 @@ export const createParentApi = (rpc:MiniIframeRPC, user:User, iframe:Window) => 
     }
   });
   def('getDownloadURL', getDownloadURL);
+  def('addNumbers', getStub('addNumbers'))
 }

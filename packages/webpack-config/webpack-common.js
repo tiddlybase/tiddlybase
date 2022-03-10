@@ -4,7 +4,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 const fs = require('fs');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
- 
+
 const PROJECT_ROOT = path.resolve(__dirname, '..', "..");
 const MODULES_DIR = path.resolve(PROJECT_ROOT, 'node_modules');
 
@@ -57,14 +57,19 @@ const getNodeConfig = (baseOptions) => {
   const nodeConfig = getBaseConfig({
     ...baseOptions,
     mode: 'development',
-    tsConfig: path.resolve(__dirname, 'tsconfig-node.json'),
   });
   Object.assign(nodeConfig, {
     target: 'node',
     externalsPresets: {
       node: true,
     },
-    externals: [nodeExternals({ MODULES_DIR })],
+    externals: [nodeExternals({
+      allowlist: [/^@firebase-auth-loader/],
+      modulesDir: MODULES_DIR
+    })],
+    node: {
+      __dirname: true, // Webpack has to manually solve __dirname references
+    }
   });
   Object.assign(nodeConfig.output, {
     libraryTarget: 'this',
@@ -155,7 +160,7 @@ const getTW5PluginConfig = (options) => {
         }),
       );
   }
-  
+
   return config;
 };
 

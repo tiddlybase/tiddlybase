@@ -5,6 +5,9 @@
   "firestore": {
     "rules": "etc/firestore.rules"
   },
+  "functions": {
+    "source": "dist/functions"
+  },
   "hosting": [
     {
       "site": "pn-wiki",
@@ -16,6 +19,7 @@
         }
       ],
       "ignore": [
+        "dist/functions/**",
         "**/wiki.html",
         "**/types/**",
         "firebase.json",
