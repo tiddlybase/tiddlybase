@@ -1,12 +1,11 @@
-import { firebaseApp, ui } from './init';
+import { firebaseApp, isLocal, ui } from './init';
 import { deleteAccount, handleConfigChange, handleSignedInUser, handleSignedOutUser, signInWithPopup } from './login';
 import {getAuth, User} from '@firebase/auth'
 import {makeRPC} from '@firebase-auth-loader/rpc'
-import { createParentApi, getDownloadURL } from './parent-api';
+import { createParentApi, getDownloadURL } from './parent-api-impl';
 
 const getWikiURL = async () => {
-  const useLocal = window.location.hostname === 'localhost' && new URLSearchParams(window.location.search).get('local_wiki') === 'true';
-  return (useLocal ? 'wiki.html' : await getDownloadURL('csaladwiki/wiki.html')) + window.location.hash;
+  return (isLocal ? 'wiki.html' : await getDownloadURL('csaladwiki/wiki.html')) + window.location.hash;
 }
 
 const createWikiIframe = async () => {

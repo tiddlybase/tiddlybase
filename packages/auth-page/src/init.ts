@@ -14,3 +14,4 @@ const config = {
 
 export const firebaseApp = initializeApp(config);
 export const ui = new firebaseui.auth.AuthUI(getAuth(firebaseApp));
+export const isLocal = window.location.hostname === 'localhost' && new URLSearchParams(window.location.search).get('local_wiki') === 'true';
