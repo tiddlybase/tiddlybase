@@ -5,7 +5,7 @@ const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 const fs = require('fs');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
-const PROJECT_ROOT = path.resolve(__dirname, '..', "..");
+const PROJECT_ROOT = path.resolve(__dirname, '..', "..", "..");
 const MODULES_DIR = path.resolve(PROJECT_ROOT, 'node_modules');
 
 console.log("MODE is " + process.env['MODE']);
@@ -27,6 +27,7 @@ const getBaseConfig = ({
   },
   stats: {
     errorDetails: true,
+    logging: mode === 'production' ? 'info' : 'verbose'
   },
   module: {
     rules: [
@@ -160,7 +161,6 @@ const getTW5PluginConfig = (options) => {
         }),
       );
   }
-
   return config;
 };
 
