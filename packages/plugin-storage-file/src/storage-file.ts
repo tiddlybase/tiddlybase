@@ -4,14 +4,14 @@
 // https://github.com/basarat/typescript-book/blob/master/docs/project/external-modules.md
 
 import type { } from "@firebase-auth-loader/tw5-types"
-import type { ExtendedTW } from "@firebase-auth-loader/child-iframe/src/addParentClient";
 import type { ParseTree, Widget, WidgetConstructor } from '@firebase-auth-loader/tw5-types';
 import { getDomNode } from "./helper";
 import { StorageFileProps } from "./props";
 
+import {makeAbsoluteURL} from "@firebase-auth-loader/plugin-adaptors-lib/src/url";
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { widget } = require('$:/core/modules/widgets/widget.js');
-const parentClient = ($tw as ExtendedTW).parentClient!;
 
 const WidgetClass: WidgetConstructor = widget;
 class StorageFile extends WidgetClass implements Widget {
@@ -28,7 +28,7 @@ class StorageFile extends WidgetClass implements Widget {
     this.execute();
     const domNode = getDomNode(
       this.document,
-      parentClient('getDownloadURL', [this.props!.src]),
+      Promise.resolve(makeAbsoluteURL(this.props!.src)),
       this.props!)
     // Insert element
     parent.insertBefore(domNode, nextSibling);

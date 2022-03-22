@@ -489,6 +489,9 @@ export interface TW {
   };
   boot: {
     boot: () => void;
+    wikiInfo?: {
+      config: Record<string, string>;
+    }
   };
   wiki: Wiki;
   Tiddler: TiddlerConstructor;

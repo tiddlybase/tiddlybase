@@ -25,15 +25,11 @@ exports.params = [
 	{name: "title"}
 ];
 
-const CONFIG_KEY = 'default-storage-prefix';
-
-const storagePrefix = $tw?.boot?.wikiInfo?.config[CONFIG_KEY] ?? $tw?.wiki?.getTiddler('$:/config/wikiInfoConfig')?.fields[CONFIG_KEY] ?? '';
-
 exports.run = function(relpath, title) {
 
     // Override the localfile macro from tiddlywiki-base-editions/desktop
     // with a call to the storageFile widget.
-    return `<$storageFile src="${storagePrefix}${relpath}" title=${title}/>`;
+    return `<$storageFile src="${relpath}" title=${title}/>`;
 };
 
 })();

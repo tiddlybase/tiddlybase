@@ -28,6 +28,7 @@
       "packages/rpc",
       "packages/tw5-types",
       "packages/plugin-storage-file",
+      "packages/plugin-adaptors-lib",
       "packages/wiki-builder",
       "packages/functions"
     ]

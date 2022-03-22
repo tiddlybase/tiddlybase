@@ -4,11 +4,11 @@ const TerserPlugin = require('terser-webpack-plugin');
 const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 const fs = require('fs');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const { getOutputPath } = require('./plugin-utils');
+const {PROJECT_ROOT, getPluginTiddlerTitle, getBanner} = require('./plugin-utils');
 
-const PROJECT_ROOT = path.resolve(__dirname, '..', "..", "..");
 const MODULES_DIR = path.resolve(PROJECT_ROOT, 'node_modules');
 
-console.log("MODE is " + process.env['MODE']);
 
 const getBaseConfig = ({
   input,
@@ -110,14 +110,6 @@ const getFrontendConfig = (baseOptions) => {
 
 const getTW5PluginConfig = (options) => {
   const config = getFrontendConfig(options);
-  const getBanner = () => {
-    let banner = '';
-    const bannerFile = `${config.entry}.meta`;
-    if (fs.existsSync(bannerFile)) {
-      banner = fs.readFileSync(bannerFile, { encoding: 'utf-8' });
-    }
-    return `/*\\\n${banner}\n\\*/\n`;
-  };
   Object.assign(config, {
     externals: [
       {
@@ -126,10 +118,13 @@ const getTW5PluginConfig = (options) => {
         // firebaseui: 'global firebaseui',
       },
       function ({ context, request }, callback) {
-        // console.log("externals", context, request);
         if (request.startsWith('$:/')) {
           // Externalize to a commonjs module using the request path
           return callback(null, 'commonjs ' + request);
+        }
+        const pluginTiddlerTitle = getPluginTiddlerTitle(request);
+        if (pluginTiddlerTitle) {
+          return callback(null, 'commonjs ' + pluginTiddlerTitle);
         }
         // Continue without externalizing the import
         callback();
@@ -145,7 +140,7 @@ const getTW5PluginConfig = (options) => {
           new TerserPlugin({
             terserOptions: {
               output: {
-                preamble: getBanner(),
+                preamble: getBanner(config.entry, options.outputDir, options.outputFilename),
                 comments: false,
               },
             },
@@ -156,7 +151,7 @@ const getTW5PluginConfig = (options) => {
       // BannerPlugin is only used in dev mode
       config.plugins.push(
         new webpack.BannerPlugin({
-          banner: getBanner(),
+          banner: getBanner(config.entry, options.outputDir, options.outputFilename),
           raw: true,
         }),
       );
@@ -164,4 +159,4 @@ const getTW5PluginConfig = (options) => {
   return config;
 };
 
-module.exports = { getNodeConfig, getFrontendConfig, getTW5PluginConfig };
+module.exports = { getNodeConfig, getFrontendConfig, getTW5PluginConfig};

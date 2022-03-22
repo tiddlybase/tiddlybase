@@ -4,10 +4,11 @@
 		{"path": "../../../csaladi_naplo/headless", "read-only": true}
 	],
     "config": {
-        "default-storage-prefix": "csaladwiki/files/"
+        "default-storage-prefix": "csaladwiki/files"
     },
     "plugins": [
         "firebase-auth-loader/storage-file",
+        "firebase-auth-loader/adaptors-lib",
         "tiddlywiki/codemirror"
     ],
     "themes": [
