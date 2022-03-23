@@ -3,11 +3,13 @@ type: text/vnd.tiddlywiki
 tags: $:/tags/RawMarkup
 
 <script>
+(function() {
+const isChildIframe = window !== window.parent
 window.$tw = {
     boot: {
-        suppressBoot: true
+        suppressBoot: isChildIframe
     },
-    parentLocation: JSON.parse(window.name)
+    parentLocation: isChildIframe ? JSON.parse(window.name) : undefined
 };
 
 const loadScript = (src) => {
@@ -26,7 +28,11 @@ const loadScript = (src) => {
   return ret;
 };
 
-const scriptURL = `${$tw.parentLocation.protocol}//${$tw.parentLocation.hostname}${$tw.parentLocation.port ? `:${$tw.parentLocation.port}` : ''}${$tw.parentLocation.pathname}child-frame.js`;
-console.log(`loading script ${scriptURL}`);
-loadScript(scriptURL);
+if (isChildIframe) {
+  const scriptURL = `${$tw.parentLocation.protocol}//${$tw.parentLocation.hostname}${$tw.parentLocation.port ? `:${$tw.parentLocation.port}` : ''}${$tw.parentLocation.pathname}child-frame.js`;
+  console.log(`loading script ${scriptURL}`);
+  loadScript(scriptURL);
+}
+
+})()
 </script>
