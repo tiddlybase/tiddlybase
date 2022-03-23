@@ -4,6 +4,9 @@ import type { ExtendedTW } from "@firebase-auth-loader/child-iframe/src/addParen
 const FILES_PREFIX = 'files';
 const CONFIG_KEY = 'default-storage-prefix';
 
+// This code is also run under nodejs for wiki html rendering.
+// Node throws an "undefined" error for window, but correctly states
+// that globalThis.window is undefined.
 const isChildIframe = globalThis.window && (globalThis.window !== globalThis.window.parent)
 
 const storagePrefix = $tw?.boot?.wikiInfo?.config[CONFIG_KEY] ?? $tw?.wiki?.getTiddler('$:/config/wikiInfoConfig')?.fields[CONFIG_KEY] ?? '';
