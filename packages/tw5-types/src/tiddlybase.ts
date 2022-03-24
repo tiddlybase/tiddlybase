@@ -1,4 +1,4 @@
-import type { ParentAPI, RPCClient } from "@firebase-auth-loader/rpc/src";
+import type { ParentAPI, RPCClient } from "@tiddlybase/rpc/src";
 
 export type TWTiddlybase = Partial<{
   parentClient: RPCClient<ParentAPI>

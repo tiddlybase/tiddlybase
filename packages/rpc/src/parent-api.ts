@@ -1,4 +1,4 @@
-import type { AddNumbers, NotifyAdmin } from "@firebase-auth-loader/functions/src/apis";
+import type { AddNumbers, NotifyAdmin } from "@tiddlybase/functions/src/apis";
 
 export interface ChildInitProps {
   userName: string

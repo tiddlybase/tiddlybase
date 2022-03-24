@@ -1,4 +1,4 @@
-const { getNodeConfig } = require('@firebase-auth-loader/webpack-config');
+const { getNodeConfig } = require('@tiddlybase/webpack-config');
 const path = require('path');
 
 module.exports = () => getNodeConfig({

@@ -1,5 +1,5 @@
-const { getTW5PluginConfig } = require('@firebase-auth-loader/webpack-config');
-const { findPluginSources, toOutputFilename, getOutputPath, getPluginName, writePluginInfo } = require('@firebase-auth-loader/webpack-config/src/plugin-utils');
+const { getTW5PluginConfig } = require('@tiddlybase/webpack-config');
+const { findPluginSources, toOutputFilename, getOutputPath, getPluginName, writePluginInfo } = require('@tiddlybase/webpack-config/src/plugin-utils');
 const path = require('path');
 const pkg = require(path.join(__dirname, 'package.json'));
 

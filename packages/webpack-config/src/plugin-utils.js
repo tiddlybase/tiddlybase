@@ -6,14 +6,14 @@ const util = require('util');
 const PROJECT_ROOT = path.resolve(__dirname, '..', "..", "..");
 
 const RE_EXTENSION = /\.ts$/
-const RE_PACKAGE_NAME = new RegExp("^@firebase-auth-loader/plugin-([^/]*)");
+const RE_PACKAGE_NAME = new RegExp("^@tiddlybase/plugin-([^/]*)");
 
 const META_SUFFIX = '.meta';
-const PLUGIN_TITLE_PREFIX = '$:/plugins/firebase-auth-loader/';
+const PLUGIN_TITLE_PREFIX = '$:/plugins/tiddlybase/';
 
 const stripMetaSuffix = filename => filename.substr(0, filename.length - META_SUFFIX.length);
 
-const getOutputPath = pluginName => outputDir = path.resolve(PROJECT_ROOT, `dist/plugins/firebase-auth-loader/${pluginName}`);
+const getOutputPath = pluginName => outputDir = path.resolve(PROJECT_ROOT, `dist/plugins/tiddlybase/${pluginName}`);
 
 const getPluginName = packageName => packageName.match(RE_PACKAGE_NAME)?.[1]
 
@@ -60,7 +60,7 @@ const getBanner = (sourceFile, outputDir, outputFilename) => {
 };
 
 const getPluginTiddlerTitle = importName => {
-  // eg: @firebase-auth-loader/plugin-adaptors-lib/src/url
+  // eg: @tiddlybase/plugin-adaptors-lib/src/url
   if (!getPluginName(importName)) {
     return;
   }
@@ -91,7 +91,7 @@ const writePluginInfo = pkg => {
   const pluginName = getPluginName(pkg.name);
   const outputDir = getOutputPath(pluginName);
 
-  const title = `$:/plugins/firebase-auth-loader/${pluginName}`;
+  const title = `$:/plugins/tiddlybase/${pluginName}`;
 
   const info = {
     title,

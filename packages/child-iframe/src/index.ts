@@ -1,6 +1,6 @@
-import { apiDefiner, makeAPIClient, makeRPC } from "@firebase-auth-loader/rpc";
-import { ChildAPI, ParentAPI,  } from "@firebase-auth-loader/rpc";
-import type {} from "@firebase-auth-loader/tw5-types"
+import { apiDefiner, makeAPIClient, makeRPC } from "@tiddlybase/rpc";
+import { ChildAPI, ParentAPI,  } from "@tiddlybase/rpc";
+import type {} from "@tiddlybase/tw5-types"
 
 
 const main = async () => {

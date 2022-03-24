@@ -65,7 +65,7 @@ const getNodeConfig = (baseOptions) => {
       node: true,
     },
     externals: [nodeExternals({
-      allowlist: [/^@firebase-auth-loader/],
+      allowlist: [/^@tiddlybase/],
       modulesDir: MODULES_DIR
     })],
     node: {

@@ -1,5 +1,5 @@
 {
-  "name": "@firebase-auth-loader/root",
+  "name": "@tiddlybase/root",
   "version": "1.0.0",
   "description": "",
   "author": "neumark.peter@gmail.com",
@@ -7,7 +7,7 @@
   "packageManager": "yarn@3.1.1",
   "scripts": {
     "start": "run serve -n -d --no-port-switching --symlinks -p 8080 dist",
-    "start:functions": "yarn workspace @firebase-auth-loader/functions run local",
+    "start:functions": "yarn workspace @tiddlybase/functions run local",
     "move_sourcemaps": "mkdir -p dist/sourcemaps && find dist -type f -name '*.js.map' -not -path 'dist/sourcemaps/*' -not -path 'dist/functions/*' -exec mv '{}' dist/sourcemaps/ \\;",
     "test": "yarn workspaces foreach -t run test",
     "build": "MODE=production yarn workspaces foreach -p -t run build",

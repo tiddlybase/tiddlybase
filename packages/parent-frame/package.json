@@ -1,5 +1,5 @@
 {
-  "name": "@firebase-auth-loader/parent-frame",
+  "name": "@tiddlybase/parent-frame",
   "description": "In-browser trusted code running outside the sandbox",
   "version": "0.0.0",
   "private": true,
@@ -10,8 +10,8 @@
     "build:dev": "MODE=development webpack"
   },
   "devDependencies": {
-    "@firebase-auth-loader/functions": "^0.0.0",
-    "@firebase-auth-loader/rpc": "^0.0.0",
+    "@tiddlybase/functions": "^0.0.0",
+    "@tiddlybase/rpc": "^0.0.0",
     "firebase": "^9.6.6",
     "firebaseui": "^6.0.0",
     "mini-iframe-rpc": "1.7.3",

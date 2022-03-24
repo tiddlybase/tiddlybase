@@ -1,4 +1,4 @@
-import type { } from "@firebase-auth-loader/tw5-types"
+import type { } from "@tiddlybase/tw5-types"
 
 const FILES_PREFIX = 'files';
 const CONFIG_KEY = 'default-storage-prefix';

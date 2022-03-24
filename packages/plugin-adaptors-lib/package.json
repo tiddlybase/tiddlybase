@@ -1,5 +1,5 @@
 {
-  "name": "@firebase-auth-loader/plugin-adaptors-lib",
+  "name": "@tiddlybase/plugin-adaptors-lib",
   "description": "Small js libs which can be overridden in different environments",
   "version": "0.0.0",
   "private": true,
@@ -12,9 +12,9 @@
     "test": "cross-env NODE_OPTIONS=--loader=ts-node/esm jasmine --config=jasmine.json"
   },
   "devDependencies": {
-    "@firebase-auth-loader/rpc": "^0.0.0",
-    "@firebase-auth-loader/tw5-types": "^0.0.0",
-    "@firebase-auth-loader/webpack-config": "^0.0.0",
+    "@tiddlybase/rpc": "^0.0.0",
+    "@tiddlybase/tw5-types": "^0.0.0",
+    "@tiddlybase/webpack-config": "^0.0.0",
     "@types/jasmine": "^3.10.3",
     "cross-env": "^7.0.3",
     "jasmine": "^4.0.2",

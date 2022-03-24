@@ -3,12 +3,12 @@
 // https://webpack.js.org/configuration/resolve/#resolvefallback
 // https://github.com/basarat/typescript-book/blob/master/docs/project/external-modules.md
 
-import type { } from "@firebase-auth-loader/tw5-types"
-import type { ParseTree, Widget, WidgetConstructor } from '@firebase-auth-loader/tw5-types';
+import type { } from "@tiddlybase/tw5-types"
+import type { ParseTree, Widget, WidgetConstructor } from '@tiddlybase/tw5-types';
 import { getDomNode } from "./helper";
 import { StorageFileProps } from "./props";
 
-import {makeAbsoluteURL} from "@firebase-auth-loader/plugin-adaptors-lib/src/url";
+import {makeAbsoluteURL} from "@tiddlybase/plugin-adaptors-lib/src/url";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { widget } = require('$:/core/modules/widgets/widget.js');

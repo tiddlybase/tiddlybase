@@ -1,6 +1,6 @@
 import MiniIframeRPC from "mini-iframe-rpc";
-import { apiDefiner, ParentAPI } from "@firebase-auth-loader/rpc";
-import type { CallableFunctionType} from "@firebase-auth-loader/functions/src/apis";
+import { apiDefiner, ParentAPI } from "@tiddlybase/rpc";
+import type { CallableFunctionType} from "@tiddlybase/functions/src/apis";
 import {getDownloadURL as _getDownloadURL, getStorage, ref} from '@firebase/storage';
 import { getFunctions, httpsCallable, HttpsCallable, connectFunctionsEmulator } from "@firebase/functions";
 import { firebaseApp, isLocalEnv } from './init';

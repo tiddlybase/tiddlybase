@@ -7,8 +7,8 @@
         "default-storage-prefix": "csaladwiki/files"
     },
     "plugins": [
-        "firebase-auth-loader/storage-file",
-        "firebase-auth-loader/adaptors-lib",
+        "tiddlybase/storage-file",
+        "tiddlybase/adaptors-lib",
         "tiddlywiki/codemirror"
     ],
     "themes": [
