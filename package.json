@@ -21,7 +21,7 @@
   },
   "workspaces": {
     "packages": [
-      "packages/auth-page",
+      "packages/parent-frame",
       "packages/child-iframe",
       "packages/webpack-config",
       "packages/cli",

@@ -95,21 +95,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@firebase-auth-loader/auth-page@workspace:packages/auth-page":
-  version: 0.0.0-use.local
-  resolution: "@firebase-auth-loader/auth-page@workspace:packages/auth-page"
-  dependencies:
-    "@firebase-auth-loader/functions": ^0.0.0
-    "@firebase-auth-loader/rpc": ^0.0.0
-    firebase: ^9.6.6
-    firebaseui: ^6.0.0
-    mini-iframe-rpc: 1.7.3
-    typescript: ^4.5.5
-    webpack: ^5.68.0
-    webpack-cli: ^4.9.2
-  languageName: unknown
-  linkType: soft
-
 "@firebase-auth-loader/child-iframe@workspace:packages/child-iframe":
   version: 0.0.0-use.local
   resolution: "@firebase-auth-loader/child-iframe@workspace:packages/child-iframe"
@@ -126,6 +111,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@firebase-auth-loader/cli@workspace:packages/cli"
   dependencies:
+    "@types/node": ^17.0.23
     "@types/yargs": ^17.0.8
     firebase: ^9.6.6
     firebase-admin: ^10.0.2
@@ -157,6 +143,21 @@ __metadata:
     tslib: ^2.3.1
     typescript: ^4.5.5
     webpack: ^5.70.0
+    webpack-cli: ^4.9.2
+  languageName: unknown
+  linkType: soft
+
+"@firebase-auth-loader/parent-frame@workspace:packages/parent-frame":
+  version: 0.0.0-use.local
+  resolution: "@firebase-auth-loader/parent-frame@workspace:packages/parent-frame"
+  dependencies:
+    "@firebase-auth-loader/functions": ^0.0.0
+    "@firebase-auth-loader/rpc": ^0.0.0
+    firebase: ^9.6.6
+    firebaseui: ^6.0.0
+    mini-iframe-rpc: 1.7.3
+    typescript: ^4.5.5
+    webpack: ^5.68.0
     webpack-cli: ^4.9.2
   languageName: unknown
   linkType: soft
@@ -1284,6 +1285,13 @@ __metadata:
   version: 17.0.17
   resolution: "@types/node@npm:17.0.17"
   checksum: 8ddba2829acdf1684fbd8fd248ec13f033efb70ecd1085677b547c40ef8e936a006b95eac3bdc28c47939c62526f3f027afeb4a930e30e4394923bbae4626476
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^17.0.23":
+  version: 17.0.23
+  resolution: "@types/node@npm:17.0.23"
+  checksum: a3517554737cbb042e76c30d0e5482192ac4d9bea0eeb086e2622d9cabf460a0eb52a696b99fcd18e7fcc93c96db6cc7ae507f6608f256ef0b5c1d8c87a5a470
   languageName: node
   linkType: hard
 
