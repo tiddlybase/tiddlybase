@@ -1,7 +1,6 @@
 import { apiDefiner, makeAPIClient, makeRPC } from "@firebase-auth-loader/rpc";
 import { ChildAPI, ParentAPI,  } from "@firebase-auth-loader/rpc";
 import type {} from "@firebase-auth-loader/tw5-types"
-import type { ExtendedTW } from "./addParentClient";
 
 
 const main = async () => {
@@ -11,10 +10,10 @@ const main = async () => {
   def('testParentChild', async (message:string) => {
     console.log(message);
   });
-  const childInitProps = await parentClient('childIframeReady', []);
-  console.log(childInitProps);
-  const extendedTW = $tw as ExtendedTW;
-  extendedTW.parentClient = parentClient;
+  const {isLocalEnv} = await parentClient('childIframeReady', []);
+  $tw.tiddlybase = $tw.tiddlybase ?? {};
+  $tw.tiddlybase.parentClient = parentClient;
+  $tw.tiddlybase.isLocalEnv = isLocalEnv;
   $tw.boot.boot();
 }
 

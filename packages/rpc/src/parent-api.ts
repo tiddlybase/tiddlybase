@@ -2,6 +2,7 @@ import type { AddNumbers, NotifyAdmin } from "@firebase-auth-loader/functions/sr
 
 export interface ChildInitProps {
   userName: string
+  isLocalEnv: boolean
 }
 
 export interface ParentAPI {

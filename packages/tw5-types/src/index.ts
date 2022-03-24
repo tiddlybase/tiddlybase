@@ -1,5 +1,7 @@
 // Typings for TiddlyWiki 5, lots of stuff is still missing.
 
+import { TWTiddlybase } from "./tiddlybase";
+
 // standard tiddler definition, but every field except title is optional, allowing any custom field
 export type TiddlerFields = Partial<{
   tags: string[];
@@ -500,6 +502,8 @@ export interface TW {
   hooks: {
     addHook: (...args: AddHookArguments) => void;
   };
+  // non-standard extension
+  tiddlybase?: TWTiddlybase
 }
 
 declare global {

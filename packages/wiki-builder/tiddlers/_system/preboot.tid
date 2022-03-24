@@ -4,12 +4,15 @@ tags: $:/tags/RawMarkup
 
 <script>
 (function() {
-const isChildIframe = window !== window.parent
+const inSandboxedIframe = window !== window.parent
 window.$tw = {
     boot: {
-        suppressBoot: isChildIframe
+        suppressBoot: inSandboxedIframe
     },
-    parentLocation: isChildIframe ? JSON.parse(window.name) : undefined
+    tiddlybase: {
+      inSandboxedIframe,
+      parentLocation: inSandboxedIframe ? JSON.parse(window.name) : undefined
+    }
 };
 
 const loadScript = (src) => {
@@ -28,8 +31,8 @@ const loadScript = (src) => {
   return ret;
 };
 
-if (isChildIframe) {
-  const scriptURL = `${$tw.parentLocation.protocol}//${$tw.parentLocation.hostname}${$tw.parentLocation.port ? `:${$tw.parentLocation.port}` : ''}${$tw.parentLocation.pathname}child-frame.js`;
+if (inSandboxedIframe) {
+  const scriptURL = `${$tw.tiddlybase.parentLocation.protocol}//${$tw.tiddlybase.parentLocation.hostname}${$tw.tiddlybase.parentLocation.port ? `:${$tw.tiddlybase.parentLocation.port}` : ''}${$tw.tiddlybase.parentLocation.pathname}child-frame.js`;
   console.log(`loading script ${scriptURL}`);
   loadScript(scriptURL);
 }

@@ -3,13 +3,13 @@ import { apiDefiner, ParentAPI } from "@firebase-auth-loader/rpc";
 import type { CallableFunctionType} from "@firebase-auth-loader/functions/src/apis";
 import {getDownloadURL as _getDownloadURL, getStorage, ref} from '@firebase/storage';
 import { getFunctions, httpsCallable, HttpsCallable, connectFunctionsEmulator } from "@firebase/functions";
-import { firebaseApp, isLocal } from './init';
+import { firebaseApp, isLocalEnv } from './init';
 import {User} from '@firebase/auth'
 
 const storage = getStorage(firebaseApp);
 const functions = getFunctions(firebaseApp, 'europe-west3');
 
-if (isLocal) {
+if (isLocalEnv) {
   connectFunctionsEmulator(functions, "localhost", 5001);
 }
 
@@ -35,7 +35,8 @@ export const createParentApi = (rpc:MiniIframeRPC, user:User, iframe:Window) => 
   const exposeCallable = (fn:Parameters<typeof def>[0]) => def(fn, getStub(fn))
   def('childIframeReady', async () => {
     return {
-      userName: user.displayName!
+      userName: user.displayName!,
+      isLocalEnv
     }
   });
   def('getDownloadURL', getDownloadURL);

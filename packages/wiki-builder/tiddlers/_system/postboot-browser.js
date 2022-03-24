@@ -1,5 +1,5 @@
 /*\
-title: $:/postboot.js
+title: $:/postboot-browser.js
 type: application/javascript
 module-type: startup
 
@@ -11,32 +11,18 @@ module-type: startup
   'use strict';
 
   // Export name and synchronous status
-  exports.name = 'postboot';
+  exports.name = 'postboot-browser';
   exports.after = ['load-modules'];
   exports.synchronous = true;
+  exports.platforms = ['node'];
 
   const fixGetLocationPath = () => {
     // replace $tw.utils.getLocationPath() so it uses parent frame's URL
     $tw.utils.getLocationPath = () => `${$tw.parentLocation.protocol}//${$tw.parentLocation.hostname}${$tw.parentLocation.port ? `:${$tw.parentLocation.port}` : ''}${$tw.parentLocation.pathname}${$tw.parentLocation.search}`;
   };
 
-  const saveWikiInfoConfig = () => {
-    if ($tw?.boot?.wikiInfo?.config) {
-      $tw.wiki.addTiddler(
-        new $tw.Tiddler({ title: '$:/config/wikiInfoConfig', ...$tw.boot.wikiInfo.config }),
-      );
-    }
-  };
-
   exports.startup = function () {
-    if ($tw.browser) {
-      fixGetLocationPath();
-    } else {
-      saveWikiInfoConfig();
-    }
-
+    fixGetLocationPath();
   };
-
-
 
 })();
