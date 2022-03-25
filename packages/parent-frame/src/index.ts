@@ -12,7 +12,7 @@ const createWikiIframe = async () => {
   const parentElement = document.getElementById('wiki-frame-parent');
   const iframe = document.createElement('iframe');
   // see: https://stackoverflow.com/questions/25387977/typescript-iframe-sandbox-property-undefined-domsettabletokenlist-has-no-cons
-  (<any>iframe).sandbox = 'allow-scripts';
+  (<any>iframe).sandbox = 'allow-scripts allow-downloads';
   // todo: this could be configurable to use a different tw5 build for eg mobile devices / translations, etc
   iframe.src = await getWikiURL();
   iframe.name = JSON.stringify(window.location);
