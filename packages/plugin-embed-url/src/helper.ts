@@ -1,4 +1,4 @@
-import { StorageFileProps } from "./props";
+import { EmbedURLProps } from "./props";
 
 const TAG_TO_EXTENSION_MAP = {
   'img': ['jpg', 'jpeg', 'png', 'gif', 'heic', 'svg'],
@@ -8,9 +8,9 @@ const TAG_TO_EXTENSION_MAP = {
 
 type Tag = keyof typeof TAG_TO_EXTENSION_MAP;
 
-const maybeAttribute = (propName: keyof StorageFileProps, props:StorageFileProps, overrideAttributName?:string):string => props[propName] ? `${overrideAttributName ?? propName}="${props[propName]}" ` : ''
+const maybeAttribute = (propName: keyof EmbedURLProps, props:EmbedURLProps, overrideAttributName?:string):string => props[propName] ? `${overrideAttributName ?? propName}="${props[propName]}" ` : ''
 
-const INNERHTML_GENERATORS:Record<Tag, (url:string, props:StorageFileProps)=>string> = {
+const INNERHTML_GENERATORS:Record<Tag, (url:string, props:EmbedURLProps)=>string> = {
   'img': (url, props) => `<img src="${url}" ${maybeAttribute('height', props)} ${maybeAttribute('width', props)} ${maybeAttribute('alt', props)} ${maybeAttribute('tooltip', props, 'title')}/>`,
   'video': (url, props) => `
       <video controls ${maybeAttribute('height', props)} ${maybeAttribute('width', props)}>
@@ -39,7 +39,7 @@ export const getTagForExtension = (extension:string):Tag => {
   return DEFAULT_TAG;
 }
 
-export const getDomNode = (doc:Document, urlPromise:Promise<string>, props:StorageFileProps) => {
+export const getDomNode = (doc:Document, urlPromise:Promise<string>, props:EmbedURLProps) => {
   // TODO: if source isn't set, there should be an error
   const extension = getExtension(props.src);
   const tag = getTagForExtension(extension);

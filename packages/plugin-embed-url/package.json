@@ -1,5 +1,5 @@
 {
-  "name": "@tiddlybase/plugin-storage-file",
+  "name": "@tiddlybase/plugin-embed-url",
   "description": "Load files from firebase storage",
   "version": "0.0.0",
   "private": true,

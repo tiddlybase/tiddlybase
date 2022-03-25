@@ -29,7 +29,7 @@ exports.run = function(relpath, title) {
 
     // Override the localfile macro from tiddlywiki-base-editions/desktop
     // with a call to the storageFile widget.
-    return `<$storageFile src="${relpath}" title=${title}/>`;
+    return `<$EmbedURL src="${relpath}" title=${title}/>`;
 };
 
 })();

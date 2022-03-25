@@ -6,7 +6,7 @@
 import type { } from "@tiddlybase/tw5-types"
 import type { ParseTree, Widget, WidgetConstructor } from '@tiddlybase/tw5-types';
 import { getDomNode } from "./helper";
-import { StorageFileProps } from "./props";
+import { EmbedURLProps } from "./props";
 
 import {makeAbsoluteURL} from "@tiddlybase/plugin-adaptors-lib/src/url";
 
@@ -14,9 +14,9 @@ import {makeAbsoluteURL} from "@tiddlybase/plugin-adaptors-lib/src/url";
 const { widget } = require('$:/core/modules/widgets/widget.js');
 
 const WidgetClass: WidgetConstructor = widget;
-class StorageFile extends WidgetClass implements Widget {
+class EmbedURL extends WidgetClass implements Widget {
 
-  private props?: StorageFileProps;
+  private props?: EmbedURLProps;
 
   constructor(parseTreeNode: ParseTree, options: any) {
     super(parseTreeNode, options);
@@ -60,4 +60,4 @@ class StorageFile extends WidgetClass implements Widget {
 
 }
 
-export { StorageFile as storageFile };
+export { EmbedURL};

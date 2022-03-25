@@ -7,7 +7,7 @@
         "default-storage-prefix": "csaladwiki/files"
     },
     "plugins": [
-        "tiddlybase/storage-file",
+        "tiddlybase/embed-url",
         "tiddlybase/adaptors-lib",
         "tiddlywiki/codemirror"
     ],

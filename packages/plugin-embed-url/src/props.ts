@@ -1,4 +1,4 @@
-export interface StorageFileProps {
+export interface EmbedURLProps {
   src: string;
 	width?: string;
 	height?: string;

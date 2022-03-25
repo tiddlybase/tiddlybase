@@ -1014,9 +1014,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@tiddlybase/plugin-storage-file@^0.0.0, @tiddlybase/plugin-storage-file@workspace:packages/plugin-storage-file":
+"@tiddlybase/plugin-embed-url@^0.0.0, @tiddlybase/plugin-embed-url@workspace:packages/plugin-embed-url":
   version: 0.0.0-use.local
-  resolution: "@tiddlybase/plugin-storage-file@workspace:packages/plugin-storage-file"
+  resolution: "@tiddlybase/plugin-embed-url@workspace:packages/plugin-embed-url"
   dependencies:
     "@tiddlybase/plugin-adaptors-lib": ^0.0.0
     "@tiddlybase/rpc": ^0.0.0
@@ -1076,8 +1076,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@tiddlybase/wiki-builder@workspace:packages/wiki-builder"
   dependencies:
-    "@tiddlybase/plugin-storage-file": ^0.0.0
-    tiddlywiki: ^5.2.1
+    "@tiddlybase/plugin-embed-url": ^0.0.0
+    tiddlywiki: ^5.2.2
   languageName: unknown
   linkType: soft
 
@@ -8892,12 +8892,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tiddlywiki@npm:^5.2.1":
-  version: 5.2.1
-  resolution: "tiddlywiki@npm:5.2.1"
+"tiddlywiki@npm:^5.2.2":
+  version: 5.2.2
+  resolution: "tiddlywiki@npm:5.2.2"
   bin:
     tiddlywiki: tiddlywiki.js
-  checksum: 845644b0f2df0e2fc484e4a11437ecf177f8b110f56948f85783c78b0a3fe5a1e2fd76f678f07c68f06e432cbc2880dd1341b069d038f64dbf66ab2ef35e2644
+  checksum: a3fbd061a8bfa7deb65ccfd60e9deb29c83d5a137c7d4db45455896355756b94018495cacecd5f3cf5104bc6c436863289cd88891b3fbf6a7cdee444f0bb1cff
   languageName: node
   linkType: hard
 
