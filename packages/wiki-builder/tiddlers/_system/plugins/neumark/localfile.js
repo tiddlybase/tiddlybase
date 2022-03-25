@@ -20,16 +20,18 @@ exports.name = "localfile";
 
 exports.params = [
 	// (mandatory) path param
-	{name: "relpath"},
+	{name: "src"},
+	// optional parameter
+	{name: "alt"},
 	// optional parameter
 	{name: "title"}
 ];
 
-exports.run = function(relpath, title) {
+exports.run = function(src, alt, title) {
 
     // Override the localfile macro from tiddlywiki-base-editions/desktop
     // with a call to the storageFile widget.
-    return `<$EmbedURL src="${relpath}" title=${title}/>`;
+    return `<$EmbedURL src="${src}" description="${alt}" type="${title}" />`;
 };
 
 })();

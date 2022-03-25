@@ -8,8 +8,6 @@ import type { ParseTree, Widget, WidgetConstructor } from '@tiddlybase/tw5-types
 import { getDomNode } from "./helper";
 import { EmbedURLProps } from "./props";
 
-import {makeAbsoluteURL} from "@tiddlybase/plugin-adaptors-lib/src/url";
-
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { widget } = require('$:/core/modules/widgets/widget.js');
 
@@ -28,7 +26,6 @@ class EmbedURL extends WidgetClass implements Widget {
     this.execute();
     const domNode = getDomNode(
       this.document,
-      Promise.resolve(makeAbsoluteURL(this.props!.src)),
       this.props!)
     // Insert element
     parent.insertBefore(domNode, nextSibling);
@@ -42,15 +39,15 @@ class EmbedURL extends WidgetClass implements Widget {
       src: this.getAttribute("src"),
       width: this.getAttribute("width"),
       height: this.getAttribute("height"),
-      tooltip: this.getAttribute("tooltip"),
-      alt: this.getAttribute("alt")
+      description: this.getAttribute("description"),
+      type: this.getAttribute("type")
     }
   };
 
 
   refresh() {
-    var changedAttributes = this.computeAttributes();
-    if (changedAttributes.src || changedAttributes.width || changedAttributes.height || changedAttributes["class"] || changedAttributes.tooltip) {
+    var changedAttributes = this.computeAttributes() as unknown as EmbedURLProps;
+    if (changedAttributes.src || changedAttributes.width || changedAttributes.height || changedAttributes.description || changedAttributes.type) {
       this.refreshSelf();
       return true;
     } else {
