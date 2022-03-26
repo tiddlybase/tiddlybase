@@ -65,8 +65,15 @@ const getGenerator = (props:EmbedURLProps):HTMLGenerator => {
     elementType = 'a';
   } else {
     const extension = getExtension(props.src);
-    elementType = getTagForExtension(extension)
-    // TODO: in sandboxed iframe, embed should open in new tab...
+    elementType = getTagForExtension(extension);
+    // in sandboxed iframe, embedded objects like PDFs should open in new tab
+    // because the browser will not start plugins for displaying them.
+    if ($tw?.tiddlybase?.inSandboxedIframe && elementType === 'embed') {
+      elementType = 'a';
+      // if no title was given, use the relative filename
+      props.description = props.description || props.src;
+      props.type = 'open-in-new-tab-on-click';
+    }
   }
   return INNERHTML_GENERATORS[elementType];
 }
