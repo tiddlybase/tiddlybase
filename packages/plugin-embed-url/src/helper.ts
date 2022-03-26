@@ -29,7 +29,7 @@ const INNERHTML_GENERATORS: Record<ElementType, HTMLGenerator> = {
       </video>`,
   'embed': (url, props) => `<embed src="${url}" ${maybeAttribute('height', props)} ${maybeAttribute('width', props)} />`,
   'a': (url, props) => {
-    // TODO: should set container div class to one with "display:inline"
+    props.cssClasses?.push('embed-inline-link-container');
     let extraAttributes:string[] = [];
     if (props.type === 'download') {
       extraAttributes = [`download="${props.src.split('/').slice(-1)[0]}"`];
@@ -43,7 +43,7 @@ const INNERHTML_GENERATORS: Record<ElementType, HTMLGenerator> = {
 
 const DEFAULT_TAG: ElementType = "embed";
 
-const CONTAINER_CLASSES = ["tc-tiddler-body", "tc-reveal"];
+const DEFAULT_CONTAINER_CLASSES = ["tc-tiddler-body", "tc-reveal"];
 
 export const getExtension = (filename: string) => filename.toLowerCase().trim().split(".").slice(-1)[0];
 
@@ -71,20 +71,26 @@ const getGenerator = (props:EmbedURLProps):HTMLGenerator => {
   return INNERHTML_GENERATORS[elementType];
 }
 
+const applyCssClasses = (containerNode:HTMLDivElement, cssClasses?:string[]) => {
+  cssClasses?.forEach(cls => containerNode.classList.add(cls));
+}
+
 export const getDomNode = (doc: Document, props: EmbedURLProps) => {
 
   const htmlGenerator = getGenerator(props);
   const containerNode = doc.createElement('div');
-  // add CSS classes
-  CONTAINER_CLASSES.forEach(cls => containerNode.classList.add(cls));
+  props.cssClasses = props.cssClasses ?? DEFAULT_CONTAINER_CLASSES.slice();
+
   const absoluteUrl = makeAbsoluteURL(props.src);
   if (typeof absoluteUrl === 'string') {
     containerNode.innerHTML = htmlGenerator(absoluteUrl, props);
+    applyCssClasses(containerNode, props.cssClasses);
   } else {
     // absolute URL is a promise
     containerNode.innerHTML = getPlaceholderHtml(props);
     absoluteUrl.then(url => {
       containerNode.innerHTML = htmlGenerator(url, props);
+      applyCssClasses(containerNode, props.cssClasses);
     });
   }
 

@@ -6,4 +6,5 @@ export interface EmbedURLProps {
 	height?: string;
 	description?: string;
 	type?: EmbedType;
+	cssClasses?: string[];
 }
