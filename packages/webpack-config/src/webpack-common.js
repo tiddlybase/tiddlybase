@@ -5,7 +5,7 @@ const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 const fs = require('fs');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const { getOutputPath } = require('./plugin-utils');
-const {PROJECT_ROOT, getPluginTiddlerTitle, getBanner} = require('./plugin-utils');
+const {PROJECT_ROOT, getPluginTiddlerTitle, getBanner, transformMetaAddTitle, getStaticDir} = require('./plugin-utils');
 
 const MODULES_DIR = path.resolve(PROJECT_ROOT, 'node_modules');
 
@@ -88,11 +88,15 @@ const getFrontendConfig = (baseOptions) => {
     }),
   );
   // if static dif exists, copy files from static to dist dir
-  const staticDir = path.resolve(process.cwd(), "static");
+  const staticDir = getStaticDir();
   if (fs.existsSync(staticDir)) {
     config.plugins.push(new CopyWebpackPlugin({
       patterns: [
-        { from: 'static' }
+        {
+          from: staticDir,
+          to: config.output.path,
+          transform: transformMetaAddTitle
+        }
       ]
     }));
   }
