@@ -8,7 +8,7 @@ const ELEMENT_TYPE_TO_EXTENSION_MAP = {
   'a': []
 }
 
-const NEW_TAB_LINK_ATTRIBUTES = ['target="_blank"', 'rel="noopener', 'noreferrer'];
+const NEW_TAB_LINK_ATTRIBUTES = ['target="_blank"', 'rel="noopener"', 'noreferrer'];
 
 type ElementType = keyof typeof ELEMENT_TYPE_TO_EXTENSION_MAP;
 

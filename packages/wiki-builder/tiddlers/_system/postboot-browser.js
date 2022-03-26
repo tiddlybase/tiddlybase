@@ -14,15 +14,18 @@ module-type: startup
   exports.name = 'postboot-browser';
   exports.after = ['load-modules'];
   exports.synchronous = true;
-  exports.platforms = ['node'];
+  exports.platforms = ['browser'];
 
   const fixGetLocationPath = () => {
     // replace $tw.utils.getLocationPath() so it uses parent frame's URL
-    $tw.utils.getLocationPath = () => `${$tw.parentLocation.protocol}//${$tw.parentLocation.hostname}${$tw.parentLocation.port ? `:${$tw.parentLocation.port}` : ''}${$tw.parentLocation.pathname}${$tw.parentLocation.search}`;
+    // http://localhost:8080/?local_wiki=true#2021-04-10%20Nasz%C3%A1j%20Kosdr%C3%B3l
+    $tw.utils.getLocationPath = () => $tw.tiddlybase.parentLocation.href.split('#')[0]
   };
 
   exports.startup = function () {
-    fixGetLocationPath();
+    if ($tw?.tiddlybase?.inSandboxedIframe) {
+      fixGetLocationPath();
+    }
   };
 
 })();
