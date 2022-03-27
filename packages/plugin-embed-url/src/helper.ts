@@ -79,7 +79,7 @@ const getGenerator = (props:EmbedURLProps):HTMLGenerator => {
 }
 
 const applyCssClasses = (containerNode:HTMLDivElement, cssClasses?:string[]) => {
-  cssClasses?.forEach(cls => containerNode.classList.add(cls));
+  cssClasses?.forEach(cls => containerNode?.classList?.add(cls));
 }
 
 export const getDomNode = (doc: Document, props: EmbedURLProps) => {

@@ -502,6 +502,19 @@ export interface TW {
   hooks: {
     addHook: (...args: AddHookArguments) => void;
   };
+  browser? : {
+    isIE: boolean,
+    isFirefox: boolean
+  };
+  platform? : {
+    isMac: boolean,
+    isWindows: boolean,
+    isLinux: boolean};
+  node? : unknown;
+  desktop? : {
+    gui: unknown;
+    utils: unknown;
+  }
   // non-standard extension
   tiddlybase?: TWTiddlybase
 }
