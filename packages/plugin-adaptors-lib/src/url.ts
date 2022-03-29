@@ -14,6 +14,15 @@ const isAbsoluteUrl = (url: string) => {
 
 export const getParentURL = () => $tw?.tiddlybase?.parentLocation?.href;
 
+export const getExtension = (url:string) => {
+  const parts = new URL(url, "http://www.example.com").pathname.split('.');
+  if (parts.length === 0) {
+    // no extension
+    return undefined;
+  }
+  return parts.slice(-1)[0].toLowerCase();
+}
+
 const getDesktopPathPrefix = () => {
   if ($tw?.desktop) {
     let pathPrefix = ([...(new URLSearchParams(window.location.search))].find(([k, v]) => k === 'pathname') ?? [])[1];
@@ -42,7 +51,7 @@ const getFilesURL = (subPath: string): string | Promise<string> => {
   return subPath;
 }
 
-export const makeAbsoluteURL = (possiblyRelativeURL: string) => {
+export const resolveURL = (possiblyRelativeURL: string) => {
   // absolute URL
   if (isAbsoluteUrl(possiblyRelativeURL)) {
     return possiblyRelativeURL;

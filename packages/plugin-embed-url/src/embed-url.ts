@@ -40,14 +40,14 @@ class EmbedURL extends WidgetClass implements Widget {
       width: this.getAttribute("width"),
       height: this.getAttribute("height"),
       description: this.getAttribute("description"),
-      type: this.getAttribute("type")
+      attributes: this.getAttribute("attributes")
     }
   };
 
 
   refresh() {
     var changedAttributes = this.computeAttributes() as unknown as EmbedURLProps;
-    if (changedAttributes.src || changedAttributes.width || changedAttributes.height || changedAttributes.description || changedAttributes.type) {
+    if (changedAttributes.src || changedAttributes.width || changedAttributes.height || changedAttributes.description || changedAttributes.attributes) {
       this.refreshSelf();
       return true;
     } else {

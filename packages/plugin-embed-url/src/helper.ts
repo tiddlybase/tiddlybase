@@ -1,104 +1,148 @@
-import { EmbedURLProps } from "./props";
-import {makeAbsoluteURL} from "@tiddlybase/plugin-adaptors-lib/src/url";
+import { EmbedAttribute, EmbedSpec, EmbedURLProps, EMBED_ATTRIBUTES, RenderedEmbed } from "./props";
+import { resolveURL, getExtension } from "@tiddlybase/plugin-adaptors-lib/src/url";
 
-const ELEMENT_TYPE_TO_EXTENSION_MAP = {
-  'img': ['jpg', 'jpeg', 'png', 'gif', 'heic', 'svg'],
-  'video': ['mp4', 'mov', 'mkv'],
-  'embed': ['pdf'],
-  'a': []
+type ObjectType = 'image' | 'video' | 'embed' | 'link' | 'iframe';
+
+const EXTENSION_TO_OBJECT_TYPE: Record<string, ObjectType> = {
+  'jpg': 'image',
+  'jpeg': 'image',
+  'png': 'image',
+  'gif': 'image',
+  'heic': 'image',
+  'svg': 'image',
+  'mp4': 'video',
+  'mov': 'video',
+  'mkv': 'video',
+  'pdf': 'embed',
 }
 
 const NEW_TAB_LINK_ATTRIBUTES = ['target="_blank"', 'rel="noopener"', 'noreferrer'];
 
-type ElementType = keyof typeof ELEMENT_TYPE_TO_EXTENSION_MAP;
+const RE_YOUTUBE = new RegExp("^https://www\.youtube\.com/watch\\?v=([a-zA-Z0-9]+)");
 
-const maybeAttribute = (propName: keyof EmbedURLProps, props: EmbedURLProps, overrideAttributName?: string): string => props[propName] ? `${overrideAttributName ?? propName}="${props[propName]}" ` : ''
+const maybeAttribute = (propName: keyof EmbedSpec, spec: EmbedSpec, overrideAttributName?: string): string => spec[propName] ? `${overrideAttributName ?? propName}="${spec[propName]}" ` : ''
 
-type HTMLGenerator = (url: string, props: EmbedURLProps) => string;
+// returns HTML for the embedded object, plus updated spec
+type HTMLGenerator = (spec: EmbedSpec) => RenderedEmbed;
 
-const makeLinkElement = (url:string, extraAttributes:string[] = [], body='') => `<a href="${url}" ${extraAttributes.join(" ")}>${body}</a>`
+const makeLinkElement = (url: string, extraAttributes: string[] = [], body = '') => `<a href="${url}" ${extraAttributes.join(" ")}>${body}</a>`
 
-const INNERHTML_GENERATORS: Record<ElementType, HTMLGenerator> = {
-  'img': (url, props) => {
-    const img = `<img src="${url}" ${maybeAttribute('height', props)} ${maybeAttribute('width', props)} ${maybeAttribute('description', props, 'title')} />`;
-    return props.type == 'open-in-new-tab-on-click' ? makeLinkElement(url, NEW_TAB_LINK_ATTRIBUTES, img) : img;
+const getYoutubeVideoID = (url: string) => url.match(RE_YOUTUBE)?.[1];
+
+const addInnerHTML = (spec:EmbedSpec, innerHTML:string):RenderedEmbed => ({
+  ...spec,
+  innerHTML
+})
+
+const INNERHTML_GENERATORS: Record<ObjectType, HTMLGenerator> = {
+  'image': spec => {
+    const img = `<img src="${spec.resolvedSrc}" ${maybeAttribute('height', spec)} ${maybeAttribute('width', spec)} ${maybeAttribute('description', spec, 'title')} />`;
+    return addInnerHTML(spec, spec.parsedAttributes.includes('open-in-new-tab-on-click') ? makeLinkElement(spec.resolvedSrc, NEW_TAB_LINK_ATTRIBUTES, img) : img);
   },
-  'video': (url, props) => `
-      <video controls ${maybeAttribute('height', props)} ${maybeAttribute('width', props)}>
-        <source src="${url}" />
-      </video>`,
-  'embed': (url, props) => `<embed src="${url}" ${maybeAttribute('height', props)} ${maybeAttribute('width', props)} />`,
-  'a': (url, props) => {
-    props.cssClasses?.push('embed-inline-link-container');
-    let extraAttributes:string[] = [];
-    if (props.type === 'download') {
-      extraAttributes = [`download="${props.src.split('/').slice(-1)[0]}"`];
+  'video': spec => addInnerHTML(spec, `
+      <video controls ${maybeAttribute('height', spec)} ${maybeAttribute('width', spec)}>
+        <source src="${spec.resolvedSrc}" />
+      </video>`),
+  'embed': spec => addInnerHTML(spec, `<embed src="${spec.resolvedSrc}" ${maybeAttribute('height', spec)} ${maybeAttribute('width', spec)} />`),
+  'link': spec => {
+    let extraAttributes: string[] = [];
+    let cssClasses = ['embed-inline-link-container']
+    if (spec.parsedAttributes.includes('download')) {
+      extraAttributes = [`download="${spec.src.split('/').slice(-1)[0]}"`];
     }
-    if (props.type === 'open-in-new-tab-on-click') {
+    if (spec.parsedAttributes.includes('open-in-new-tab-on-click')) {
       extraAttributes = NEW_TAB_LINK_ATTRIBUTES;
     }
-    return makeLinkElement(url, extraAttributes, props.description);
-  }
+    return addInnerHTML({
+      ...spec,
+      cssClasses
+    }, makeLinkElement(spec.resolvedSrc, extraAttributes, spec.description));
+  },
+  'iframe': spec => addInnerHTML(spec, `<iframe frameborder="0" scrolling="no" marginheight="0" marginwidth="0" ${maybeAttribute('height', spec)} ${maybeAttribute('width', spec)} src="${spec.resolvedSrc}"></iframe>`)
 };
-
-const DEFAULT_TAG: ElementType = "embed";
 
 const DEFAULT_CONTAINER_CLASSES = ["tc-tiddler-body", "tc-reveal"];
 
-export const getExtension = (filename: string) => filename.toLowerCase().trim().split(".").slice(-1)[0];
+const addSpecAttribute = (spec: EmbedSpec, attribute: EmbedAttribute): EmbedSpec => ({
+  ...spec,
+  parsedAttributes: spec.parsedAttributes.concat(attribute)
+})
 
-export const getTagForExtension = (extension: string): ElementType => {
-  let tag: string;
-  let extensions: string[];
-  for ([tag, extensions] of Object.entries(ELEMENT_TYPE_TO_EXTENSION_MAP)) {
-    if (extensions.includes(extension)) {
-      return tag as ElementType;
+const generateHtml = (spec: EmbedSpec): RenderedEmbed => {
+  // download links are always <a>
+  if (spec.parsedAttributes.includes('download')) {
+    return INNERHTML_GENERATORS['link'](spec);
+  }
+  // try to embed youtube links
+  const youtubeVideoId = getYoutubeVideoID(spec.resolvedSrc);
+  if (youtubeVideoId) {
+    if (spec.inSandboxedIframe) {
+      return INNERHTML_GENERATORS['link'](addSpecAttribute(spec, 'open-in-new-tab-on-click'))
+    } else {
+      return INNERHTML_GENERATORS['iframe']({
+        ...spec,
+        resolvedSrc: `https://www.youtube.com/embed/${youtubeVideoId}`
+      });
     }
   }
-  return DEFAULT_TAG;
-}
 
-const getGenerator = (props:EmbedURLProps):HTMLGenerator => {
-  // TODO: take embed type attribute and sandboxed iframe status into account
-  let elementType:ElementType;
-  if (props.type === 'download') {
-    elementType = 'a';
-  } else {
-    const extension = getExtension(props.src);
-    elementType = getTagForExtension(extension);
-    // in sandboxed iframe, embedded objects like PDFs should open in new tab
-    // because the browser will not start plugins for displaying them.
-    if ($tw?.tiddlybase?.inSandboxedIframe && elementType === 'embed') {
-      elementType = 'a';
-      // if no title was given, use the relative filename
-      props.description = props.description || props.src;
-      props.type = 'open-in-new-tab-on-click';
-    }
+  // for images and media files
+  const extension = getExtension(spec.resolvedSrc);
+  let objectType: ObjectType = (extension ? EXTENSION_TO_OBJECT_TYPE[extension] : undefined) ?? 'link';
+  // in sandboxed iframe, embedded objects like PDFs should open in new tab
+  // because the browser will not start plugins for displaying them.
+  if (spec.inSandboxedIframe && objectType === 'embed') {
+    return INNERHTML_GENERATORS['link']({
+      ...(addSpecAttribute(spec, 'open-in-new-tab-on-click')),
+      // if no title was given, use the original (possibly relative) filename
+      description: spec.description || spec.src
+    })
   }
-  return INNERHTML_GENERATORS[elementType];
+  return INNERHTML_GENERATORS[objectType](spec);
 }
 
-const applyCssClasses = (containerNode:HTMLDivElement, cssClasses?:string[]) => {
+const applyCssClasses = (containerNode: HTMLDivElement, cssClasses?: string[]) => {
   cssClasses?.forEach(cls => containerNode?.classList?.add(cls));
 }
 
+const parseAttributes = (attributes?: string): EmbedAttribute[] => (attributes ? attributes.split(',') : []).reduce((parsed: EmbedAttribute[], a: string) => {
+  const attribute = a.trim();
+  if (EMBED_ATTRIBUTES.includes(attribute as EmbedAttribute)) {
+    parsed.push(attribute as EmbedAttribute);
+  } else {
+    console.warn("ignoring unknown embed-url attribute " + a);
+  }
+  return parsed;
+}, []);
+
+const makeEmbedSpec = (props: EmbedURLProps, resolvedSrc: string, cssClasses: string[], parsedAttributes: EmbedAttribute[]): EmbedSpec => ({
+  ...props,
+  resolvedSrc,
+  cssClasses,
+  parsedAttributes,
+  inSandboxedIframe: $tw?.tiddlybase?.inSandboxedIframe ?? false
+});
+
+
 export const getDomNode = (doc: Document, props: EmbedURLProps) => {
 
-  const htmlGenerator = getGenerator(props);
   const containerNode = doc.createElement('div');
-  props.cssClasses = props.cssClasses ?? DEFAULT_CONTAINER_CLASSES.slice();
+  const runWhenUrlReady = (resolvedSrc: string) => {
+    const cssClasses = props.cssClasses ?? DEFAULT_CONTAINER_CLASSES.slice();
+    const parsedAttributes = parseAttributes(props.attributes)
+    const spec = makeEmbedSpec(props, resolvedSrc, cssClasses, parsedAttributes)
+    const rendered = generateHtml(spec);
+    applyCssClasses(containerNode, rendered.cssClasses);
+    containerNode.innerHTML = rendered.innerHTML;
+  }
 
-  const absoluteUrl = makeAbsoluteURL(props.src);
-  if (typeof absoluteUrl === 'string') {
-    containerNode.innerHTML = htmlGenerator(absoluteUrl, props);
-    applyCssClasses(containerNode, props.cssClasses);
+  const resolvedSrc = resolveURL(props.src);
+  if (typeof resolvedSrc === 'string') {
+    runWhenUrlReady(resolvedSrc)
   } else {
     // absolute URL is a promise
     containerNode.innerHTML = getPlaceholderHtml(props);
-    absoluteUrl.then(url => {
-      containerNode.innerHTML = htmlGenerator(url, props);
-      applyCssClasses(containerNode, props.cssClasses);
-    });
+    resolvedSrc.then(runWhenUrlReady);
   }
 
   return containerNode;
