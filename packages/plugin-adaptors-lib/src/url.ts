@@ -1,11 +1,9 @@
-import type { } from "@tiddlybase/tw5-types"
+// use full package path so the import is externalized
+import { getWikiInfoConfigValue } from "@tiddlybase/plugin-adaptors-lib/src/wiki-info-config";
 
 const FILES_PREFIX = 'files';
 const STORAGE_PREFIX_CONFIG_KEY = 'default-storage-prefix';
 const LOCAL_FS_PREFIX_CONFIG_KEY = 'default-file-location';
-const WIKI_INFO_CONFIG_TIDDLER = '$:/config/wikiInfoConfig';
-
-const getWikiInfoConfigValue = (key: string) => $tw?.boot?.wikiInfo?.config[key] ?? $tw?.wiki?.getTiddler(WIKI_INFO_CONFIG_TIDDLER)?.fields[key];
 
 const isAbsoluteUrl = (url: string) => {
   const lowercase = url.toLowerCase().trim();

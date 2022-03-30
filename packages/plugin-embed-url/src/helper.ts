@@ -1,20 +1,9 @@
-import { EmbedAttribute, EmbedSpec, EmbedURLProps, EMBED_ATTRIBUTES, RenderedEmbed } from "./props";
+import { EmbedAttribute, EmbedSpec, EmbedURLProps, EMBED_ATTRIBUTES, LinkIcon, ObjectType, RenderedEmbed } from "./props";
 import { resolveURL, getExtension } from "@tiddlybase/plugin-adaptors-lib/src/url";
+import { getWikiInfoConfigValue } from "@tiddlybase/plugin-adaptors-lib/src/wiki-info-config";
+import { EXTENSION_TO_OBJECT_TYPE, LINK_ICONS } from "./constants";
 
-type ObjectType = 'image' | 'video' | 'embed' | 'link' | 'iframe';
-
-const EXTENSION_TO_OBJECT_TYPE: Record<string, ObjectType> = {
-  'jpg': 'image',
-  'jpeg': 'image',
-  'png': 'image',
-  'gif': 'image',
-  'heic': 'image',
-  'svg': 'image',
-  'mp4': 'video',
-  'mov': 'video',
-  'mkv': 'video',
-  'pdf': 'embed',
-}
+const ENABLE_ICONS = getWikiInfoConfigValue('display-link-icons') === 'true';
 
 const NEW_TAB_LINK_ATTRIBUTES = ['target="_blank"', 'rel="noopener"', 'noreferrer'];
 
@@ -28,6 +17,8 @@ type HTMLGenerator = (spec: EmbedSpec) => RenderedEmbed;
 const makeLinkElement = (url: string, extraAttributes: string[] = [], body = '') => `<a href="${url}" ${extraAttributes.join(" ")}>${body}</a>`
 
 const getYoutubeVideoID = (url: string) => url.match(RE_YOUTUBE)?.[1];
+
+const addIcon = (icon?:LinkIcon, description?:string):string => `${icon ? LINK_ICONS[icon] : ''}${description || ''}`
 
 const addInnerHTML = (spec:EmbedSpec, innerHTML:string):RenderedEmbed => ({
   ...spec,
@@ -56,9 +47,17 @@ const INNERHTML_GENERATORS: Record<ObjectType, HTMLGenerator> = {
     return addInnerHTML({
       ...spec,
       cssClasses
-    }, makeLinkElement(spec.resolvedSrc, extraAttributes, spec.description));
+    }, makeLinkElement(spec.resolvedSrc, extraAttributes, addIcon(spec.icon, spec.description)));
   },
-  'iframe': spec => addInnerHTML(spec, `<iframe frameborder="0" scrolling="no" marginheight="0" marginwidth="0" ${maybeAttribute('height', spec)} ${maybeAttribute('width', spec)} src="${spec.resolvedSrc}"></iframe>`)
+  'iframe': spec => addInnerHTML(spec,
+    `<iframe
+      frameborder="0"
+      scrolling="no"
+      marginheight="0"
+      marginwidth="0"
+      ${maybeAttribute('height', spec)}
+      ${maybeAttribute('width', spec)}
+      src="${spec.resolvedSrc}"></iframe>`)
 };
 
 const DEFAULT_CONTAINER_CLASSES = ["tc-tiddler-body", "tc-reveal"];
@@ -68,16 +67,29 @@ const addSpecAttribute = (spec: EmbedSpec, attribute: EmbedAttribute): EmbedSpec
   parsedAttributes: spec.parsedAttributes.concat(attribute)
 })
 
+const getIconForExtension = (extension: string): LinkIcon => (extension === 'pdf' ? 'pdf' : 'file')
+
 const generateHtml = (spec: EmbedSpec): RenderedEmbed => {
   // download links are always <a>
   if (spec.parsedAttributes.includes('download')) {
-    return INNERHTML_GENERATORS['link'](spec);
+    let icon:LinkIcon|undefined = undefined;
+    if (ENABLE_ICONS) {
+      const extension = getExtension(spec.resolvedSrc);
+      icon = extension ? getIconForExtension(extension) : undefined;
+    }
+    return INNERHTML_GENERATORS['link']({
+      ...spec,
+      icon
+    });
   }
   // try to embed youtube links
   const youtubeVideoId = getYoutubeVideoID(spec.resolvedSrc);
   if (youtubeVideoId) {
     if (spec.inSandboxedIframe) {
-      return INNERHTML_GENERATORS['link'](addSpecAttribute(spec, 'open-in-new-tab-on-click'))
+      return INNERHTML_GENERATORS['link'](addSpecAttribute({
+        ...spec,
+        icon: ENABLE_ICONS ? 'youtube' : undefined
+      }, 'open-in-new-tab-on-click'))
     } else {
       return INNERHTML_GENERATORS['iframe']({
         ...spec,
@@ -92,11 +104,12 @@ const generateHtml = (spec: EmbedSpec): RenderedEmbed => {
   // in sandboxed iframe, embedded objects like PDFs should open in new tab
   // because the browser will not start plugins for displaying them.
   if (spec.inSandboxedIframe && objectType === 'embed') {
-    return INNERHTML_GENERATORS['link']({
-      ...(addSpecAttribute(spec, 'open-in-new-tab-on-click')),
+    return INNERHTML_GENERATORS['link'](addSpecAttribute({
+      ...spec,
       // if no title was given, use the original (possibly relative) filename
-      description: spec.description || spec.src
-    })
+      description: spec.description || spec.src,
+      icon: (ENABLE_ICONS && extension) ? getIconForExtension(extension) : undefined
+    }, 'open-in-new-tab-on-click'))
   }
   return INNERHTML_GENERATORS[objectType](spec);
 }

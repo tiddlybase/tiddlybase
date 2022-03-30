@@ -471,6 +471,17 @@ export interface DomMakerOptions {
   class: string;
 }
 
+export const WIKI_INFO_CONFIG_KEYS = [
+  // Standard TiddlyWiki5 config keys
+  'default-tiddler-location',
+  'retain-original-tiddler-path',
+  // TiddlyBase additions
+  'default-storage-prefix',
+  'default-file-location',
+  'display-link-icons'
+] as const;
+export type WikiInfoConfigKey = typeof WIKI_INFO_CONFIG_KEYS[number];
+
 export interface TW {
   utils: {
     // defined in tiddlywiki/core/modules/utils/dom/http.js
@@ -492,7 +503,7 @@ export interface TW {
   boot: {
     boot: () => void;
     wikiInfo?: {
-      config: Record<string, string>;
+      config: Record<WikiInfoConfigKey, string>;
     }
   };
   wiki: Wiki;

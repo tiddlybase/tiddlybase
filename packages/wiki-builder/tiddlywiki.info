@@ -4,7 +4,8 @@
 		{"path": "../../../csaladi_naplo/headless", "read-only": true}
 	],
     "config": {
-        "default-storage-prefix": "csaladwiki/files"
+        "default-storage-prefix": "csaladwiki/files",
+        "display-link-icons": "true"
     },
     "plugins": [
         "tiddlybase/embed-url",
