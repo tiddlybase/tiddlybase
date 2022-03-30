@@ -3,7 +3,7 @@ import { resolveURL, getExtension } from "@tiddlybase/plugin-adaptors-lib/src/ur
 import { getWikiInfoConfigValue } from "@tiddlybase/plugin-adaptors-lib/src/wiki-info-config";
 import { EXTENSION_TO_OBJECT_TYPE, LINK_ICONS } from "./constants";
 
-const ENABLE_ICONS = getWikiInfoConfigValue('display-link-icons') === 'true';
+const ENABLE_ICONS = getWikiInfoConfigValue('display-link-icons') === true;
 
 const NEW_TAB_LINK_ATTRIBUTES = ['target="_blank"', 'rel="noopener"', 'noreferrer'];
 

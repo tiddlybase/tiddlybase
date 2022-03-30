@@ -16,10 +16,17 @@ module-type: startup
   exports.synchronous = true;
   exports.platforms = ['node'];
 
+  const objMap = (fn, input) => Object.fromEntries(Object.entries(input).map(fn));
+
   const saveWikiInfoConfig = () => {
     if ($tw?.boot?.wikiInfo?.config) {
       $tw.wiki.addTiddler(
-        new $tw.Tiddler({ title: '$:/config/wikiInfoConfig', ...$tw.boot.wikiInfo.config }),
+        new $tw.Tiddler({
+          ...(objMap(
+              ([k, v]) => [k, JSON.stringify(v)],
+              $tw.boot.wikiInfo?.config ?? {})),
+          title: '$:/config/wikiInfoConfig',
+          }),
       );
     }
   };

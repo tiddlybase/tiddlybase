@@ -471,16 +471,19 @@ export interface DomMakerOptions {
   class: string;
 }
 
-export const WIKI_INFO_CONFIG_KEYS = [
-  // Standard TiddlyWiki5 config keys
-  'default-tiddler-location',
-  'retain-original-tiddler-path',
-  // TiddlyBase additions
-  'default-storage-prefix',
-  'default-file-location',
-  'display-link-icons'
-] as const;
-export type WikiInfoConfigKey = typeof WIKI_INFO_CONFIG_KEYS[number];
+export type WikiInfoConfig = Partial<{
+  // === Standard TiddlyWiki5 config keys, see: https://tiddlywiki.com/static/tiddlywiki.info%2520Files.html ===
+
+  // default-tiddler-location - a string path to the default location for the filesystem adaptor to save new tiddlers (resolved relative to the wiki folder)
+  "default-tiddler-location": string,
+  // retain-original-tiddler-path - If true, the server will generate a tiddler $:/config/OriginalTiddlerPaths containing the original file paths of each tiddler in the wiki
+  "retain-original-tiddler-path": boolean,
+  // === TiddlyBase additions ===
+  "default-storage-prefix": string,
+  "default-file-location": string,
+  // 'display-link-icons' - if true, display
+  "display-link-icons": boolean
+}>
 
 export interface TW {
   utils: {
@@ -503,7 +506,7 @@ export interface TW {
   boot: {
     boot: () => void;
     wikiInfo?: {
-      config: Record<WikiInfoConfigKey, string>;
+      config: WikiInfoConfig;
     }
   };
   wiki: Wiki;
