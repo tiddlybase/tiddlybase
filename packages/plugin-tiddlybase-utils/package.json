@@ -1,5 +1,5 @@
 {
-  "name": "@tiddlybase/plugin-adaptors-lib",
+  "name": "@tiddlybase/plugin-tiddlybase-utils",
   "description": "Small js libs which can be overridden in different environments",
   "version": "0.0.0",
   "private": true,

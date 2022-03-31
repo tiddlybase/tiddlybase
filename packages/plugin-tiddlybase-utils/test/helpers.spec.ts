@@ -1,4 +1,4 @@
-import * as helper from '../src/helper.js'
+import * as helper from '../src/helper.js.js'
 // The '.js' at the end is very very strange I know
 // based on: https://github.com/ert78gb/jasmine4-typescript-es6-module-example
 

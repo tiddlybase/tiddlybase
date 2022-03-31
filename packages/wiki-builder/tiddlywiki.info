@@ -9,7 +9,7 @@
     },
     "plugins": [
         "tiddlybase/embed-url",
-        "tiddlybase/adaptors-lib",
+        "tiddlybase/tiddlybase-utils",
         "tiddlywiki/codemirror"
     ],
     "themes": [

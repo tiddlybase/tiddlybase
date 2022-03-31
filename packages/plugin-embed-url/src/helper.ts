@@ -1,6 +1,6 @@
 import { EmbedAttribute, EmbedSpec, EmbedURLProps, EMBED_ATTRIBUTES, LinkIcon, ObjectType, RenderedEmbed } from "./props";
-import { resolveURL, getExtension } from "@tiddlybase/plugin-adaptors-lib/src/url";
-import { getWikiInfoConfigValue } from "@tiddlybase/plugin-adaptors-lib/src/wiki-info-config";
+import { resolveURL, getExtension } from "@tiddlybase/plugin-tiddlybase-utils/src/url";
+import { getWikiInfoConfigValue } from "@tiddlybase/plugin-tiddlybase-utils/src/wiki-info-config";
 import { EXTENSION_TO_OBJECT_TYPE, LINK_ICONS } from "./constants";
 
 const ENABLE_ICONS = getWikiInfoConfigValue('display-link-icons') === true;

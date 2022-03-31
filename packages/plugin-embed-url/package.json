@@ -12,7 +12,7 @@
     "test": "cross-env NODE_OPTIONS=--loader=ts-node/esm jasmine --config=jasmine.json"
   },
   "devDependencies": {
-    "@tiddlybase/plugin-adaptors-lib": "^0.0.0",
+    "@tiddlybase/plugin-tiddlybase-utils": "^0.0.0",
     "@tiddlybase/rpc": "^0.0.0",
     "@tiddlybase/tw5-types": "^0.0.0",
     "@tiddlybase/webpack-config": "^0.0.0",

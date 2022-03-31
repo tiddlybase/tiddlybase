@@ -1,5 +1,5 @@
 // use full package path so the import is externalized
-import { getWikiInfoConfigValue } from "@tiddlybase/plugin-adaptors-lib/src/wiki-info-config";
+import { getWikiInfoConfigValue } from "@tiddlybase/plugin-tiddlybase-utils/src/wiki-info-config";
 
 const FILES_PREFIX = 'files';
 const STORAGE_PREFIX_CONFIG_KEY = 'default-storage-prefix';

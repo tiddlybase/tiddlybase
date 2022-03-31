@@ -11,6 +11,7 @@
     "build:debug": "NODE_OPTIONS=--inspect-brk TIDDLYWIKI_PLUGIN_PATH=../../dist/plugins tiddlywiki . --output ../../dist --build wiki --verbose"
   },
   "dependencies": {
+    "@tiddlybase/plugin-tiddlybase-utils": "^0.0.0",
     "@tiddlybase/plugin-embed-url": "^0.0.0"
   },
   "devDependencies": {

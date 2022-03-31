@@ -77,7 +77,7 @@ const getBanner = (sourceFile, outputDir, outputFilename) => {
 };
 
 const getPluginTiddlerTitle = importName => {
-  // eg: @tiddlybase/plugin-adaptors-lib/src/url
+  // eg: @tiddlybase/plugin-tiddlybase-utils/src/url
   const pluginName = getPluginName(importName)
   if (!pluginName) {
     return;

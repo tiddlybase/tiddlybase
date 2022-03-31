@@ -996,10 +996,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@tiddlybase/plugin-adaptors-lib@^0.0.0, @tiddlybase/plugin-adaptors-lib@workspace:packages/plugin-adaptors-lib":
+"@tiddlybase/plugin-embed-url@^0.0.0, @tiddlybase/plugin-embed-url@workspace:packages/plugin-embed-url":
   version: 0.0.0-use.local
-  resolution: "@tiddlybase/plugin-adaptors-lib@workspace:packages/plugin-adaptors-lib"
+  resolution: "@tiddlybase/plugin-embed-url@workspace:packages/plugin-embed-url"
   dependencies:
+    "@tiddlybase/plugin-tiddlybase-utils": ^0.0.0
     "@tiddlybase/rpc": ^0.0.0
     "@tiddlybase/tw5-types": ^0.0.0
     "@tiddlybase/webpack-config": ^0.0.0
@@ -1014,11 +1015,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@tiddlybase/plugin-embed-url@^0.0.0, @tiddlybase/plugin-embed-url@workspace:packages/plugin-embed-url":
+"@tiddlybase/plugin-tiddlybase-utils@^0.0.0, @tiddlybase/plugin-tiddlybase-utils@workspace:packages/plugin-tiddlybase-utils":
   version: 0.0.0-use.local
-  resolution: "@tiddlybase/plugin-embed-url@workspace:packages/plugin-embed-url"
+  resolution: "@tiddlybase/plugin-tiddlybase-utils@workspace:packages/plugin-tiddlybase-utils"
   dependencies:
-    "@tiddlybase/plugin-adaptors-lib": ^0.0.0
     "@tiddlybase/rpc": ^0.0.0
     "@tiddlybase/tw5-types": ^0.0.0
     "@tiddlybase/webpack-config": ^0.0.0

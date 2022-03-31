@@ -28,7 +28,7 @@
       "packages/rpc",
       "packages/tw5-types",
       "packages/plugin-embed-url",
-      "packages/plugin-adaptors-lib",
+      "packages/plugin-tiddlybase-utils",
       "packages/wiki-builder",
       "packages/functions"
     ]
