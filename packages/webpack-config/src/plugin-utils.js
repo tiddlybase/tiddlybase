@@ -5,6 +5,8 @@ const util = require('util');
 
 const PROJECT_ROOT = path.resolve(__dirname, '..', "..", "..");
 
+const EXTERNALIZED_PACKAGE_BLACKLIST = ["@tiddlybase/tw5-types"]
+
 const RE_TS_EXTENSION = /\.ts$/
 const RE_PACKAGE_NAME = new RegExp("^@tiddlybase/plugin-([^/]*)");
 
@@ -84,6 +86,9 @@ const getPluginTiddlerTitle = importName => {
   }
   const parts = importName.split("/");
   const packageName = parts.slice(0, 2).join("/");
+  if (EXTERNALIZED_PACKAGE_BLACKLIST.includes(packageName)) {
+    return;
+  }
   const packageSubPath = parts.slice(2).join("/");
   // we need to find the directory of the package
   const packageDir = packageNameToDir(packageName);

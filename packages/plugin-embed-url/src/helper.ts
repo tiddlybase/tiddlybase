@@ -69,7 +69,7 @@ const addSpecAttribute = (spec: EmbedSpec, attribute: EmbedAttribute): EmbedSpec
 
 const getIconForExtension = (extension: string): LinkIcon => (extension === 'pdf' ? 'pdf' : 'file')
 
-const generateHtml = (spec: EmbedSpec): RenderedEmbed => {
+export const generateHtml = (spec: EmbedSpec): RenderedEmbed => {
   // download links are always <a>
   if (spec.parsedAttributes.includes('download')) {
     let icon:LinkIcon|undefined = undefined;

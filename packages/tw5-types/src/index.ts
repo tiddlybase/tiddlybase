@@ -534,5 +534,7 @@ export interface TW {
 }
 
 declare global {
-  const $tw: TW;
+  var $tw: TW;
 }
+
+export var $tw = globalThis.$tw

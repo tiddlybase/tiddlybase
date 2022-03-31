@@ -1,3 +1,4 @@
+import { $tw } from "@tiddlybase/tw5-types";
 // use full package path so the import is externalized
 import { getWikiInfoConfigValue } from "@tiddlybase/plugin-tiddlybase-utils/src/wiki-info-config";
 
@@ -13,7 +14,11 @@ const isAbsoluteUrl = (url: string) => {
 export const getParentURL = () => $tw?.tiddlybase?.parentLocation?.href;
 
 export const getExtension = (url:string) => {
-  const parts = new URL(url, "http://www.example.com").pathname.split('.');
+  const pathName = new URL(url, "http://www.example.com").pathname;
+  if (pathName.indexOf('.') < 0) {
+    return undefined;
+  }
+  const parts = pathName.split('.');
   if (parts.length === 0) {
     // no extension
     return undefined;

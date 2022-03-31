@@ -1,4 +1,4 @@
-import { WikiInfoConfig } from "packages/tw5-types/src";
+import { $tw, WikiInfoConfig } from "@tiddlybase/tw5-types";
 
 const WIKI_INFO_CONFIG_TIDDLER = '$:/config/wikiInfoConfig';
 
