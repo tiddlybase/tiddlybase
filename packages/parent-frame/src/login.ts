@@ -2,21 +2,29 @@ import {GoogleAuthProvider, GithubAuthProvider, EmailAuthProvider, PhoneAuthProv
 import * as firebaseui from 'firebaseui';
 import { ui } from './init';
 
+export const toggleVisibleDOMSection = (selectedSectionId?:string) => {
+  // rehide all sections
+  [...(document.querySelectorAll('.section'))].forEach(section => {
+    (section as any).style.display = 'none';
+  });
+  // show newly selected section
+  if (selectedSectionId) {
+    (document.getElementById(selectedSectionId) as any).style.display = 'block';
+  }
+}
 
 function getUiConfig(startTW5: (user: User) => Promise<void>) {
+  console.log('running getUiConfig');
   return {
     callbacks: {
       // Called when the user has been successfully signed in.
       // Note: types in node_modules/firebaseui/dist/index.d.ts
       signInSuccessWithAuthResult: function (authResult: any, redirectUrl: string) {
+        console.log('running signInSuccessWithAuthResult callback');
         if (authResult.user) {
           handleSignedInUser(startTW5, authResult.user);
         }
-        if (authResult.additionalUserInfo) {
-          (document.getElementById('is-new-user') as any).textContent = authResult.additionalUserInfo.isNewUser
-            ? 'New User'
-            : 'Existing User';
-        }
+        console.log("authResult", authResult)
         // Do not redirect.
         return false;
       },
@@ -52,12 +60,12 @@ function getUiConfig(startTW5: (user: User) => Promise<void>) {
         provider: EmailAuthProvider.PROVIDER_ID,
         // Whether the display name should be displayed in Sign Up page.
         requireDisplayName: true,
-        signInMethod: getEmailSignInMethod(),
+        signInMethod: 'emailLink',
       },
       {
         provider: PhoneAuthProvider.PROVIDER_ID,
         recaptchaParameters: {
-          size: getRecaptchaMode(),
+          size: 'normal',
         },
       },
       /*{
@@ -81,13 +89,15 @@ function getUiConfig(startTW5: (user: User) => Promise<void>) {
  * @return {string} The URL of the FirebaseUI standalone widget.
  */
 function getWidgetUrl() {
-  return '/widget#recaptcha=' + getRecaptchaMode() + '&emailSignInMethod=' + getEmailSignInMethod();
+  console.log('running getWidgetUrl');
+  return '/widget#recaptcha=normal&emailSignInMethod=emailLink';
 }
 
 /**
  * Open a popup with the FirebaseUI widget.
  */
 export const signInWithPopup = function () {
+  console.log('running signInWithPopup');
   window.open(getWidgetUrl(), 'Sign In', 'width=985,height=735');
 };
 
@@ -96,9 +106,10 @@ export const signInWithPopup = function () {
  * @param {!firebase.User} user
  */
 export const handleSignedInUser = async function (startTW5: (user: User) => Promise<void>, user: User) {
+  console.log('running handleSignedInUser');
+  toggleVisibleDOMSection('user-signed-in');
 
-  (document.getElementById('user-signed-in') as any).style.display = 'block';
-  (document.getElementById('user-signed-out') as any).style.display = 'none';
+  /*
   (document.getElementById('name') as any).textContent = user.displayName;
   (document.getElementById('email') as any).textContent = user.email;
   (document.getElementById('phone') as any).textContent = user.phoneNumber;
@@ -116,6 +127,7 @@ export const handleSignedInUser = async function (startTW5: (user: User) => Prom
   } else {
     (document.getElementById('photo') as any).style.display = 'none';
   }
+  */
 
   // --- start tiddlywiki ---
   await startTW5(user);
@@ -125,9 +137,8 @@ export const handleSignedInUser = async function (startTW5: (user: User) => Prom
  * Displays the UI for a signed out user.
  */
 export const handleSignedOutUser = function (startTW5: (user: User) => Promise<void>) {
-  (document.getElementById('user-signed-in') as any).style.display = 'none';
-  (document.getElementById('user-signed-out') as any).style.display = 'block';
-  console.log("asdf");
+  console.log('running handleSignedOutUser');
+  toggleVisibleDOMSection('user-signed-out');
   ui.start('#firebaseui-container', getUiConfig(startTW5));
 };
 
@@ -135,6 +146,7 @@ export const handleSignedOutUser = function (startTW5: (user: User) => Promise<v
  * Deletes the user's account.
  */
 export const deleteAccount = function () {
+  console.log('running deleteAccount');
     getAuth()
     .currentUser?.delete()
     .catch(function (error:any) {
@@ -157,28 +169,7 @@ export const deleteAccount = function () {
  * Handles when the user changes the reCAPTCHA or email signInMethod config.
  */
 export function handleConfigChange(startTW5:(user: User) => Promise<void>) {
-  const newRecaptchaValue = (document.querySelector('input[name="recaptcha"]:checked') as any).value;
-  const newEmailSignInMethodValue = (document.querySelector('input[name="emailSignInMethod"]:checked') as any).value;
-  location.replace(
-    location.pathname + '#recaptcha=' + newRecaptchaValue + '&emailSignInMethod=' + newEmailSignInMethodValue,
-  );
-
-  // Reset the inline widget so the config changes are reflected.
+  console.log('running handleConfigChange');
   ui.reset();
   ui.start('#firebaseui-container', getUiConfig(startTW5));
-}
-
-function getRecaptchaMode() {
-  //const config = parseQueryString(location.hash);
-  //return config['recaptcha'] === 'invisible' ? 'invisible' : 'normal';
-  return 'normal';
-}
-
-/**
- * @return {string} The email signInMethod from the configuration.
- */
-function getEmailSignInMethod() {
-  // const config = parseQueryString(location.hash);
-  // return config['emailSignInMethod'] === 'password' ? 'password' : 'emailLink';
-  return 'emailLink';
 }
