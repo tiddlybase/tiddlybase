@@ -1,7 +1,7 @@
 import type { FirebaseError } from '@firebase/util';
-import { getAuth, User } from '@firebase/auth';
+import { User } from '@firebase/auth';
 import { makeRPC } from '@tiddlybase/rpc';
-import { firebaseApp, isLocalEnv, ui } from './init';
+import { firebaseAuth, isLocalEnv, ui } from './init';
 import { handleSignedInUser, handleSignedOutUser, toggleVisibleDOMSection } from './login';
 import { createParentApi, getDownloadURL } from './parent-api-impl';
 
@@ -28,14 +28,6 @@ const createWikiIframe = async () => {
   iframe.name = JSON.stringify(window.location);
   iframe.frameBorder="0"
   iframe.allowFullscreen=true
-  /*
-  iframe.width = String(
-    window.innerWidth ?? window.document?.documentElement?.clientWidth ?? window.document?.body?.clientWidth,
-  );
-  iframe.height = String(
-    window.innerHeight ?? window.document?.documentElement?.clientHeight ?? window.document?.body?.clientHeight,
-  );
-  */
   parentElement?.appendChild(iframe);
   return iframe;
 };
@@ -63,7 +55,7 @@ const initApp = async () => {
 
   // Listen to change in auth state so it displays the correct UI for when
   // the user is signed in or not.
-  getAuth(firebaseApp).onAuthStateChanged(function (user: User | null) {
+  firebaseAuth.onAuthStateChanged(function (user: User | null) {
     console.log('running onAuthStateChanged callback');
     user ? handleSignedInUser(startTW5, user!) : handleSignedOutUser(startTW5);
   });
@@ -71,24 +63,6 @@ const initApp = async () => {
 
   // Disable auto-sign in.
   ui.disableAutoSignIn();
-  // document.getElementById('sign-in-with-redirect').addEventListener( 'click', signInWithRedirect);
-  /*
-  document.getElementById('sign-in-with-popup')?.addEventListener('click', signInWithPopup);
-  document.getElementById('sign-out')?.addEventListener('click', () => getAuth(firebaseApp).signOut());
-  document.getElementById('delete-account')?.addEventListener('click', () => deleteAccount());
-  document.getElementById('recaptcha-normal')?.addEventListener('change', () => handleConfigChange(startTW5));
-  document.getElementById('recaptcha-invisible')?.addEventListener('change', () => handleConfigChange(startTW5));
-  // Check the selected reCAPTCHA mode.
-  //(document.querySelector('input[name="recaptcha"][value="' + getRecaptchaMode() + '"]') as any).checked = true;
-  document
-    .getElementById('email-signInMethod-password')
-    ?.addEventListener('change', () => handleConfigChange(startTW5));
-  document
-    .getElementById('email-signInMethod-emailLink')
-    ?.addEventListener('change', () => handleConfigChange(startTW5));
-  // Check the selected email signInMethod mode.
-  //(document.querySelector('input[name="emailSignInMethod"][value="' + getEmailSignInMethod() + '"]') as any).checked = true;
-  */
 };
 
 window.addEventListener('load', initApp);

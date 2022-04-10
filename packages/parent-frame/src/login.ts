@@ -86,50 +86,12 @@ function getUiConfig(startTW5: (user: User) => Promise<void>) {
 }
 
 /**
- * @return {string} The URL of the FirebaseUI standalone widget.
- */
-function getWidgetUrl() {
-  console.log('running getWidgetUrl');
-  return '/widget#recaptcha=normal&emailSignInMethod=emailLink';
-}
-
-/**
- * Open a popup with the FirebaseUI widget.
- */
-export const signInWithPopup = function () {
-  console.log('running signInWithPopup');
-  window.open(getWidgetUrl(), 'Sign In', 'width=985,height=735');
-};
-
-/**
  * Displays the UI for a signed in user.
  * @param {!firebase.User} user
  */
 export const handleSignedInUser = async function (startTW5: (user: User) => Promise<void>, user: User) {
   console.log('running handleSignedInUser');
   toggleVisibleDOMSection('user-signed-in');
-
-  /*
-  (document.getElementById('name') as any).textContent = user.displayName;
-  (document.getElementById('email') as any).textContent = user.email;
-  (document.getElementById('phone') as any).textContent = user.phoneNumber;
-  let photoURL;
-  if (user.photoURL) {
-    photoURL = user.photoURL;
-    // Append size to the photo URL for Google hosted images to avoid requesting
-    // the image with its original resolution (using more bandwidth than needed)
-    // when it is going to be presented in smaller size.
-    if (photoURL.indexOf('googleusercontent.com') != -1 || photoURL.indexOf('ggpht.com') != -1) {
-      photoURL = photoURL + '?sz=' + document.getElementById('photo')?.clientHeight;
-    }
-    (document.getElementById('photo') as any).src = photoURL;
-    (document.getElementById('photo') as any).style.display = 'block';
-  } else {
-    (document.getElementById('photo') as any).style.display = 'none';
-  }
-  */
-
-  // --- start tiddlywiki ---
   await startTW5(user);
 };
 
@@ -145,7 +107,7 @@ export const handleSignedOutUser = function (startTW5: (user: User) => Promise<v
 /**
  * Deletes the user's account.
  */
-export const deleteAccount = function () {
+export const deleteAccount = async function () {
   console.log('running deleteAccount');
     getAuth()
     .currentUser?.delete()
@@ -164,12 +126,3 @@ export const deleteAccount = function () {
       }
     });
 };
-
-/**
- * Handles when the user changes the reCAPTCHA or email signInMethod config.
- */
-export function handleConfigChange(startTW5:(user: User) => Promise<void>) {
-  console.log('running handleConfigChange');
-  ui.reset();
-  ui.start('#firebaseui-container', getUiConfig(startTW5));
-}

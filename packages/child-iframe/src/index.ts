@@ -10,7 +10,8 @@ const main = async () => {
   def('testParentChild', async (message:string) => {
     console.log(message);
   });
-  const {isLocalEnv} = await parentClient('childIframeReady', []);
+  const {user, isLocalEnv} = await parentClient('childIframeReady', []);
+  console.log('child iframe recevied user info', user);
   $tw.tiddlybase = $tw.tiddlybase ?? {};
   $tw.tiddlybase.parentClient = parentClient;
   $tw.tiddlybase.isLocalEnv = isLocalEnv;

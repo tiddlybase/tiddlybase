@@ -3,8 +3,10 @@ import { apiDefiner, ParentAPI } from "@tiddlybase/rpc";
 import type { CallableFunctionType} from "@tiddlybase/functions/src/apis";
 import {getDownloadURL as _getDownloadURL, getStorage, ref} from '@firebase/storage';
 import { getFunctions, httpsCallable, HttpsCallable, connectFunctionsEmulator } from "@firebase/functions";
-import { firebaseApp, isLocalEnv } from './init';
-import {User} from '@firebase/auth'
+import { firebaseApp, firebaseAuth, isLocalEnv } from './init';
+import type {User} from '@firebase/auth'
+import { TiddlyBaseUser, USER_FIELDS } from "packages/rpc/src/parent-api";
+import { deleteAccount } from "./login";
 
 const storage = getStorage(firebaseApp);
 const functions = getFunctions(firebaseApp, 'europe-west3');
@@ -29,17 +31,25 @@ const getStub = <P extends CallableFunctionType>(functionName:string):P => {
   return invoker as P;
 }
 
+const objFilter = <K extends keyof any=string,V=any>(fn: (k: K, v: V) => boolean, input: Record<K, V>): Record<K, V> =>
+  Object.fromEntries(Object.entries(input).filter(([k, v]) => fn(k as K, v as V))) as Record<K, V>;
+
+
+const convertUser = (firebaseUser:User):TiddlyBaseUser => objFilter<keyof TiddlyBaseUser, any>((k) => USER_FIELDS.includes(k), firebaseUser) as TiddlyBaseUser;
+
 export const createParentApi = (rpc:MiniIframeRPC, user:User, iframe:Window) => {
   // const childClient = makeAPIClient<ChildAPI>(rpc, iframe);
   const def = apiDefiner<ParentAPI>(rpc);
   const exposeCallable = (fn:Parameters<typeof def>[0]) => def(fn, getStub(fn))
   def('childIframeReady', async () => {
     return {
-      userName: user.displayName!,
+      user: convertUser(user),
       isLocalEnv
     }
   });
   def('getDownloadURL', getDownloadURL);
+  def('authSignOut', firebaseAuth.signOut.bind(firebaseAuth));
+  def('authDeleteAccount', deleteAccount);
   exposeCallable('addNumbers');
   exposeCallable('notifyAdmin');
 }
