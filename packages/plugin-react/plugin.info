@@ -1,0 +1,6 @@
+{
+	"title": "$:/plugins/tiddlybase/react",
+	"name": "React",
+	"description": "React libs",
+	"list": "react.js react-dom.js"
+}

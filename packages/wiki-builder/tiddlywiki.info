@@ -8,9 +8,10 @@
         "display-link-icons": true
     },
     "plugins": [
+        "tiddlywiki/codemirror",
         "tiddlybase/embed-url",
         "tiddlybase/tiddlybase-utils",
-        "tiddlywiki/codemirror"
+        "tiddlybase/react"
     ],
     "themes": [
     ],

@@ -29,6 +29,7 @@
       "packages/tw5-types",
       "packages/plugin-embed-url",
       "packages/plugin-tiddlybase-utils",
+      "packages/plugin-react",
       "packages/wiki-builder",
       "packages/functions"
     ]
