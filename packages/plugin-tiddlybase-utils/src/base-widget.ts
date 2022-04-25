@@ -18,7 +18,7 @@ export class BaseWidget<PropType> extends WidgetClass implements Widget {
     super(parseTreeNode, options);
   }
 
-  getDOMNode(parent?: HTMLElement, nextSibling?: HTMLElement):HTMLElement {
+  getDOMNode(): HTMLElement {
     // Override this
     const div = this.document.createElement('div')
     div.innerHTML = 'please override BaseWidget.getDOMNode()'
@@ -30,7 +30,7 @@ export class BaseWidget<PropType> extends WidgetClass implements Widget {
     this.parentDomNode = parent;
     this.computeAttributes();
     this.execute();
-    const domNode = this.getDOMNode(parent, nextSibling)
+    const domNode = this.getDOMNode()
     // Insert element
     parent.insertBefore(domNode, nextSibling);
     this.domNodes.push(domNode);
@@ -40,22 +40,13 @@ export class BaseWidget<PropType> extends WidgetClass implements Widget {
     return super.getAttribute(String(attribute));
   }
 
-  execute() {
-    // NOTE: override execute if some attributes aren't string and must
-    // be converted / cast.
-    this.props = this.attributes as unknown as PropType;
-  };
-
-
   refresh() {
-    var changedAttributes = this.computeAttributes() as unknown as Partial<Record<keyof PropType, boolean>>;
     // default is to refresh if any attribute changed
-    if (Object.keys(changedAttributes).length > 0) {
+    if (Object.keys(this.computeAttributes()).length > 0) {
       this.refreshSelf();
       return true;
     } else {
       return false;
     }
   };
-
 }

@@ -1784,7 +1784,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@tiddlybase/plugin-mdx@workspace:packages/plugin-mdx":
+"@tiddlybase/plugin-mdx@^0.0.0, @tiddlybase/plugin-mdx@workspace:packages/plugin-mdx":
   version: 0.0.0-use.local
   resolution: "@tiddlybase/plugin-mdx@workspace:packages/plugin-mdx"
   dependencies:
@@ -1825,6 +1825,17 @@ __metadata:
 "@tiddlybase/plugin-react@^0.0.0, @tiddlybase/plugin-react@workspace:packages/plugin-react":
   version: 0.0.0-use.local
   resolution: "@tiddlybase/plugin-react@workspace:packages/plugin-react"
+  dependencies:
+    "@tiddlybase/tw5-types": ^0.0.0
+    "@tiddlybase/webpack-config": ^0.0.0
+    cross-env: ^7.0.3
+    jest: ^27.5.1
+    react: ^18.0.0
+    react-dom: ^18.0.0
+    ts-jest: ^27.1.4
+    typescript: ^4.5.5
+    webpack: ^5.68.0
+    webpack-cli: ^4.9.2
   languageName: unknown
   linkType: soft
 
@@ -1888,6 +1899,7 @@ __metadata:
   resolution: "@tiddlybase/wiki-builder@workspace:packages/wiki-builder"
   dependencies:
     "@tiddlybase/plugin-embed-url": ^0.0.0
+    "@tiddlybase/plugin-mdx": ^0.0.0
     "@tiddlybase/plugin-react": ^0.0.0
     "@tiddlybase/plugin-tiddlybase-utils": ^0.0.0
     tiddlywiki: ^5.2.2
@@ -11058,6 +11070,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-dom@npm:^18.0.0":
+  version: 18.0.0
+  resolution: "react-dom@npm:18.0.0"
+  dependencies:
+    loose-envify: ^1.1.0
+    scheduler: ^0.21.0
+  peerDependencies:
+    react: ^18.0.0
+  checksum: dd0ba9f2f31dd728076c892a95b2f5a8dfe79136431b0289afb46eec39d0ca6b6f0f40a60fd8aa6ef702c98ce7c26100d3d4dbc35c7c9e87429cd04f84cb58bd
+  languageName: node
+  linkType: hard
+
 "react-is@npm:^16.12.0 || ^17.0.0 || ^18.0.0, react-is@npm:^18.0.0":
   version: 18.0.0
   resolution: "react-is@npm:18.0.0"
@@ -11094,6 +11118,15 @@ __metadata:
   peerDependencies:
     react: ^18.0.0
   checksum: c0e5250fa2e4c3650e247b986c262631bec68f18c06817269ab7a4e2cffa5a152bb58ce0fe4182ffa8c333e6c2a8d763ac92e0928e5f6914a7aa188c2de1943a
+  languageName: node
+  linkType: hard
+
+"react@npm:^18.0.0":
+  version: 18.0.0
+  resolution: "react@npm:18.0.0"
+  dependencies:
+    loose-envify: ^1.1.0
+  checksum: 293020b96536b3c7113ee57ca5c990a3f25649d1751b1c7a3aabd16dff0691fe9f1eed1206616d0906d05933536052037340a0c8d0941ff870b0eb469a2f975b
   languageName: node
   linkType: hard
 

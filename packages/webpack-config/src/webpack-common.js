@@ -120,6 +120,9 @@ const getTW5PluginConfig = (options) => {
         // make firebase and firebase-ui external
         // firebase: 'global firebase',
         // firebaseui: 'global firebaseui',
+        // defined in plugin-react package
+        react: 'commonjs $:/plugins/tiddlybase/react/react.js',
+        'react-dom': 'commonjs $:/plugins/tiddlybase/react/react-dom.js'
       },
       function ({ context, request }, callback) {
         if (request.startsWith('$:/')) {
