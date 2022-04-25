@@ -11,7 +11,8 @@
         "tiddlywiki/codemirror",
         "tiddlybase/embed-url",
         "tiddlybase/tiddlybase-utils",
-        "tiddlybase/react"
+        "tiddlybase/react",
+        "tiddlybase/mdx"
     ],
     "themes": [
     ],

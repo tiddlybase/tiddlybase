@@ -12,8 +12,9 @@
   },
   "dependencies": {
     "@tiddlybase/plugin-embed-url": "^0.0.0",
+    "@tiddlybase/plugin-react": "^0.0.0",
     "@tiddlybase/plugin-tiddlybase-utils": "^0.0.0",
-    "@tiddlybase/plugin-react": "^0.0.0"
+    "@tiddlybase/plugin-mdx": "^0.0.0"
   },
   "devDependencies": {
     "tiddlywiki": "^5.2.2"

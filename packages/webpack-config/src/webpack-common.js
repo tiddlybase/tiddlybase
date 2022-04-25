@@ -48,7 +48,7 @@ const getBaseConfig = ({
   resolve: {
     modules: [MODULES_DIR],
     extensions: ['.json', '.js', '.tsx', '.ts'],
-    plugins: [ new TsconfigPathsPlugin() ]
+    plugins: [ new TsconfigPathsPlugin({configFile: tsConfig}) ]
   },
   plugins: [],
 });
