@@ -21,6 +21,7 @@
   },
   "workspaces": {
     "packages": [
+      "packages/browser-tests",
       "packages/parent-frame",
       "packages/child-iframe",
       "packages/webpack-config",

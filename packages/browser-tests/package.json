@@ -1,0 +1,22 @@
+{
+  "name": "@tiddlybase/browser-tests",
+  "description": "In-browser trusted code running outside the sandbox",
+  "version": "0.0.0",
+  "private": true,
+  "author": "Peter Neumark",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "yarn workspace @tiddlybase/root run move_sourcemaps && TIDDLYWIKI_PLUGIN_PATH=../../dist/plugins tiddlywiki . --output ../../dist --build wiki --verbose",
+    "build:dev": "yarn run build",
+    "build:debug": "NODE_OPTIONS=--inspect-brk TIDDLYWIKI_PLUGIN_PATH=../../dist/plugins tiddlywiki . --output ../../dist --build wiki --verbose"
+  },
+  "dependencies": {
+    "@tiddlybase/plugin-embed-url": "^0.0.0",
+    "@tiddlybase/plugin-mdx": "^0.0.0",
+    "@tiddlybase/plugin-react": "^0.0.0",
+    "@tiddlybase/plugin-tiddlybase-utils": "^0.0.0"
+  },
+  "devDependencies": {
+    "tiddlywiki": "^5.2.2"
+  }
+}

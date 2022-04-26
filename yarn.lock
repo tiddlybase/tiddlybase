@@ -1699,6 +1699,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tiddlybase/browser-tests@workspace:packages/browser-tests":
+  version: 0.0.0-use.local
+  resolution: "@tiddlybase/browser-tests@workspace:packages/browser-tests"
+  dependencies:
+    "@tiddlybase/plugin-embed-url": ^0.0.0
+    "@tiddlybase/plugin-mdx": ^0.0.0
+    "@tiddlybase/plugin-react": ^0.0.0
+    "@tiddlybase/plugin-tiddlybase-utils": ^0.0.0
+    tiddlywiki: ^5.2.2
+  languageName: unknown
+  linkType: soft
+
 "@tiddlybase/child-iframe@workspace:packages/child-iframe":
   version: 0.0.0-use.local
   resolution: "@tiddlybase/child-iframe@workspace:packages/child-iframe"

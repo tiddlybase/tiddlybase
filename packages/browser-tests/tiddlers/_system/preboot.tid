@@ -1,0 +1,41 @@
+title: $:/preboot
+type: text/vnd.tiddlywiki
+tags: $:/tags/RawMarkup
+
+<script>
+(function() {
+const inSandboxedIframe = window !== window.parent
+window.$tw = {
+    boot: {
+        suppressBoot: inSandboxedIframe
+    },
+    tiddlybase: {
+      inSandboxedIframe,
+      parentLocation: inSandboxedIframe ? JSON.parse(window.name) : undefined
+    }
+};
+
+const loadScript = (src) => {
+  const elem = document.createElement("script");
+  const elemAttr = { async: "", src };
+  Object.entries(elemAttr).forEach(([key, value]) =>
+    elem.setAttribute(key, value)
+  );
+  const firstScript = document.getElementsByTagName("script")[0];
+  const parent =
+    firstScript && firstScript.parentNode ? firstScript.parentNode : document.body;
+  const ret = new Promise((resolve) => {
+    elem.onload = (ev) => resolve(ev);
+  });
+  parent.insertBefore(elem, firstScript);
+  return ret;
+};
+
+if (inSandboxedIframe) {
+  const scriptURL = `${$tw.tiddlybase.parentLocation.protocol}//${$tw.tiddlybase.parentLocation.hostname}${$tw.tiddlybase.parentLocation.port ? `:${$tw.tiddlybase.parentLocation.port}` : ''}${$tw.tiddlybase.parentLocation.pathname}child-frame.js`;
+  console.log(`loading script ${scriptURL}`);
+  loadScript(scriptURL);
+}
+
+})()
+</script>
