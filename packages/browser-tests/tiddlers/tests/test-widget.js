@@ -79,6 +79,12 @@ describe("Widget module", function() {
 		expect(wrapper.children[1].children[2].sequenceNumber).toBe(6);
 	});
 
+    if ($tw.browser) {
+      it("should fail", function() {
+        expect(1).toEqual(2);
+      });
+    }
+
 	it("should deal with transclude widgets and indirect attributes", function() {
 		var wiki = new $tw.Wiki();
 		// Add a tiddler

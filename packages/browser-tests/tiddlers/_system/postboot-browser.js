@@ -18,7 +18,7 @@ module-type: startup
 
   const reporter = {
       jasmineDone(...args) {
-        console.log("jasmine finished", args);
+        window?.onJasmineDone(...args);
       }
   };
 
