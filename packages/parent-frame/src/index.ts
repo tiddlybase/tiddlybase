@@ -1,7 +1,7 @@
 import type { FirebaseError } from '@firebase/util';
 import { User } from '@firebase/auth';
 import { makeRPC } from '@tiddlybase/rpc';
-import { firebaseAuth, isLocalEnv, ui } from './init';
+import { firebaseAuth, isLocalEnv, StartTW5, ui } from './init';
 import { handleSignedInUser, handleSignedOutUser, toggleVisibleDOMSection } from './login';
 import { createParentApi, getDownloadURL } from './parent-api-impl';
 
@@ -18,6 +18,7 @@ const createWikiIframe = async () => {
     if (err?.code === 'storage/unauthorized') {
       toggleVisibleDOMSection('user-unauthorized');
     }
+    return;
   }
   const parentElement = document.getElementById('wiki-frame-parent');
   const iframe = document.createElement('iframe');
@@ -40,17 +41,22 @@ const initApp = async () => {
 
   let tw5Started = false;
 
-  const startTW5 = async (user: User) => {
+  const startTW5:StartTW5 = async (user: User) => {
     if (tw5Started) {
       console.log("tw5 already started, not starting again")
       return;
     }
+    // just in case, remove any previous wiki iframes
     console.log('running startTW5');
-    const rpc = makeRPC();
     const iframe = await createWikiIframe();
-    createParentApi(rpc, user, iframe.contentWindow!);
-    console.log("child iframe created");
-    tw5Started = true;
+    if (iframe) {
+      const rpc = makeRPC();
+      createParentApi(rpc, user, iframe.contentWindow!);
+      console.log("child iframe created");
+      tw5Started = true;
+    } else {
+      console.log("child iframe could not be created");
+    }
   };
 
   // Listen to change in auth state so it displays the correct UI for when

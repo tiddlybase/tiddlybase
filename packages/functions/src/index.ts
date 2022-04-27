@@ -4,10 +4,13 @@ import * as admin from 'firebase-admin';
 import { AddNumbers, CallableFunctionHandler, NotifyAdmin } from './apis';
 import { assertAuthenticated } from './utils';
 import { sendEmail } from './mailer';
+import { makeOnSignup } from './on-signup';
+import { REGION } from './constants';
+
+export const app = admin.initializeApp();
 
 // based on: https://github.com/firebase/quickstart-js/blob/master/functions/functions/index.js
 
-admin.initializeApp();
 
 const addNumbers:CallableFunctionHandler<AddNumbers> = async (data, context) => {
 
@@ -39,5 +42,6 @@ const notifyAdmin:CallableFunctionHandler<NotifyAdmin> = async ({subject, body},
     html: body});
 };
 
-exports.addNumbers = functions.region('europe-west3').https.onCall(addNumbers);
-exports.notifyAdmin = functions.region('europe-west3').https.onCall(notifyAdmin);
+exports.addNumbers = functions.region(REGION).https.onCall(addNumbers);
+exports.notifyAdmin = functions.region(REGION).https.onCall(notifyAdmin);
+exports.onSignup = makeOnSignup(app);
