@@ -40,12 +40,14 @@ export class TranscludeTiddler extends React.Component<TranscludeTiddlerParams> 
         document: this.context!.document,
       }
     );
+    this.context!.addExternalChild(this.transcludeWidget);
     this.transcludeWidget.render(this.el!);
     //this.$el.somePlugin();
     console.log("constructing transcluded tiddler widget");
   }
 
   componentWillUnmount() {
+    this.context!.removeExternalChild(this.transcludeWidget!);
     console.log("destructing transcluded tiddler widget");
   }
 

@@ -1,4 +1,4 @@
 import React from "react";
-import type { Widget } from '@tiddlybase/tw5-types';
+import { WidgetWithExternalChildren } from "./WidgetWithExternalChildren";
 
-export const TW5WidgetParentContext = React.createContext<Widget|undefined>(undefined);
+export const TW5WidgetParentContext = React.createContext<WidgetWithExternalChildren|null>(null);

@@ -38,14 +38,4 @@ export class BaseWidget<PropType> extends WidgetClass implements Widget {
   getPropAttribute(attribute:keyof PropType) {
     return super.getAttribute(String(attribute));
   }
-
-  refresh() {
-    // default is to refresh if any attribute changed
-    if (Object.keys(this.computeAttributes()).length > 0) {
-      this.refreshSelf();
-      return true;
-    } else {
-      return false;
-    }
-  };
 }

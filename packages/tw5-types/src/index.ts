@@ -190,6 +190,8 @@ export type ParseTree =
 // TODO, what's an event in Widget context?
 export type Event = any;
 
+export type ChangedTiddlers = Record<string, boolean>;
+
 // Widget documentation: https://tiddlywiki.com/dev/static/WidgetModules.html
 export interface Widget {
   parentDomNode: HTMLElement;
@@ -225,8 +227,8 @@ export interface Widget {
   makeChildWidgets(parseTreeNodes: ParseTree[]): void;
   nextSibling(): HTMLElement | null;
   previousSibling(): HTMLElement | null;
-  refresh(changedTiddlers: Record<string, boolean>): boolean;
-  refreshChildren(changedTiddlers: Tiddler[]): void;
+  refresh(changedTiddlers: ChangedTiddlers): boolean;
+  refreshChildren(changedTiddlers: ChangedTiddlers): void;
   refreshSelf(): void;
   removeChildDomNodes(): void;
   render(parent: HTMLElement, nextSibling?: HTMLElement): void;
@@ -420,52 +422,52 @@ export interface ImportFileInfo {
 // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/
 export type AddHookArguments =
   // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook_%20th-before-importing.tid
-  | ['th-before-importing.tid']
+  | ['th-before-importing']
 
   // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook_%20th-closing-tiddler.tid
-  | ['th-closing-tiddler.tid']
+  | ['th-closing-tiddler']
 
   // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook__th-deleting-tiddler.tid
-  | ['th-deleting-tiddler.tid']
+  | ['th-deleting-tiddler']
 
   // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook__th-editing-tiddler.tid
-  | ['th-editing-tiddler.tid']
+  | ['th-editing-tiddler']
 
   // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook__th-importing-file.tid
-  | ['th-importing-file.tid', /* importFunction*/ (info: ImportFileInfo) => boolean]
+  | ['th-importing-file', /* importFunction*/ (info: ImportFileInfo) => boolean]
 
   // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook__th-importing-tiddler.tid
-  | ['th-importing-tiddler.tid']
+  | ['th-importing-tiddler']
 
   // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook_th-make-tiddler-path.tid
-  | ['th-make-tiddler-path.tid']
+  | ['th-make-tiddler-path']
 
   // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook__th-navigating.tid
-  | ['th-navigating.tid']
+  | ['th-navigating']
 
   // https://tiddlywiki.com/dev/static/Hook%253A%2520th-opening-default-tiddlers-list.html
   | ['th-opening-default-tiddlers-list', /* getDefaultList */ (tiddlerTitles: string[]) => string[]]
 
   // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook_%20th-page-refreshed.tid
-  | ['th-page-refreshed.tid']
+  | ['th-page-refreshed']
 
   // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook_%20th-page-refreshing.tid
-  | ['th-page-refreshing.tid']
+  | ['th-page-refreshing']
 
   // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook__th-relinking-tiddler.tid
-  | ['th-relinking-tiddler.tid']
+  | ['th-relinking-tiddler']
 
   // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook__th-renaming-tiddler.tid
-  | ['th-renaming-tiddler.tid', /*newTiddlerTitle*/ string, /*oldTiddlerTitle*/ string]
+  | ['th-renaming-tiddler', /*newTiddlerTitle*/ string, /*oldTiddlerTitle*/ string]
 
   // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook__th-rendering-element.tid
-  | ['th-rendering-element.tid']
+  | ['th-rendering-element']
 
   // https://tiddlywiki.com/dev/static/Hook%253A%2520th-saving-tiddler.html
   | ['th-saving-tiddler']
 
   // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook__th-server-command-post-start.tid
-  | ['th-server-command-post-start.tid'];
+  | ['th-server-command-post-start'];
 
 export interface DomMakerOptions {
   document: Document;

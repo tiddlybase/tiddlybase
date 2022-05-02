@@ -4,6 +4,8 @@ import { MDXProps } from "./mdx-props";
 import { MDXLayout, MDXLayoutArgs } from "./components/MDXLayout";
 import { LogContext } from "./components/LogContext";
 import { TranscludeTiddler } from "./components/TranscludeTiddler";
+import type { Widget, ChangedTiddlers } from '@tiddlybase/tw5-types';
+import { WidgetWithExternalChildren } from "./components/WidgetWithExternalChildren";
 
 const components = {
   wrapper: MDXLayout,
@@ -11,7 +13,17 @@ const components = {
   TranscludeTiddler
 };
 
-class MDXWidget extends ReactBaseWidget<MDXProps> {
+class MDXWidget extends ReactBaseWidget<MDXProps> implements WidgetWithExternalChildren{
+
+  externalChildren = new Set<Widget>([]);
+
+  addExternalChild (child: Widget) {
+    this.externalChildren.add(child);
+  }
+
+  removeExternalChild (child: Widget) {
+    this.externalChildren.delete(child);
+  }
 
   getComponent() {
     const context = {
@@ -32,6 +44,11 @@ class MDXWidget extends ReactBaseWidget<MDXProps> {
       parent: this
     };
     return getComponent(compiledFn, importFn, components, contextValues, additionalProps);
+  }
+
+  refreshChildren(changedTiddlers: ChangedTiddlers): void {
+    super.refreshChildren(changedTiddlers);
+    this.externalChildren.forEach(child => child.refresh(changedTiddlers));
   }
 
 }
