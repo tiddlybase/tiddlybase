@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["./src/widget"],
+  "include": ["./src/widget/**/*"],
   "compilerOptions": {
       "noImplicitAny": false
   }

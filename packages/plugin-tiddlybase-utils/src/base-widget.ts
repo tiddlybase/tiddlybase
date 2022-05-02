@@ -3,7 +3,6 @@
 // https://webpack.js.org/configuration/resolve/#resolvefallback
 // https://github.com/basarat/typescript-book/blob/master/docs/project/external-modules.md
 
-import type { } from "@tiddlybase/tw5-types"
 import type { ParseTree, Widget, WidgetConstructor } from '@tiddlybase/tw5-types';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires

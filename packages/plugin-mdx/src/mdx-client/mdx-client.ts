@@ -21,23 +21,23 @@ export const unmount = (root: Root) => root.unmount();
 // replace async import expression with call to sync importFn()
 const fixImports = (body: string) => body.replace(/= await import\(/, "= importFn(");
 
-const wrap = (name: string, body: string) => `
-(function ${name}(jsxFns, importFn) {
+const wrap = (name: string, body: string, contextVars:string[]) => `
+(function ${name}(${['jsxFns', 'importFn'].concat(contextVars).join(', ')}) {
 ${fixImports(body)}
 });
 
 //# sourceURL=${name}.js
 `
 
-export const getComponent = (compiledJSX: any, importFn: any, components: any, additionalProps: any = {}) => {
-  const fn: Function = compiledJSX(ReactJSXRuntime, importFn).default;
+export const getComponent = (compiledJSX: any, importFn: any, components: any, contextValues: any[] = [], additionalProps: any = {}) => {
+  const fn: Function = compiledJSX(ReactJSXRuntime, importFn, ...contextValues).default;
   return fn({
     components,
     ...additionalProps
   }) as React.ReactChild;
 }
 
-export const compile = (name: string, mdx: string) => {
+export const compile = (name: string, mdx: string, contextKeys:string[]=[]) => {
   try {
     // trimStart() is needed because mdx doesn't tolerate leading newlines
     const compilerOutput = compileSync(mdx.trimStart(), {
@@ -49,7 +49,7 @@ export const compile = (name: string, mdx: string) => {
       jsxRuntime: 'automatic',
       jsxImportSource: 'react'
     });
-    const jsSource = wrap(name,String(compilerOutput.value))
+    const jsSource = wrap(name,String(compilerOutput.value), contextKeys)
     return eval(jsSource);
   } catch (e) {
     throw new Error((e as Error).message);

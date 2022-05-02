@@ -30,7 +30,7 @@ export interface Tiddler {
 export type HTTPMethod = 'GET' | 'PUT' | 'POST' | 'DELETE';
 
 export type Callback = (err: any, ...data: any[]) => void;
-export type TiddlerCallback = (tiddler:Tiddler, title:string) => void;
+export type TiddlerCallback = (tiddler: Tiddler, title: string) => void;
 
 export interface VariableInfo {
   text: string;
@@ -151,14 +151,14 @@ export type WidgetAddEventListenerArgs =
 
   // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-zip-render-file.html
   | ['tm-zip-render-file', NoArgEventListener]
-;
+  ;
 
 // based on: https://instil.co/blog/crazy-powerful-typescript-tuple-types/
 type ConvertEventListener<T> = T extends WidgetAddEventListenerArgs
   ? {
-      type: T[0];
-      handler: T[1];
-    }
+    type: T[0];
+    handler: T[1];
+  }
   : never;
 
 type ConvertEventListeners<T extends [...any[]]> = T extends [infer Head, ...infer Tail]
@@ -177,14 +177,15 @@ export type ParseTree =
   | { type: 'macro'; macro: any /*<TBD>*/ }
   // from: tiddlywiki/core/modules/parsers/textparser.js
   | {
-      type: 'codeblock';
-      attributes: {
-        code: { type: 'string'; value: string /*text*/ };
-        language: { type: 'string'; value: string /*type*/ };
-      };
-    }
+    type: 'codeblock';
+    attributes: {
+      code: { type: 'string'; value: string /*text*/ };
+      language: { type: 'string'; value: string /*type*/ };
+    };
+  }
   // from: tiddlywiki/core/modules/parsers/csvparser.js
-  | { type: 'scrollable'; children?: ParseTree[] };
+  | { type: 'scrollable'; children?: ParseTree[] }
+  | { type: string, attributes: any };
 
 // TODO, what's an event in Widget context?
 export type Event = any;
@@ -212,8 +213,8 @@ export interface Widget {
   findNextSiblingDomNode(startIndex: number): HTMLElement | null;
   getAttribute(name: string, defaultText?: string): any;
   getStateQualifier(name: string): string;
-  getVariable(name: string, options: any): any;
-  getVariableInfo(name: string, options: any): any;
+  getVariable(name: string, options?: any): any;
+  getVariableInfo(name: string, options?: any): any;
   hasAttribute(name: string): boolean;
   hasVariable(name: string, value?: any): boolean;
   initialise(parseTreeNode: ParseTree, options: any): void;
@@ -228,7 +229,7 @@ export interface Widget {
   refreshChildren(changedTiddlers: Tiddler[]): void;
   refreshSelf(): void;
   removeChildDomNodes(): void;
-  render(parent: HTMLElement, nextSibling: HTMLElement): void;
+  render(parent: HTMLElement, nextSibling?: HTMLElement): void;
   renderChildren(parent: HTMLElement, nextSibling: HTMLElement): void;
   resolveVariableParameters(formalParams: any, actualParams: any): any;
   setVariable(name: string, value: any, params: any, isMacroDefinition: boolean): void;
@@ -242,7 +243,7 @@ export interface WidgetConstructorOptions {
 }
 
 export interface WidgetConstructor {
-  new (parseTreeNode: ParseTree, options: WidgetConstructorOptions): Widget;
+  new(parseTreeNode: ParseTree, options: WidgetConstructorOptions): Widget;
 }
 
 export type TiddlerChangeType = 'deleted' | 'modified';
@@ -261,26 +262,26 @@ export interface Wiki {
   // addTiddlers: (tiddlers)  => void;
   // addToHistory: (title,fromPageRect,historyTitle)  => void;
   // addToStory: (title,fromTitle,storyTitle,options)  => void;
-  allShadowTitles: ()  => string[];
-  allTitles: ()  => string[];
+  allShadowTitles: () => string[];
+  allTitles: () => string[];
   // checkTiddlerText: (title,targetText,options)  => void;
-  clearCache: (title: string)  => void;
-  clearGlobalCache: ()  => void;
+  clearCache: (title: string) => void;
+  clearGlobalCache: () => void;
   // clearTiddlerEventQueue: ()  => void;
   // compileFilter: (filterString)  => void;
   // countTiddlers: (excludeTag)  => void;
   // defineShadowModules: ()  => void;
   // defineTiddlerModules: ()  => void;
   // deleteTextReference: (textRef,currTiddlerTitle)  => void;
-  deleteTiddler: (title:string)  => void;
+  deleteTiddler: (title: string) => void;
   // deserializeTiddlers: (type,text,srcFields,options)  => void;
   // dispatchEvent: (type /*, args */)  => void;
   // doesPluginInfoRequireReload: (pluginInfo)  => void;
   // doesPluginRequireReload: (title)  => void;
-  each: (callback:TiddlerCallback)  => void;
-  eachShadow: (callback:TiddlerCallback)  => void;
-  eachShadowPlusTiddlers: (callback:TiddlerCallback)  => void;
-  eachTiddlerPlusShadows: (callback:TiddlerCallback)  => void;
+  each: (callback: TiddlerCallback) => void;
+  eachShadow: (callback: TiddlerCallback) => void;
+  eachShadowPlusTiddlers: (callback: TiddlerCallback) => void;
+  eachTiddlerPlusShadows: (callback: TiddlerCallback) => void;
   // enqueueTiddlerEvent: (title,isDeleted)  => void;
   // extractLinks: (parseTreeRoot)  => void;
   // extractTiddlerDataItem: (titleOrTiddler,index,defaultText)  => void;
@@ -297,15 +298,15 @@ export interface Wiki {
   // getFilterRunPrefixes: ()  => void;
   // getGlobalCache: (cacheName,initializer)  => void;
   // getIndexer: (name)  => void;
-  getMissingTitles: ()  => string[];
+  getMissingTitles: () => string[];
   // getModificationFields: ()  => void;
-  getOrphanTitles: ()  => string[];
+  getOrphanTitles: () => string[];
   // getPluginInfo: (title)  => void;
-  getPluginTypes: ()  => string[];
-  getRelinkableTitles: ()  => string[];
+  getPluginTypes: () => string[];
+  getRelinkableTitles: () => string[];
   // getShadowSource: (title)  => void;
   // getSizeOfTiddlerEventQueue: ()  => void;
-  getSubTiddler: (title: string,subTiddlerTitle: string)  => string | undefined;
+  getSubTiddler: (title: string, subTiddlerTitle: string) => string | undefined;
   // getTagMap: ()  => void;
   // getTextReference: (textRef,defaultText,currTiddlerTitle)  => void;
   // getTextReferenceParserInfo: (title,field,index,options)  => void;
@@ -395,11 +396,11 @@ export interface Logger {
 }
 
 export interface LoggerConstructor {
-  new (loggerName?: string): Logger;
+  new(loggerName?: string): Logger;
 }
 
 export interface TiddlerConstructor {
-  new (...fields: Tiddler['fields'][]): Tiddler;
+  new(...fields: Tiddler['fields'][]): Tiddler;
 }
 
 export interface Translator {
@@ -516,16 +517,17 @@ export interface TW {
   hooks: {
     addHook: (...args: AddHookArguments) => void;
   };
-  browser? : {
+  browser?: {
     isIE: boolean,
     isFirefox: boolean
   };
-  platform? : {
+  platform?: {
     isMac: boolean,
     isWindows: boolean,
-    isLinux: boolean};
-  node? : unknown;
-  desktop? : {
+    isLinux: boolean
+  };
+  node?: unknown;
+  desktop?: {
     gui: unknown;
     utils: unknown;
   }

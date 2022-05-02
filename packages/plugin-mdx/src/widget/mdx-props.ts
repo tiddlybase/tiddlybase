@@ -1,3 +1,4 @@
 export interface MDXProps {
-  mdx: string
+  mdx: string,
+  name?: string
 }
