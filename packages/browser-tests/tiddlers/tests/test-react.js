@@ -54,6 +54,7 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
     describe("Widget lifecycle", function () {
 
         var widget = require("$:/core/modules/widgets/widget.js");
+        const MDX = $tw.modules.titles['$:/plugins/tiddlybase/mdx/mdx-widget.js'].exports.MDX;
 
         function createWidgetNode(parseTreeNode, wiki) {
             return new widget.widget(parseTreeNode, {
@@ -80,14 +81,30 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
         }
 
         it("Opening tiddlers with dispatchEvent should work", async function () {
-            console.log("asdf");
             const title = "TiddlerOne";
             $tw.wiki.addTiddlers([
                 { title, text: "the quick brown fox" }
             ]);
             await openTiddler(title);
-            getTiddlerDiv(title);
+            expect(getTiddlerDiv(title)).not.toBeNull();
             expect($tw.wiki.getTiddler('$:/HistoryList').fields['current-tiddler']).toEqual(title);
+        });
+
+        it("Assert widget lifecycle hooks called", async function () {
+            spyOn(widget.widget.prototype, 'refresh').and.callThrough();
+            // spyOn(MDX.prototype, 'refresh').and.callThrough();
+            $tw.wiki.addTiddlers([
+                { title: "B1", text: `<$MDX mdx="# h1" />` }
+            ]);
+            $tw.wiki.addTiddlers([
+                { title: "B2", text: "the quick brown fox" }
+            ]);
+            await openTiddler("B1");
+            console.log("asdf");
+            // spay on the prototype, from: https://stackoverflow.com/a/46317148
+            expect(widget.widget.prototype.refresh).toHaveBeenCalledTimes(4);
+            // TODO: react root should be unmounted here...
+            await openTiddler("B2");
         });
 
         /*

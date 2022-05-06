@@ -32,8 +32,11 @@ export class BaseWidget<PropType> extends WidgetClass implements Widget {
     const domNode = this.getDOMNode()
     // Insert element
     parent.insertBefore(domNode, nextSibling);
-    this.domNodes.push(domNode);
+    this.domNodes = [domNode];
+    this.onPostDomInsert();
   }
+
+  onPostDomInsert() {/* override if necessary */}
 
   getPropAttribute(attribute:keyof PropType) {
     return super.getAttribute(String(attribute));
