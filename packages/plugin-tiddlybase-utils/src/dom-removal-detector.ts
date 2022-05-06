@@ -23,6 +23,14 @@ const isOrphan = (testNode: Node, removedNode:Node): boolean => {
   return isOrphan(testNode.parentNode, removedNode);
 }
 
+export const monitorRemoval = (monitoredElement: HTMLElement, callback: MonitorCallback) => {
+  callbackMap.set(monitoredElement, callback);
+}
+
+export const unmonitorRemoval = (monitoredElement: HTMLElement) => {
+  callbackMap.delete(monitoredElement);
+}
+
 const maybeRemove = (removedNode: Node) => {
   // naive strategy: for each monitored element, see if the
   // removed node was a parent.
@@ -30,7 +38,7 @@ const maybeRemove = (removedNode: Node) => {
     if (isOrphan(monitoredElement, removedNode)) {
       callback(removedNode);
     }
-    callbackMap.delete(monitoredElement);
+    unmonitorRemoval(monitoredElement);
   })
 }
 
@@ -72,9 +80,3 @@ export const uninstall = () => {
     console.log("not installed, doing nothing");
   }
 }
-
-export const monitorRemoval = (monitoredElement: HTMLElement, callback: MonitorCallback) => {
-  callbackMap.set(monitoredElement, callback);
-}
-
-

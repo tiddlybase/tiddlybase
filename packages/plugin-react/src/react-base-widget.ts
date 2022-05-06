@@ -1,8 +1,9 @@
 import { BaseWidget } from "@tiddlybase/plugin-tiddlybase-utils/src/base-widget";
-import { monitorRemoval } from "@tiddlybase/plugin-tiddlybase-utils/src/dom-removal-detector";
+import { monitorRemoval, unmonitorRemoval } from "@tiddlybase/plugin-tiddlybase-utils/src/dom-removal-detector";
 import type { Root } from 'react-dom/client';
 import { createRoot } from 'react-dom/client';
 import { createElement } from 'react';
+import type { ChangedTiddlers } from "@tiddlybase/tw5-types";
 
 type Component = Parameters<Root["render"]>[0];
 
@@ -13,8 +14,9 @@ export class ReactBaseWidget<PropType> extends BaseWidget<PropType> {
   component?: Component;
 
   destroy() {
-    if (this.domNode && this.domNode.parentElement) {
-      this.domNode.parentElement.removeChild(this.domNode);
+    if (this.domNode) {
+      unmonitorRemoval(this.domNode)
+      this.domNode.parentElement?.removeChild(this.domNode);
     }
     this.domNode = undefined;
     if (this.root) {
@@ -22,6 +24,15 @@ export class ReactBaseWidget<PropType> extends BaseWidget<PropType> {
     }
     this.root = undefined;
   }
+
+  render(parent: HTMLElement, nextSibling: HTMLElement) {
+    // render() called by parent, we're getting a new DOM container
+    // destroy existing one.
+    this.destroy();
+    // calls back into BaseWidget.render() which ultimately calls initReact()
+    super.render(parent, nextSibling);
+  }
+
 
   getComponent():Component {
     return createElement('span', null, 'please override ReactBaseWidget.getComponent()');
@@ -36,6 +47,7 @@ export class ReactBaseWidget<PropType> extends BaseWidget<PropType> {
 
   reactRender() {
     if (this.component) {
+      console.log("invoking react render fn");
       this.root?.render(this.component);
     }
   }
@@ -61,5 +73,19 @@ export class ReactBaseWidget<PropType> extends BaseWidget<PropType> {
     super.removeChildDomNodes();
     this.destroy();
   }
+
+  refresh(changedTiddlers: ChangedTiddlers):boolean {
+    var changedAttributes = this.computeAttributes();
+    if (Object.keys(changedAttributes).length > 0) {
+        console.log("attributes changed, rerendering component")
+        // recreate component
+        this.component = this.getComponent();
+        // force rerender
+        this.reactRender();
+        return true;
+    }
+    // no changed, but push refresh down to children.
+    return this.refreshChildren(changedTiddlers);
+  };
 
 }

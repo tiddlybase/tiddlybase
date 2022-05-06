@@ -46,9 +46,9 @@ class MDXWidget extends ReactBaseWidget<MDXProps> implements WidgetWithExternalC
     return getComponent(compiledFn, importFn, components, contextValues, additionalProps);
   }
 
-  refreshChildren(changedTiddlers: ChangedTiddlers): void {
+  refreshChildren(changedTiddlers: ChangedTiddlers): boolean {
     super.refreshChildren(changedTiddlers);
-    this.externalChildren.forEach(child => child.refresh(changedTiddlers));
+    return [...this.externalChildren].map(child => child.refresh(changedTiddlers)).reduce((acc, ret) => acc || ret, false);
   }
 
 }

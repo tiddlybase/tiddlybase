@@ -228,7 +228,7 @@ export interface Widget {
   nextSibling(): HTMLElement | null;
   previousSibling(): HTMLElement | null;
   refresh(changedTiddlers: ChangedTiddlers): boolean;
-  refreshChildren(changedTiddlers: ChangedTiddlers): void;
+  refreshChildren(changedTiddlers: ChangedTiddlers): boolean;
   refreshSelf(): void;
   removeChildDomNodes(): void;
   render(parent: HTMLElement, nextSibling?: HTMLElement): void;
