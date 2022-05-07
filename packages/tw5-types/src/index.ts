@@ -485,7 +485,8 @@ export type WikiInfoConfig = Partial<{
   "default-storage-prefix": string,
   "default-file-location": string,
   // 'display-link-icons' - if true, display
-  "display-link-icons": boolean
+  "display-link-icons": boolean,
+  "parse-markdown-as-mdx": boolean,
 }>
 
 export interface TW {
