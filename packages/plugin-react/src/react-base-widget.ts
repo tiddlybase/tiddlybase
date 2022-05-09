@@ -28,7 +28,9 @@ export class ReactBaseWidget<PropType> extends BaseWidget<PropType> {
   render(parent: HTMLElement, nextSibling: HTMLElement) {
     // render() called by parent, we're getting a new DOM container
     // destroy existing one.
-    this.destroy();
+    if (this.domNode) {
+      this.destroy();
+    }
     // calls back into BaseWidget.render() which ultimately calls initReact()
     super.render(parent, nextSibling);
   }

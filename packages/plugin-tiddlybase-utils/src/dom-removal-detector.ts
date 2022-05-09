@@ -37,8 +37,8 @@ const maybeRemove = (removedNode: Node) => {
   callbackMap.forEach((callback: MonitorCallback, monitoredElement: HTMLElement) => {
     if (isOrphan(monitoredElement, removedNode)) {
       callback(removedNode);
+      unmonitorRemoval(monitoredElement);
     }
-    unmonitorRemoval(monitoredElement);
   })
 }
 

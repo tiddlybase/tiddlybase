@@ -1,5 +1,5 @@
 /*\
-title: test-react.js
+title: test-mdx.js
 type: application/javascript
 tags: [[$:/tags/test-spec]]
 
@@ -17,23 +17,7 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
         return
     }
 
-    const findNavigator = (parent = $tw.rootWidget) => {
-        const isNavigator = child => child?.parseTreeNode?.type === 'navigator'
-        for (let child of parent.children || []) {
-            if (isNavigator(child)) {
-                // console.log("found navigator as child", child);
-                return child;
-            }
-            // console.log("searching for navigator in children");
-            const descendent = findNavigator(child);
-            if (descendent) {
-                return descendent;
-            }
-
-        }
-    }
-
-    const tw5Navigator = findNavigator();
+    const tw5Navigator = require('$:/test-utils.js').findNavigator();
 
     const openTiddler = async navigateTo => {
         tw5Navigator.dispatchEvent({type: "tm-close-all-tiddlers"});
@@ -53,8 +37,7 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
 
     describe("Widget lifecycle", function () {
 
-        var widget = require("$:/core/modules/widgets/widget.js");
-        const MDX = $tw.modules.titles['$:/plugins/tiddlybase/mdx/mdx-widget.js'].exports.MDX;
+        const MDX = require('$:/plugins/tiddlybase/mdx/mdx-widget.js').MDX;
 
         function createWidgetNode(parseTreeNode, wiki) {
             return new widget.widget(parseTreeNode, {
@@ -91,20 +74,53 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
         });
 
         it("Assert widget lifecycle hooks called", async function () {
-            spyOn(widget.widget.prototype, 'refresh').and.callThrough();
-            // spyOn(MDX.prototype, 'refresh').and.callThrough();
+            console.log("asdf");
+
+            const initSpy = (obj, methodName) => {
+                let waitingResolves = [];
+                const spy = spyOn(obj, methodName).and.callFake(function (...args) {
+                    let p;
+                    console.log(`[spy:${methodName}] invoked function, waitingResolves`, waitingResolves)
+                    for (p of waitingResolves) {
+                        console.log("invoking resolver", p)
+                        p(args);
+                    }
+                    console.log(`[spy:${methodName}] calling original function ${methodName}`)
+                    return spy.and.originalFn.apply(this, args);
+                });
+                const waitFor = (label) => new Promise((resolve, reject) => {
+                    waitingResolves.push(() => resolve(label))
+                    console.log(`[waitFor:${methodName}] registering new wait for promise ${label}`, waitingResolves);
+                    sleep(1000).then(() => reject(new Error(`timeout waiting ${label}`)));
+                });
+                return {spy, waitFor}
+            }
+            initSpy(MDX.prototype, 'initReact');
+            const {waitFor: waitForDestroy} = initSpy(MDX.prototype, 'destroy');
+            const assertCalls = (initCalls, destroyCalls) => {
+                expect(MDX.prototype.initReact).toHaveBeenCalledTimes(initCalls);
+                expect(MDX.prototype.destroy).toHaveBeenCalledTimes(destroyCalls);
+            }
             $tw.wiki.addTiddlers([
                 { title: "B1", text: `<$MDX mdx="# h1" />` }
             ]);
             $tw.wiki.addTiddlers([
-                { title: "B2", text: "the quick brown fox" }
+                { title: "B2", text: "{{B1}}" }
             ]);
+
+            assertCalls(0,0);
+
+            let nextDestroyCall = waitForDestroy('destroy B1');
             await openTiddler("B1");
-            console.log("asdf");
-            // spay on the prototype, from: https://stackoverflow.com/a/46317148
-            expect(widget.widget.prototype.refresh).toHaveBeenCalledTimes(4);
-            // TODO: react root should be unmounted here...
+            assertCalls(1,0);
             await openTiddler("B2");
+            expect(await nextDestroyCall).toEqual('destroy B1');
+
+            nextDestroyCall = waitForDestroy('destroy B2');
+            assertCalls(2,1);
+            await openTiddler("Start");
+            expect(await nextDestroyCall).toEqual('destroy B2');
+            assertCalls(2,2);
         });
 
         /*
