@@ -6,15 +6,8 @@
   "author": "Peter Neumark",
   "license": "Apache-2.0",
   "scripts": {
-    "build": "./build.sh",
-    "build:dev": "./build.sh",
-    "test": "./test.sh"
-  },
-  "dependencies": {
-    "@tiddlybase/plugin-embed-url": "^0.0.0",
-    "@tiddlybase/plugin-mdx": "^0.0.0",
-    "@tiddlybase/plugin-react": "^0.0.0",
-    "@tiddlybase/plugin-tiddlybase-utils": "^0.0.0"
+    "test:build": "./build.sh",
+    "test:run": "yarn node launcher.js"
   },
   "devDependencies": {
     "puppeteer": "^13.6.0",

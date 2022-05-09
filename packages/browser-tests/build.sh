@@ -1,5 +1,10 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash -x
 set -e
 
+TWDIR="${1:-.}"
+OUT="${2:-./test.html}"
+
+mkdir -p "$(dirname "$OUT")"
+
 yarn workspace @tiddlybase/root run move_sourcemaps
-TIDDLYWIKI_PLUGIN_PATH="../../dist/plugins" yarn run tiddlywiki . --verbose --output . --rendertiddler $:/core/save/all test.html text/plain
+TIDDLYWIKI_PLUGIN_PATH="../../dist/plugins" yarn run tiddlywiki "$TWDIR" --verbose --output "$(dirname "$OUT")" --rendertiddler $:/core/save/all "$(basename "$OUT")" text/plain

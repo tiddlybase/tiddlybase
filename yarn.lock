@@ -1703,10 +1703,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@tiddlybase/browser-tests@workspace:packages/browser-tests"
   dependencies:
-    "@tiddlybase/plugin-embed-url": ^0.0.0
-    "@tiddlybase/plugin-mdx": ^0.0.0
-    "@tiddlybase/plugin-react": ^0.0.0
-    "@tiddlybase/plugin-tiddlybase-utils": ^0.0.0
     puppeteer: ^13.6.0
     tiddlywiki: ^5.2.2
   languageName: unknown

@@ -15,7 +15,7 @@ A dummy test which always passes to please Jasmine when it runs tests under node
     describe("Dummy", function () {
 
         it("should always pass", function () {
-            expect(2).toBe(2);
+            expect(true).toBe(true);
         });
 
     });

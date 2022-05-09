@@ -19,7 +19,7 @@ const fs = require('fs');
   // });
 
   const page = await browser.newPage();
-  let pageUrl = `file://${__dirname}/test.html`;
+  let pageUrl = `file://${process.argv[2]}`;
     //
   // Define a window.onCustomEvent function on the page.
   await page.exposeFunction('onJasmineDone', (args) => {

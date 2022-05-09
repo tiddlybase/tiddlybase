@@ -1,14 +1,9 @@
 {
     "description": "test edition",
     "config": {
-        "display-link-icons": true
     },
     "plugins": [
-        "tiddlywiki/jasmine",
-        "tiddlybase/embed-url",
-        "tiddlybase/tiddlybase-utils",
-        "tiddlybase/react",
-        "tiddlybase/mdx"
+       "tiddlywiki/jasmine"
     ],
     "themes": [
      "tiddlywiki/vanilla",

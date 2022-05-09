@@ -1,15 +1,12 @@
 {
-    "description": "Empty edition",
+    "description": "Test runner",
     "includeWikis": [
-		{"path": "../../../csaladi_naplo/headless", "read-only": true}
+		{"path": "../../browser-tests", "read-only": true}
 	],
     "config": {
-        "default-storage-prefix": "csaladwiki/files",
-        "display-link-icons": true,
         "parse-markdown-as-mdx": true
     },
     "plugins": [
-        "tiddlywiki/codemirror",
         "tiddlybase/tiddlybase-utils",
         "tiddlybase/react",
         "tiddlybase/embed-url",
