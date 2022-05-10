@@ -13,18 +13,12 @@ module-type: parser
   const MDXParser = function(type, text, options) {
     this.tree = [
       {
-          "type": "element",
-          "tag": "p",
-          "children": [
-              {
-                  "type": "MDX",
-                  attributes: {
-                    "mdx": { type: "string", value: text}
-                  }
-              }
-          ]
+          "type": "MDX",
+          attributes: {
+              "mdx": { type: "string", value: text }
+          }
       }
-  ]
+    ]
   };
 
   if (require("$:/plugins/tiddlybase/tiddlybase-utils/wiki-info-config.js").getWikiInfoConfigValue('parse-markdown-as-mdx') === true) {

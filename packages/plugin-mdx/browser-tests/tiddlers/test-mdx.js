@@ -43,22 +43,16 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
         return wrapper.innerHTML;
     }
 
-    const MDXParser = function(type, text, options) {
+    const MDXParser = function (type, text, options) {
         this.tree = [
-          {
-              "type": "element",
-              "tag": "div",
-              "children": [
-                  {
-                      "type": "MDX",
-                      attributes: {
-                        "mdx": { type: "string", value: text}
-                      }
-                  }
-              ]
-          }
-      ]
-      };
+            {
+                "type": "MDX",
+                attributes: {
+                    "mdx": { type: "string", value: text }
+                }
+            }
+        ]
+    };
 
     const renderWithMDX = async mdx => {
         const wiki = new $tw.Wiki();
@@ -71,7 +65,7 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
         console.log("wrapper node", wrapper);
         widgetNode.render(wrapper, null);
         await sleep(0);
-        return wrapper.firstChild.firstChild.innerHTML;
+        return wrapper.firstChild.innerHTML;
     }
 
     describe("Widget lifecycle", function () {
