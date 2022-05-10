@@ -4,9 +4,10 @@
 		{"path": "../../browser-tests", "read-only": true}
 	],
     "config": {
-        "parse-markdown-as-mdx": true
+        "parse-markdown-as-mdx": false
     },
     "plugins": [
+        "tiddlywiki/markdown",
         "tiddlybase/tiddlybase-utils",
         "tiddlybase/browser-test-utils",
         "tiddlybase/react",
