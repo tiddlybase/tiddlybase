@@ -17,9 +17,13 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
         return
     }
 
+    const { initSpy, openTiddler, sleep } = require('$:/plugins/tiddlybase/browser-test-utils/test-utils.js');
+
     const MDX = require('$:/plugins/tiddlybase/mdx/mdx-widget.js').MDX;
 
-    const { initSpy, openTiddler, sleep } = require('$:/plugins/tiddlybase/browser-test-utils/test-utils.js');
+    const widget = require("$:/core/modules/widgets/widget.js");
+    const officialMarkdownParser = require('$:/plugins/tiddlywiki/markdown/wrapper.js')["text/x-markdown"]
+
 
     const getTiddlerDiv = title => {
         const results = document.querySelectorAll(`div[data-tiddler-title="${title}"]`);
@@ -27,12 +31,8 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
         expect(results[0]).not.toBeNull();
         return results[0];
     }
-    const widget = require("$:/core/modules/widgets/widget.js");
-    const officialMarkdownParser = require('$:/plugins/tiddlywiki/markdown/wrapper.js')["text/x-markdown"]
-    const mdxMarkdownParser = require('$:/plugins/tiddlybase/mdx/register-mdx-parser.js')["text/x-markdown"]
 
-    const renderWithOfficialMarkdownPlugin = markdown => {
-        const wiki = new $tw.Wiki();
+    const renderWithOfficialMarkdownPlugin = (markdown, wiki=new $tw.Wiki()) => {
         const parser = new officialMarkdownParser(null, markdown);
         const widgetNode = new widget.widget({ type: "widget", children: parser.tree }, {
             wiki: wiki,
@@ -54,8 +54,7 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
         ]
     };
 
-    const renderWithMDX = async mdx => {
-        const wiki = new $tw.Wiki();
+    const renderWithMDX = async (mdx, wiki=new $tw.Wiki()) => {
         const parser = new MDXParser(null, mdx);
         const widgetNode = new widget.widget({ type: "widget", children: parser.tree }, {
             wiki: wiki,
@@ -66,6 +65,17 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
         widgetNode.render(wrapper, null);
         await sleep(0);
         return wrapper.firstChild.innerHTML;
+    }
+
+    const renderWikiText = (wikiText, wiki=new $tw.Wiki()) => {
+        const parser = wiki.parseText(null, wikiText)
+        const widgetNode = new widget.widget({ type: "widget", children: parser.tree }, {
+            wiki: wiki,
+            document: $tw.fakeDocument
+        });
+        var wrapper = $tw.fakeDocument.createElement("div");
+        widgetNode.render(wrapper, null);
+        return wrapper.innerHTML;
     }
 
     describe("Widget lifecycle", function () {
@@ -109,9 +119,88 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
             expect((await nextDestroyCall).label).toEqual('destroy B2');
             assertCalls(2, 2);
         });
+    });
+
+
+    describe("Parsing markdown", function () {
+
+        it("should render headers as expected", async function() {
+            expect(renderWithOfficialMarkdownPlugin("# foo")).toEqual("<h1>foo</h1>");
+            expect(renderWikiText("! foo")).toEqual('<h1 class="">foo</h1>');
+            expect(await renderWithMDX("# foo")).toEqual("<h1>foo</h1>");
+        });
+
+        it("should render bold as expected", async function() {
+            expect(renderWithOfficialMarkdownPlugin("**foo**")).toEqual("<p><strong>foo</strong></p>");
+            expect(renderWikiText("''foo''")).toEqual('<p><strong>foo</strong></p>');
+            expect(await renderWithMDX("**foo**")).toEqual("<p><strong>foo</strong></p>");
+        });
+
+        it("should render italic as expected", async function() {
+            expect(renderWithOfficialMarkdownPlugin("_foo_")).toEqual("<p><em>foo</em></p>");
+            expect(await renderWithMDX("_foo_")).toEqual("<p><em>foo</em></p>");
+            expect(renderWikiText("//foo//")).toEqual('<p><em>foo</em></p>');
+        });
+
+        it("should render non-nested lists as expected", async function() {
+            const lists = [`
+- item1
+- item2
+- item3`.trim(),
+            `
+* item1
+* item2
+* item3`.trim(),
+            `
++ item1
++ item2
++ item3
+            `.trim()];
+            for (let list of lists) {
+                expect(renderWithOfficialMarkdownPlugin(list)).toEqual("<ul><li>item1</li><li>item2</li><li>item3</li></ul>");
+                expect(await renderWithMDX(list)).toEqual(`<ul>
+<li>item1</li>
+<li>item2</li>
+<li>item3</li>
+</ul>`);
+            }
+        });
+
+        it("should render nested lists as expected", async function() {
+            const list = `
+- item1
+    - 1a
+    - 1b
+    - 1c
+        - 1c1
+- item2
+    - 2a
+- item3`.trim();
+            const expectation = `<ul>
+<li>item1
+<ul>
+<li>1a</li>
+<li>1b</li>
+<li>1c
+<ul>
+<li>1c1</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>item2
+<ul>
+<li>2a</li>
+</ul>
+</li>
+<li>item3</li>
+</ul>`;
+                expect(renderWithOfficialMarkdownPlugin(list)).toEqual(expectation.replace(/(\r\n|\n|\r)/gm, ""));
+                expect(await renderWithMDX(list)).toEqual(expectation);
+        });
 
         it("Assert basic markdown is rendered as expected by official plugin", async function () {
-            expect(renderWithOfficialMarkdownPlugin("# foo")).toEqual("<h1>foo</h1>");
+
             expect(renderWithOfficialMarkdownPlugin("**foo**")).toEqual("<p><strong>foo</strong></p>");
             expect(renderWithOfficialMarkdownPlugin("> a quote")).toEqual("<blockquote><p>a quote</p></blockquote>");
             expect(renderWithOfficialMarkdownPlugin("_foo_")).toEqual("<p><em>foo</em></p>");
@@ -129,7 +218,7 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
 
         it("Assert mdx is rendered as expected by official plugin", async function () {
             console.log("asdf")
-            expect(await renderWithMDX("# foo")).toEqual("<h1>foo</h1>");
+
             expect(await renderWithMDX("**foo**")).toEqual("<p><strong>foo</strong></p>");
             expect(await renderWithMDX("> a quote")).toEqual(`<blockquote>
 <p>a quote</p>
