@@ -17,14 +17,7 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
         return
     }
 
-    const tw5Navigator = require('$:/test-utils.js').findNavigator();
-
-    const openTiddler = async navigateTo => {
-        tw5Navigator.dispatchEvent({type: "tm-close-all-tiddlers"});
-        tw5Navigator.dispatchEvent({type: "tm-navigate", navigateTo})
-        // force interruption of this function so that tiddlywiki events can be dispatched and acted upon.
-        return await sleep(0);
-    };
+    const {findNavigator, initSpy, sleep, openTiddler} = require('$:/plugins/tiddlybase/browser-test-utils/test-utils.js');
 
     const getTiddlerDiv = title => {
         const results = document.querySelectorAll(`div[data-tiddler-title="${title}"]`);
@@ -32,8 +25,6 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
         expect(results[0]).not.toBeNull();
         return results[0];
     }
-
-    const sleep = async (ms=1000) => new Promise(resolve => setTimeout(resolve, ms));
 
     describe("Widget lifecycle", function () {
 
@@ -74,27 +65,7 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
         });
 
         it("Assert widget lifecycle hooks called", async function () {
-            console.log("asdf");
 
-            const initSpy = (obj, methodName) => {
-                let waitingResolves = [];
-                const spy = spyOn(obj, methodName).and.callFake(function (...args) {
-                    let p;
-                    console.log(`[spy:${methodName}] invoked function, waitingResolves`, waitingResolves)
-                    for (p of waitingResolves) {
-                        console.log("invoking resolver", p)
-                        p(args);
-                    }
-                    console.log(`[spy:${methodName}] calling original function ${methodName}`)
-                    return spy.and.originalFn.apply(this, args);
-                });
-                const waitFor = (label) => new Promise((resolve, reject) => {
-                    waitingResolves.push(() => resolve(label))
-                    console.log(`[waitFor:${methodName}] registering new wait for promise ${label}`, waitingResolves);
-                    sleep(1000).then(() => reject(new Error(`timeout waiting ${label}`)));
-                });
-                return {spy, waitFor}
-            }
             initSpy(MDX.prototype, 'initReact');
             const {waitFor: waitForDestroy} = initSpy(MDX.prototype, 'destroy');
             const assertCalls = (initCalls, destroyCalls) => {
@@ -110,16 +81,16 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
 
             assertCalls(0,0);
 
-            let nextDestroyCall = waitForDestroy('destroy B1');
+            let nextDestroyCall = waitForDestroy({label: 'destroy B1'});
             await openTiddler("B1");
             assertCalls(1,0);
             await openTiddler("B2");
-            expect(await nextDestroyCall).toEqual('destroy B1');
+            expect((await nextDestroyCall).label).toEqual('destroy B1');
 
-            nextDestroyCall = waitForDestroy('destroy B2');
+            nextDestroyCall = waitForDestroy({label: 'destroy B2'});
             assertCalls(2,1);
             await openTiddler("Start");
-            expect(await nextDestroyCall).toEqual('destroy B2');
+            expect((await nextDestroyCall).label).toEqual('destroy B2');
             assertCalls(2,2);
         });
 

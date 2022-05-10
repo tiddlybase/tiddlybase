@@ -1703,6 +1703,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@tiddlybase/browser-tests@workspace:packages/browser-tests"
   dependencies:
+    "@tiddlybase/tw5-types": ^0.0.0
+    "@tiddlybase/webpack-config": ^0.0.0
+    "@types/jasmine": ^4.0.3
     puppeteer: ^13.6.0
     tiddlywiki: ^5.2.2
   languageName: unknown
@@ -1769,6 +1772,19 @@ __metadata:
     firebase: ^9.6.6
     firebaseui: ^6.0.0
     mini-iframe-rpc: 1.7.3
+    typescript: ^4.5.5
+    webpack: ^5.68.0
+    webpack-cli: ^4.9.2
+  languageName: unknown
+  linkType: soft
+
+"@tiddlybase/plugin-browser-test-utils@workspace:packages/plugin-browser-test-utils":
+  version: 0.0.0-use.local
+  resolution: "@tiddlybase/plugin-browser-test-utils@workspace:packages/plugin-browser-test-utils"
+  dependencies:
+    "@tiddlybase/tw5-types": ^0.0.0
+    "@tiddlybase/webpack-config": ^0.0.0
+    "@types/jasmine": ^4.0.3
     typescript: ^4.5.5
     webpack: ^5.68.0
     webpack-cli: ^4.9.2
@@ -2201,6 +2217,13 @@ __metadata:
   dependencies:
     "@types/istanbul-lib-report": "*"
   checksum: f1ad54bc68f37f60b30c7915886b92f86b847033e597f9b34f2415acdbe5ed742fa559a0a40050d74cdba3b6a63c342cac1f3a64dba5b68b66a6941f4abd7903
+  languageName: node
+  linkType: hard
+
+"@types/jasmine@npm:^4.0.3":
+  version: 4.0.3
+  resolution: "@types/jasmine@npm:4.0.3"
+  checksum: 9d2af9ddb5750667bc9a3b439542fc9457c6eac2ab2c74801f598b03b9bc5cee1338fa8e75e6804dff1856e64539e8b0e3962ed8664a702f362d3db62eb9cd3a
   languageName: node
   linkType: hard
 

@@ -533,7 +533,8 @@ export interface TW {
   desktop?: {
     gui: unknown;
     utils: unknown;
-  }
+  },
+  rootWidget: Widget,
   // non-standard extension
   tiddlybase?: TWTiddlybase
 }
