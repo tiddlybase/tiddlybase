@@ -17,33 +17,15 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
         return
     }
 
-    const { initSpy, openTiddler, sleep } = require('$:/plugins/tiddlybase/browser-test-utils/test-utils.js');
-
-    const MDX = require('$:/plugins/tiddlybase/mdx/mdx-widget.js').MDX;
+    const { initSpy, sleep, toJSON } = require('$:/plugins/tiddlybase/browser-test-utils/test-utils.js');
 
     const widget = require("$:/core/modules/widgets/widget.js");
-    const officialMarkdownParser = require('$:/plugins/tiddlywiki/markdown/wrapper.js')["text/x-markdown"]
 
+    const markdownParser = require('$:/plugins/tiddlywiki/markdown/wrapper.js')["text/x-markdown"];
 
-    const getTiddlerDiv = title => {
-        const results = document.querySelectorAll(`div[data-tiddler-title="${title}"]`);
-        expect(results.length).toEqual(1);
-        expect(results[0]).not.toBeNull();
-        return results[0];
-    }
+    const wikitextParser = $tw.Wiki.parsers["text/vnd.tiddlywiki"];
 
-    const renderWithOfficialMarkdownPlugin = (markdown, wiki=new $tw.Wiki()) => {
-        const parser = new officialMarkdownParser(null, markdown);
-        const widgetNode = new widget.widget({ type: "widget", children: parser.tree }, {
-            wiki: wiki,
-            document: $tw.fakeDocument
-        });
-        var wrapper = $tw.fakeDocument.createElement("div");
-        widgetNode.render(wrapper, null);
-        return wrapper.innerHTML;
-    }
-
-    const MDXParser = function (type, text, options) {
+    const mdxParser = function (type, text, options) {
         this.tree = [
             {
                 "type": "MDX",
@@ -54,95 +36,58 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
         ]
     };
 
-    const renderWithMDX = async (mdx, wiki=new $tw.Wiki()) => {
-        const parser = new MDXParser(null, mdx);
+    const renderToDOM = async (text, parserConstructor, wiki = new $tw.Wiki()) => {
+        const parser = new parserConstructor(null, text, { wiki });
         const widgetNode = new widget.widget({ type: "widget", children: parser.tree }, {
             wiki: wiki,
             document: window.document
         });
         var wrapper = window.document.createElement("div");
-        console.log("wrapper node", wrapper);
         widgetNode.render(wrapper, null);
+        // this sleep(0) forces async execution
         await sleep(0);
-        return wrapper.firstChild.innerHTML;
+        return wrapper.firstChild;
     }
 
-    const renderWikiText = (wikiText, wiki=new $tw.Wiki()) => {
-        const parser = wiki.parseText(null, wikiText)
-        const widgetNode = new widget.widget({ type: "widget", children: parser.tree }, {
-            wiki: wiki,
-            document: $tw.fakeDocument
-        });
-        var wrapper = $tw.fakeDocument.createElement("div");
-        widgetNode.render(wrapper, null);
-        return wrapper.innerHTML;
+    const getElement = (dom, parserConstructor) => {
+        if (parserConstructor === mdxParser) {
+            // mdx parser has an extra <div> wrapper (the react container node)
+            return dom.firstChild;
+        }
+        return dom;
     }
 
-    describe("Widget lifecycle", function () {
+    const renderToHTML = async (text, parserConstructor, wiki = new $tw.Wiki()) => {
+        return getElement(await (renderToDOM(text, parserConstructor, wiki)), parserConstructor).parentElement.innerHTML;
+    }
 
-        it("Opening tiddlers with dispatchEvent should work", async function () {
-            const title = "TiddlerOne";
-            $tw.wiki.addTiddlers([
-                { title, text: "the quick brown fox" }
-            ]);
-            await openTiddler(title);
-            expect(getTiddlerDiv(title)).not.toBeNull();
-            expect($tw.wiki.getTiddler('$:/HistoryList').fields['current-tiddler']).toEqual(title);
-        });
+    const renderToJSON = async (text, parserConstructor, wiki = new $tw.Wiki()) => {
+        return toJSON(getElement(await (renderToDOM(text, parserConstructor, wiki)), parserConstructor));
+    }
 
-        it("Assert widget lifecycle hooks called", async function () {
-
-            initSpy(MDX.prototype, 'initReact');
-            const { waitFor: waitForDestroy } = initSpy(MDX.prototype, 'destroy');
-            const assertCalls = (initCalls, destroyCalls) => {
-                expect(MDX.prototype.initReact).toHaveBeenCalledTimes(initCalls);
-                expect(MDX.prototype.destroy).toHaveBeenCalledTimes(destroyCalls);
-            }
-            $tw.wiki.addTiddlers([
-                { title: "B1", text: `<$MDX mdx="# h1" />` }
-            ]);
-            $tw.wiki.addTiddlers([
-                { title: "B2", text: "{{B1}}" }
-            ]);
-
-            assertCalls(0, 0);
-
-            let nextDestroyCall = waitForDestroy({ label: 'destroy B1' });
-            await openTiddler("B1");
-            assertCalls(1, 0);
-            await openTiddler("B2");
-            expect((await nextDestroyCall).label).toEqual('destroy B1');
-
-            nextDestroyCall = waitForDestroy({ label: 'destroy B2' });
-            assertCalls(2, 1);
-            await openTiddler("Start");
-            expect((await nextDestroyCall).label).toEqual('destroy B2');
-            assertCalls(2, 2);
-        });
-    });
-
+    const stripNewlines = str => str.replace(/(\r\n|\n|\r)/gm, "")
 
     describe("Parsing markdown", function () {
 
-        it("should render headers as expected", async function() {
-            expect(renderWithOfficialMarkdownPlugin("# foo")).toEqual("<h1>foo</h1>");
-            expect(renderWikiText("! foo")).toEqual('<h1 class="">foo</h1>');
-            expect(await renderWithMDX("# foo")).toEqual("<h1>foo</h1>");
+        it("should render headers as expected", async function () {
+            expect(await renderToHTML("# foo", markdownParser)).toEqual("<h1>foo</h1>");
+            expect(await renderToHTML("# foo", mdxParser)).toEqual("<h1>foo</h1>");
+            expect(await renderToHTML("! foo", wikitextParser)).toEqual('<h1 class="">foo</h1>');
         });
 
-        it("should render bold as expected", async function() {
-            expect(renderWithOfficialMarkdownPlugin("**foo**")).toEqual("<p><strong>foo</strong></p>");
-            expect(renderWikiText("''foo''")).toEqual('<p><strong>foo</strong></p>');
-            expect(await renderWithMDX("**foo**")).toEqual("<p><strong>foo</strong></p>");
+        it("should render bold as expected", async function () {
+            expect(await renderToHTML("**foo**", markdownParser)).toEqual("<p><strong>foo</strong></p>");
+            expect(await renderToHTML("**foo**", mdxParser)).toEqual("<p><strong>foo</strong></p>");
+            expect(await renderToHTML("''foo''", wikitextParser)).toEqual('<p><strong>foo</strong></p>');
         });
 
-        it("should render italic as expected", async function() {
-            expect(renderWithOfficialMarkdownPlugin("_foo_")).toEqual("<p><em>foo</em></p>");
-            expect(await renderWithMDX("_foo_")).toEqual("<p><em>foo</em></p>");
-            expect(renderWikiText("//foo//")).toEqual('<p><em>foo</em></p>');
+        it("should render italic as expected", async function () {
+            expect(await renderToHTML("_foo_", markdownParser)).toEqual("<p><em>foo</em></p>");
+            expect(await renderToHTML("_foo_", mdxParser)).toEqual("<p><em>foo</em></p>");
+            expect(await renderToHTML("//foo//", wikitextParser)).toEqual('<p><em>foo</em></p>');
         });
 
-        it("should render non-nested lists as expected", async function() {
+        it("should render non-nested lists as expected", async function () {
             const lists = [`
 - item1
 - item2
@@ -156,17 +101,18 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
 + item2
 + item3
             `.trim()];
-            for (let list of lists) {
-                expect(renderWithOfficialMarkdownPlugin(list)).toEqual("<ul><li>item1</li><li>item2</li><li>item3</li></ul>");
-                expect(await renderWithMDX(list)).toEqual(`<ul>
+            const expected = `<ul>
 <li>item1</li>
 <li>item2</li>
 <li>item3</li>
-</ul>`);
+</ul>`
+            for (let list of lists) {
+                expect(await renderToHTML(list, markdownParser)).toEqual(stripNewlines(expected));
+                expect(await renderToHTML(list, mdxParser)).toEqual(expected);
             }
         });
 
-        it("should render nested lists as expected", async function() {
+        it("should render nested lists as expected", async function () {
             const list = `
 - item1
     - 1a
@@ -195,82 +141,46 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
 </li>
 <li>item3</li>
 </ul>`;
-                expect(renderWithOfficialMarkdownPlugin(list)).toEqual(expectation.replace(/(\r\n|\n|\r)/gm, ""));
-                expect(await renderWithMDX(list)).toEqual(expectation);
+            expect(await renderToHTML(list, markdownParser)).toEqual(stripNewlines(expectation));
+            expect(await renderToHTML(list, mdxParser)).toEqual(expectation);
         });
 
-        it("Assert basic markdown is rendered as expected by official plugin", async function () {
-
-            expect(renderWithOfficialMarkdownPlugin("**foo**")).toEqual("<p><strong>foo</strong></p>");
-            expect(renderWithOfficialMarkdownPlugin("> a quote")).toEqual("<blockquote><p>a quote</p></blockquote>");
-            expect(renderWithOfficialMarkdownPlugin("_foo_")).toEqual("<p><em>foo</em></p>");
-            expect(renderWithOfficialMarkdownPlugin(`
-- item1
-- item2
-- item3
-            `.trim())).toEqual("<ul><li>item1</li><li>item2</li><li>item3</li></ul>");
-            expect(renderWithOfficialMarkdownPlugin(`
-* item1
-* item2
-* item3
-            `.trim())).toEqual("<ul><li>item1</li><li>item2</li><li>item3</li></ul>");
-        });
-
-        it("Assert mdx is rendered as expected by official plugin", async function () {
-            console.log("asdf")
-
-            expect(await renderWithMDX("**foo**")).toEqual("<p><strong>foo</strong></p>");
-            expect(await renderWithMDX("> a quote")).toEqual(`<blockquote>
-<p>a quote</p>
-</blockquote>`);
-            expect(await renderWithMDX("_foo_")).toEqual("<p><em>foo</em></p>");
-            expect(await renderWithMDX(`
-- item1
-- item2
-- item3
-            `.trim())).toEqual(`<ul>
-<li>item1</li>
-<li>item2</li>
-<li>item3</li>
-</ul>`);
-            expect(await renderWithMDX(`
-* item1
-* item2
-* item3
-            `.trim())).toEqual(`<ul>
-<li>item1</li>
-<li>item2</li>
-<li>item3</li>
-</ul>`);
-        });
-        /*
-        it("should deal with transclude widgets and indirect attributes", function () {
-            var wiki = new $tw.Wiki();
-            // Add a tiddler
-            wiki.addTiddlers([
-                { title: "TiddlerOne", text: "the quick brown fox" }
-            ]);
-            // Test parse tree
-            var parseTreeNode = {
-                type: "widget", children: [
-                    { type: "MDX", text: "A text node" },
+        it("should render external links identically", async function () {
+            const expected = {
+                "nodeType": 1,
+                "tagName": "p",
+                "attributes": {},
+                "nodeName": "P",
+                "childNodes": [
+                    {
+                        "nodeType": 1,
+                        "tagName": "a",
+                        "attributes": {
+                            "class": "tc-tiddlylink-external",
+                            "href": "https://github.com/neumark/",
+                            "rel": "noopener noreferrer",
+                            "target": "_blank"
+                        },
+                        "nodeName": "A",
+                        "childNodes": [
+                            {
+                                "nodeType": 3,
+                                "nodeName": "#text",
+                                "nodeValue": "neumark",
+                                "childNodes": []
+                            }
+                        ]
+                    }
                 ]
             };
-            // Construct the widget node
-            var widgetNode = createWidgetNode(parseTreeNode, wiki);
-            // Render the widget node to the DOM
-            var wrapper = renderWidgetNode(widgetNode);
-            // Test the rendering
-            expect(wrapper.innerHTML).toBe("A text node<div class=\"myClass\" title=\"the quick brown fox\"> and the content of a DIV<div> and an inner DIV</div> and back in the outer DIVthe quick brown fox</div>the quick brown fox");
-            // Change the transcluded tiddler
-            wiki.addTiddler({ title: "TiddlerOne", text: "jumps over the lazy dog" });
-            // Refresh
-            refreshWidgetNode(widgetNode, wrapper, ["TiddlerOne"]);
-            // Test the refreshing
-            expect(wrapper.innerHTML).toBe("A text node<div class=\"myClass\" title=\"jumps over the lazy dog\"> and the content of a DIV<div> and an inner DIV</div> and back in the outer DIVjumps over the lazy dog</div>jumps over the lazy dog");
+            const externalLinkMD = "[neumark](https://github.com/neumark/)";
+            const wiki = new $tw.Wiki();
+            expect(await renderToJSON(externalLinkMD, markdownParser, wiki)).toEqual(expected);
+            expect(await renderToJSON(externalLinkMD, mdxParser, wiki)).toEqual(expected);
+            expect(await renderToJSON("[[neumark|https://github.com/neumark/]]",wikitextParser, wiki)).toEqual(expected);
         });
-        */
 
     });
+
 
 })();

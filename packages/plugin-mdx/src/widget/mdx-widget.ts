@@ -6,11 +6,13 @@ import { LogContext } from "./components/LogContext";
 import { TranscludeTiddler } from "./components/TranscludeTiddler";
 import type { Widget, ChangedTiddlers } from '@tiddlybase/tw5-types';
 import { WidgetWithExternalChildren } from "./components/WidgetWithExternalChildren";
+import { TW5ExternalLink } from "./components/TW5Components";
 
 const components = {
   wrapper: MDXLayout,
   LogContext,
-  TranscludeTiddler
+  TranscludeTiddler,
+  a: TW5ExternalLink
 };
 
 class MDXWidget extends ReactBaseWidget<MDXProps> implements WidgetWithExternalChildren{

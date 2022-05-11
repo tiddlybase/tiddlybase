@@ -1,5 +1,6 @@
 import type { Widget } from '@tiddlybase/tw5-types'
 import type {} from 'jasmine'
+export { toJSON } from './tojson';
 
 export const sleep = async (ms=1000) => new Promise(resolve => setTimeout(resolve, ms));
 
