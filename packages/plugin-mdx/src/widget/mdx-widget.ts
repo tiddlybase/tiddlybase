@@ -1,19 +1,10 @@
 import { ReactBaseWidget } from "@tiddlybase/plugin-react/src/react-base-widget";
 import { compile, getComponent } from "@tiddlybase/plugin-mdx/src/mdx-client/mdx-client";
 import { MDXProps } from "./mdx-props";
-import { MDXLayout, MDXLayoutArgs } from "./components/MDXLayout";
-import { LogContext } from "./components/LogContext";
-import { TranscludeTiddler } from "./components/TranscludeTiddler";
 import type { Widget, ChangedTiddlers } from '@tiddlybase/tw5-types';
 import { WidgetWithExternalChildren } from "./components/WidgetWithExternalChildren";
-import { TW5ExternalLink } from "./components/TW5Components";
-
-const components = {
-  wrapper: MDXLayout,
-  LogContext,
-  TranscludeTiddler,
-  a: TW5ExternalLink
-};
+import { makeTW5Components } from "./components/TW5Components";
+import type { MDXLayoutArgs } from "./components/MDXLayout";
 
 class MDXWidget extends ReactBaseWidget<MDXProps> implements WidgetWithExternalChildren{
 
@@ -30,8 +21,10 @@ class MDXWidget extends ReactBaseWidget<MDXProps> implements WidgetWithExternalC
   getComponent() {
     const context = {
       getVariable: this.getVariable.bind(this),
-      wiki: this.wiki
+      wiki: this.wiki,
+      parentWidget: this
     }
+    const components = makeTW5Components(this);
     const contextKeys:string[] = Object.keys(context).sort();
     const contextValues:any[] = contextKeys.reduce((acc, key) => {
       acc.push((context as any)[key])

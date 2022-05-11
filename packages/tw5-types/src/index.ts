@@ -330,9 +330,9 @@ export interface Wiki {
   // invokeUpgraders: (titles,tiddlers)  => void;
   // isBinaryTiddler: (title)  => void;
   // isDraftModified: (title)  => void;
-  // isImageTiddler: (title)  => void;
-  // isShadowTiddler: (title)  => void;
-  // isSystemTiddler: (title)  => void;
+  isImageTiddler: (title:string)  => boolean;
+  isShadowTiddler: (title:string)  => boolean;
+  isSystemTiddler: (title:string)  => boolean;
   // isTemporaryTiddler: (title)  => void;
   // isVolatileTiddler: (title)  => void;
   // makeTiddlerIterator: (titles)  => void;
