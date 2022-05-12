@@ -21,9 +21,10 @@ export const toJSON = (node:Node):JsonDomNode => {
       if (node.attributes) {
         obj.attributes = Object.fromEntries([...node.attributes].map((attr:Attr) => [attr.name, attr.value]));
       }
-    }
-    if (node.nodeName) {
+    } else {
+      if (node.nodeName) {
         obj.nodeName = node.nodeName;
+      }
     }
     if (node.nodeValue) {
         obj.nodeValue = node.nodeValue;
