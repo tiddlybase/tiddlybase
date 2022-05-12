@@ -481,11 +481,19 @@ export type WikiInfoConfig = Partial<{
   "default-tiddler-location": string,
   // retain-original-tiddler-path - If true, the server will generate a tiddler $:/config/OriginalTiddlerPaths containing the original file paths of each tiddler in the wiki
   "retain-original-tiddler-path": boolean,
+
   // === TiddlyBase additions ===
   "default-storage-prefix": string,
+  // relative path of external files referenced by embed-url plugin.
   "default-file-location": string,
-  // 'display-link-icons' - if true, display
+  // prefix for relative URLs considered external files which are part of the
+  // wiki, hosted on google storage or the local file filesystem (for TiddlyDesktop).
+  "external-url-path-prefix": string,
+  // 'display-link-icons' - if true, display file type icon when files are
+  // linked to instead of embedded.
   "display-link-icons": boolean,
+  // Use the mdx parser from tiddlybase/mdx instead of the official
+  // tiddlywiki/markdown package to parser markdown tiddlers.
   "parse-markdown-as-mdx": boolean,
 }>
 

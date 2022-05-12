@@ -6,7 +6,7 @@
     "config": {
         "default-storage-prefix": "csaladwiki/files",
         "display-link-icons": true,
-        "parse-markdown-as-mdx": true
+        "parse-markdown-as-mdx": false
     },
     "plugins": [
         "tiddlywiki/codemirror",
