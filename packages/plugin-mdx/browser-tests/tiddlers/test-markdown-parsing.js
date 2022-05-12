@@ -1,5 +1,5 @@
 /*\
-title: test-mdx.js
+title: test-markdown-parsing.js
 type: application/javascript
 tags: [[$:/tags/test-spec]]
 
@@ -17,7 +17,7 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
         return
     }
 
-    const { initSpy, sleep, toJSON } = require('$:/plugins/tiddlybase/browser-test-utils/test-utils.js');
+    const { sleep, toJSON } = require('$:/plugins/tiddlybase/browser-test-utils/test-utils.js');
 
     const widget = require("$:/core/modules/widgets/widget.js");
 
@@ -207,8 +207,7 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
                 title: "MyTiddler",
                 text: "asdf"
             })
-            //expect(await renderToJSON(externalLinkMD, markdownParser, wiki)).toEqual(expected);
-            //expect(await renderToJSON(externalLinkMD, mdxParser, wiki)).toEqual(expected);
+
             expect(await renderToJSON("[[Displayed Link Title|MyTiddler]]",wikitextParser, wiki)).toEqual(expected);
             expect(await renderToJSON("[[Displayed Link Title|MyTiddler]]",mdxParser, wiki)).toEqual(expected);
         });
@@ -242,8 +241,7 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
                 title: "My Tiddler",
                 text: "asdf"
             })
-            //expect(await renderToJSON(externalLinkMD, markdownParser, wiki)).toEqual(expected);
-            //expect(await renderToJSON(externalLinkMD, mdxParser, wiki)).toEqual(expected);
+
             expect(await renderToJSON("[[Displayed Link Title|My Tiddler]]",wikitextParser, wiki)).toEqual(expected);
             expect(await renderToJSON("[[Displayed Link Title|My Tiddler]]",mdxParser, wiki)).toEqual(expected);
         });

@@ -1,5 +1,5 @@
 /*\
-title: test-mdx.js
+title: test-react-widget.js
 type: application/javascript
 tags: [[$:/tags/test-spec]]
 
@@ -20,6 +20,10 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
     const { initSpy, openTiddler, sleep } = require('$:/plugins/tiddlybase/browser-test-utils/test-utils.js');
 
     const widget = require("$:/core/modules/widgets/widget.js");
+
+    const TestReactWidget = require("$:/plugins/tiddlybase/generated/TestReactWidget.js").TestReactWidget;
+
+    console.log("asdf");
 
     const getTiddlerDiv = title => {
         const results = document.querySelectorAll(`div[data-tiddler-title="${title}"]`);
@@ -42,14 +46,14 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
 
         it("Assert widget lifecycle hooks called", async function () {
 
-            initSpy(MDX.prototype, 'initReact');
-            const { waitFor: waitForDestroy } = initSpy(MDX.prototype, 'destroy');
+            initSpy(TestReactWidget.prototype, 'initReact');
+            const { waitFor: waitForDestroy } = initSpy(TestReactWidget.prototype, 'destroy');
             const assertCalls = (initCalls, destroyCalls) => {
-                expect(MDX.prototype.initReact).toHaveBeenCalledTimes(initCalls);
-                expect(MDX.prototype.destroy).toHaveBeenCalledTimes(destroyCalls);
+                expect(TestReactWidget.prototype.initReact).toHaveBeenCalledTimes(initCalls);
+                expect(TestReactWidget.prototype.destroy).toHaveBeenCalledTimes(destroyCalls);
             }
             $tw.wiki.addTiddlers([
-                { title: "B1", text: `<$MDX mdx="# h1" />` }
+                { title: "B1", text: `<$TestReactWidget foo="bar" />` }
             ]);
             $tw.wiki.addTiddlers([
                 { title: "B2", text: "{{B1}}" }

@@ -88,17 +88,19 @@ const getFrontendConfig = (baseOptions) => {
     }),
   );
   // if static dif exists, copy files from static to dist dir
-  const staticDir = getStaticDir();
-  if (fs.existsSync(staticDir)) {
-    config.plugins.push(new CopyWebpackPlugin({
-      patterns: [
-        {
-          from: staticDir,
-          to: config.output.path,
-          transform: transformMetaAddTitle
-        }
-      ]
-    }));
+  if (baseOptions.copyStatic !== false) {
+    const staticDir = getStaticDir();
+    if (fs.existsSync(staticDir)) {
+      config.plugins.push(new CopyWebpackPlugin({
+        patterns: [
+          {
+            from: staticDir,
+            to: config.output.path,
+            transform: transformMetaAddTitle
+          }
+        ]
+      }));
+    }
   }
   Object.assign(config.output, {
     library: { type: 'window' }
