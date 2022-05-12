@@ -1,5 +1,5 @@
 import { BaseWidget } from "@tiddlybase/plugin-tiddlybase-utils/src/base-widget";
-import { monitorRemoval, unmonitorRemoval } from "@tiddlybase/plugin-tiddlybase-utils/src/dom-removal-detector";
+import { monitorRemoval, unmonitorRemoval } from "@tiddlybase/plugin-react/src/dom-removal-detector";
 import type { Root } from 'react-dom/client';
 import { createRoot } from 'react-dom/client';
 import { createElement } from 'react';
