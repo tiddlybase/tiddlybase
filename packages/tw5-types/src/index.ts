@@ -41,50 +41,102 @@ export interface VariableInfo {
 
 type NoArgEventListener = () => void;
 
-// The full list of documented messages is availble at
-// https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/tw5.com/tiddlers/messages
+/**
+ Due to TiddlyWiki's extensible nature, the list of messages is never complete.
+ The following list was compiled by merging the the output of:
+ ```bash
+ grep -R 'addEventListener("tm' ../../node_modules/tiddlywiki | cut -d '(' -f 2 | cut -d , -f 1 | sort | uniq
+ ```
+ with TiddlyWiki's extensive [documentation of messages](https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/tw5.com/tiddlers/messages).
+ In many cases the type of the callback function is **not** `NoArgEventListener`.
+ */
 export type WidgetAddEventListenerArgs =
+
+  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-add-field.html
+  | ['tm-add-field', NoArgEventListener]
+
+  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-add-tag.html
+  | ['tm-add-tag', NoArgEventListener]
+
   // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-auto-save-wiki.html
   | ['tm-auto-save-wiki', NoArgEventListener]
 
   // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-browser-refresh.html
   | ['tm-browser-refresh', NoArgEventListener]
 
-  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-clear-browser-storage.html
+  // TODO
   | ['tm-clear-browser-storage', NoArgEventListener]
+
+  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-cancel-tiddler.html
+  | ['tm-cancel-tiddler', NoArgEventListener]
 
   // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-clear-password.html
   | ['tm-clear-password', NoArgEventListener]
 
+  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-clear-password.html
+  | ['tm-clear-password', NoArgEventListener]
+
+  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-close-all-tiddlers.html
+  | ['tm-close-all-tiddlers', NoArgEventListener]
+
+  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-close-all-windows.html
+  | ['tm-close-all-windows', NoArgEventListener]
+
+  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-close-other-tiddlers.html
+  | ['tm-close-other-tiddlers', NoArgEventListener]
+
   // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-close-tiddler.html
   | ['tm-close-tiddler', NoArgEventListener]
 
-  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-consent-accept.html
+  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-close-window.html
+  | ['tm-close-window', NoArgEventListener]
+
+  // TODO
   | ['tm-consent-accept', NoArgEventListener]
-
-  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-consent-clear.html
   | ['tm-consent-clear', NoArgEventListener]
-
-  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-consent-decline.html
   | ['tm-consent-decline', NoArgEventListener]
 
-  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-copy-syncer-logs-to-clipboard.html
+  // TODO
   | ['tm-copy-syncer-logs-to-clipboard', NoArgEventListener]
 
   // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-copy-to-clipboard.html
   | ['tm-copy-to-clipboard', NoArgEventListener]
 
+  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-delete-tiddler.html
+  | ['tm-delete-tiddler', NoArgEventListener]
+
   // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-download-file.html
   | ['tm-download-file', (event: Event) => string | undefined]
 
+  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-edit-bitmap-operation.html
+  | ['tm-edit-bitmap-operation', (event: Event) => string | undefined]
+
+  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-edit-text-operation.html
+  | ['tm-edit-text-operation', (event: Event) => string | undefined]
+
+  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-edit-tiddler.html
+  | ['tm-edit-tiddler', (event: Event) => string | undefined]
+
   // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-focus-selector.html
   | ['tm-focus-selector', NoArgEventListener]
+
+  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-fold-all-tiddlers.html
+  | ['tm-fold-all-tiddlers', NoArgEventListener]
+
+  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-fold-other-tiddlers.html
+  | ['tm-fold-other-tiddlers', NoArgEventListener]
+
+  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-fold-tiddler.html
+  | ['tm-fold-tiddler', NoArgEventListener]
 
   // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-full-screen.html
   | ['tm-full-screen', NoArgEventListener]
 
   // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-home.html
   | ['tm-home', NoArgEventListener]
+
+  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-import-tiddlers.html
+  | ['tm-import-tiddlers', NoArgEventListener]
 
   // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-load-plugin-from-library.html
   | ['tm-load-plugin-from-library', NoArgEventListener]
@@ -110,6 +162,9 @@ export type WidgetAddEventListenerArgs =
   // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-open-window.html
   | ['tm-open-window', NoArgEventListener]
 
+  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-perform-import.html
+  | ['tm-perform-import', NoArgEventListener]
+
   // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-permalink.html
   | ['tm-permalink', NoArgEventListener]
 
@@ -118,6 +173,21 @@ export type WidgetAddEventListenerArgs =
 
   // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-print.html
   | ['tm-print', NoArgEventListener]
+
+  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-relink-tiddler.html
+  | ['tm-relink-tiddler', NoArgEventListener]
+
+  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-remove-field.html
+  | ['tm-remove-field', NoArgEventListener]
+
+  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-remove-tag.html
+  | ['tm-remove-tag', NoArgEventListener]
+
+  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-rename-tiddler.html
+  | ['tm-rename-tiddler', NoArgEventListener]
+
+  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-save-tiddler.html
+  | ['tm-save-tiddler', NoArgEventListener]
 
   // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-save-wiki.html
   | ['tm-save-wiki', NoArgEventListener]
@@ -131,26 +201,27 @@ export type WidgetAddEventListenerArgs =
   // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-set-password.html
   | ['tm-set-password', NoArgEventListener]
 
-  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-show-switcher.html
+  // TODO
   | ['tm-show-switcher', NoArgEventListener]
 
-  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-slice-tiddler.html
+  // TODO
   | ['tm-slice-tiddler', NoArgEventListener]
 
   // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-unload-plugin-library.html
   | ['tm-unload-plugin-library', NoArgEventListener]
 
-  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-zip-add-text-file.html
+  // https://github.com/Jermolene/TiddlyWiki5/blob/775c7f00746a5c4d83babdec81e59f4aea3c2e04/plugins/tiddlywiki/jszip/docs.tid
   | ['tm-zip-add-text-file', NoArgEventListener]
-
-  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-zip-create.html
   | ['tm-zip-create', NoArgEventListener]
-
-  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-zip-download.html
   | ['tm-zip-download', NoArgEventListener]
-
-  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-zip-render-file.html
   | ['tm-zip-render-file', NoArgEventListener]
+
+  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-unfold-all-tiddlers.html
+  | ['tm-unfold-all-tiddlers', NoArgEventListener]
+
+  // https://tiddlywiki.com/static/WidgetMessage%253A%2520tm-unload-plugin-library.html
+  | ['tm-unload-plugin-library', NoArgEventListener]
+
   ;
 
 // based on: https://instil.co/blog/crazy-powerful-typescript-tuple-types/
