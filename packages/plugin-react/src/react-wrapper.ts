@@ -53,7 +53,7 @@ export class ReactWrapper extends WidgetClass implements Widget{
       return;
     }
     const exportValue = module[exportName];
-    if (typeof exportValue === 'undefined') {
+    if (exportValue === undefined) {
       this.renderable = ReactWrapperError({message: `The module's '${exportName}' module undefined.`});
       return;
     }
