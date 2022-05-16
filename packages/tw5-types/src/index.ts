@@ -311,7 +311,7 @@ export interface Widget {
 
 export interface WidgetConstructorOptions {
   wiki: Wiki; // mandatory reference to wiki associated with this render tree
-  parentWidget: Widget; // optional reference to a parent renderer node for the context chain
+  parentWidget?: Widget; // optional reference to a parent renderer node for the context chain
   document?: Document; // optional document object to use instead of global document
 }
 

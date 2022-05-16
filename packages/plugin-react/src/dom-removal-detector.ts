@@ -1,3 +1,42 @@
+/**
+ * dom-removal-detector
+ * This module addresses the problem of React Root garbage collection.
+ * React needs to be notified if it should no longer try to monitor a dom
+ * subtree for changes. Ideally, when a Tiddlywiki widget's DOM element is no
+ * longer needed, React would be notified. Unfortunately, Tiddlywiki isn't
+ * guaranteed to call any Widget class methods when a widget's DOM element is
+ * removed from the DOM, which can happen for several reasons:
+ * - The tiddler containing the widget is closed and removed from the Story.
+ * - The parent widget's refresh() function decides to build a new DOM element.
+ *   For example, this happens when the a transcluded tiddler changes.
+ * - The parent widget gets rid of the child widget (eg: a <$list> filtering
+ *   by tag would remove the widget if its parent tiddler loses that tag).
+ * - A react widget's component tree might remove the parent element of a
+ *   transcluded tiddler (added via the TranscludeTiddler component).
+ * - There can be additional reasons in the non-story parts of the UI (eg:
+ *   sidebar, edit template, ...)
+ *
+ * There is the `tm-close-tiddler` message for the closing tiddler case, but
+ * that doesn't all the cases listed above, and it's not fired when all tiddler
+ * are closed.
+ *
+ * # Naive solution
+ * The simplest approach is to monitory all subtree changes on document.body.
+ * This does work, the downside is that each React root must be checked whether
+ * it has become an orphan on any subtree change. This places a limit on the
+ * number of react widgets which can be displayed at any time.
+ *
+ * # Slightly more complex solution
+ * If we accept that react widgets should only exist within the story, then
+ * we could have a single mutation observer which listens to direct child
+ * changes of the <section> element at the root of the story widget. This can
+ * be used to detect when a tiddler is removed from the story. We also need a
+ * per-tiddler mutation observer wich **does** listen to subtree changes (albeit
+ * with a much smaller scope) to cover cases where the tiddler remains open but
+ * the DOM element is replaced by the widget (eg: refresh, transclude, ...).
+ */
+
+
 export type MonitorCallback = (orphanNode: Node) => void;
 
 // monitoredElement -> callback

@@ -7,7 +7,7 @@ const PROJECT_ROOT = path.resolve(__dirname, '..', "..", "..");
 
 const EXTERNALIZED_PACKAGE_BLACKLIST = ["@tiddlybase/tw5-types"]
 
-const RE_TS_EXTENSION = /\.ts$/
+const RE_TS_EXTENSION = /\.tsx?$/
 const RE_PACKAGE_NAME = new RegExp("^@tiddlybase/plugin-([^/]*)");
 
 const META_SUFFIX = '.meta';

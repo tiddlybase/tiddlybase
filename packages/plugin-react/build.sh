@@ -11,4 +11,5 @@ destination="$filesDir/react-dom.js"
 if [ ! -f "$destination" ]; then
   curl -o "$destination" 'https://unpkg.com/react-dom@18.0.0/umd/react-dom.production.min.js'
 fi
+cp "../../node_modules/react/cjs/react-jsx-runtime.production.min.js" "$filesDir/react-jsx-runtime.js"
 yarn webpack

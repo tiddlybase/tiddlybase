@@ -123,8 +123,9 @@ const getTW5PluginConfig = (options) => {
         // firebase: 'global firebase',
         // firebaseui: 'global firebaseui',
         // defined in plugin-react package
-        react: 'commonjs $:/plugins/tiddlybase/react/react.js',
-        'react-dom': 'commonjs $:/plugins/tiddlybase/react/react-dom.js'
+        'react': 'commonjs $:/plugins/tiddlybase/react/react.js',
+        'react-dom': 'commonjs $:/plugins/tiddlybase/react/react-dom.js',
+        'react/jsx-runtime': 'commonjs $:/plugins/tiddlybase/react/react-jsx-runtime.js'
       },
       function ({ context, request }, callback) {
         if (request.startsWith('$:/')) {
