@@ -1,0 +1,28 @@
+title: $:/plugins/tiddlybase/mdx/test/force-mdx-parser.js
+type: application/javascript
+module-type: startup
+
+/**
+ * Forces the mdx parser to be used for 'text/x-markdown' tiddlers.
+ * Normally, only one of the 'tiddlywiki/markdown' and 'tiddlybase/mdx'
+ * plugins is enabled for a wiki, but in the test wiki, the parsers are
+ * compared, so both are included in the wiki. Which parser is registered
+ * is undetermined, so this startup module overrides whatever was registered
+ * with the mdx plugin.
+ */
+
+(function () {
+  /*global $tw: false */
+  'use strict';
+
+  // Export name and synchronous status
+  exports.name = 'force-mdx-parser';
+  exports.after = ['load-modules'];
+  exports.synchronous = true;
+  exports.platforms = ['browser'];
+
+  exports.startup = function () {
+      $tw.Wiki.parsers['text/x-markdown'] = require("$:/plugins/tiddlybase/mdx/parser.js").MDXParser;
+  };
+
+})();

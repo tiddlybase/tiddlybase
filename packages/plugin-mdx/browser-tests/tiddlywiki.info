@@ -4,7 +4,6 @@
 		{"path": "../../browser-tests", "read-only": true}
 	],
     "config": {
-        "parse-markdown-as-mdx": true
     },
     "plugins": [
         "tiddlywiki/markdown",

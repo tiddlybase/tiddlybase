@@ -570,10 +570,7 @@ export type WikiInfoConfig = Partial<{
   "external-url-path-prefix": string,
   // 'display-link-icons' - if true, display file type icon when files are
   // linked to instead of embedded.
-  "display-link-icons": boolean,
-  // Use the mdx parser from tiddlybase/mdx instead of the official
-  // tiddlywiki/markdown package to parser markdown tiddlers.
-  "parse-markdown-as-mdx": boolean,
+  "display-link-icons": boolean
 }>
 
 export interface TW {
