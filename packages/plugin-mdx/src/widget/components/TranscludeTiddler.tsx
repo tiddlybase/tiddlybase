@@ -1,6 +1,6 @@
 import type { Widget, WidgetConstructor } from "packages/tw5-types/src";
 import React from "react";
-import { TW5WidgetParentContext } from "./TW5WidgetParentContext";
+import { WidgetParentContext } from "@tiddlybase/plugin-react/src/components/WidgetContext";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { transclude } = require("$:/core/modules/widgets/transclude.js");
@@ -20,8 +20,8 @@ export class TranscludeTiddler extends React.Component<TranscludeTiddlerParams> 
   el: HTMLDivElement | null = null;
   transcludeWidget: Widget | null = null;
 
-  static contextType = TW5WidgetParentContext;
-  declare context: React.ContextType<typeof TW5WidgetParentContext>;
+  static contextType = WidgetParentContext;
+  declare context: React.ContextType<typeof WidgetParentContext>;
 
   componentDidMount() {
     this.transcludeWidget = new TranscludeClass(
@@ -40,14 +40,15 @@ export class TranscludeTiddler extends React.Component<TranscludeTiddlerParams> 
         document: this.context!.document,
       }
     );
-    this.context!.addExternalChild(this.transcludeWidget);
+    this.context?.children?.push(this.transcludeWidget);
     this.transcludeWidget.render(this.el!);
-    //this.$el.somePlugin();
     console.log("constructing transcluded tiddler widget");
   }
 
   componentWillUnmount() {
-    this.context!.removeExternalChild(this.transcludeWidget!);
+    if (this.context?.children) {
+      this.context.children = this.context.children.filter(ch => ch !== this.transcludeWidget);
+    }
     console.log("destructing transcluded tiddler widget");
   }
 

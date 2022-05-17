@@ -24,6 +24,10 @@ export type ReactWrapperProps = {
   export?:string,
 } & Record<string,string>
 
+export type WrappedPropsBase = {
+  parentWidget: Widget
+}
+
 export class ReactWrapper extends WidgetClass implements Widget{
 
   root?: Root;
@@ -59,8 +63,8 @@ export class ReactWrapper extends WidgetClass implements Widget{
     }
     try {
       this.renderable = renderWithContext({
-        parent: this,
-        children: createElement(exportValue, props, null)
+        parentWidget: this,
+        children: createElement(exportValue, {...props, parentWidget: this}, null)
       })
     } catch (e) {
       this.renderable = ReactWrapperError({message: `Error rendering component '${exportName}': ${String(e)}`})

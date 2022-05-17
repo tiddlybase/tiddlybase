@@ -21,20 +21,11 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
 
     const widget = require("$:/core/modules/widgets/widget.js");
 
-    const markdownParser = require('$:/plugins/tiddlywiki/markdown/wrapper.js')["text/x-markdown"];
+    const markdownParser = require('$:/plugins/tiddlywiki/markdown/wrapper.js')['text/x-markdown'];
 
     const wikitextParser = $tw.Wiki.parsers["text/vnd.tiddlywiki"];
 
-    const mdxParser = function (type, text, options) {
-        this.tree = [
-            {
-                "type": "MDX",
-                attributes: {
-                    "mdx": { type: "string", value: text }
-                }
-            }
-        ]
-    };
+    const mdxParser = require("$:/plugins/tiddlybase/mdx/parser.js").MDXParser;
 
     const renderToDOM = async (text, parserConstructor, wiki = new $tw.Wiki()) => {
         const parser = new parserConstructor(null, text, { wiki });

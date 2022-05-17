@@ -1,5 +1,4 @@
 import type { Widget, Wiki } from "packages/tw5-types/src";
-import { MDXLayout } from "./MDXLayout";
 import { LogContext } from "./LogContext";
 import { TranscludeTiddler } from "./TranscludeTiddler";
 
@@ -122,7 +121,6 @@ const makeLinkClickHandler =
   };
 
 export const makeTW5Components = (parentWidget: Widget) => ({
-  wrapper: MDXLayout,
   LogContext,
   TranscludeTiddler,
   a(props: React.AnchorHTMLAttributes<HTMLAnchorElement>): React.ReactElement {

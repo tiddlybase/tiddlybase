@@ -1,8 +1,8 @@
 import { useContext } from "react";
-import { TW5WidgetParentContext } from "./TW5WidgetParentContext";
+import { WidgetParentContext } from "@tiddlybase/plugin-react/src/components/WidgetContext";
 
 export const LogContext = () => {
-  const value = useContext(TW5WidgetParentContext);
+  const value = useContext(WidgetParentContext);
   console.log("context is", value);
   return "context has been logged";
 }

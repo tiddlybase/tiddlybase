@@ -2,6 +2,14 @@
 
 import { TWTiddlybase } from "./tiddlybase";
 
+export type Parser = {
+  tree: ParseTree[]
+}
+
+export interface ParserConstructor {
+  new(type: string|null|undefined, text:string, options?:{wiki:Wiki}): Parser;
+}
+
 // standard tiddler definition, but every field except title is optional, allowing any custom field
 export type TiddlerFields = Partial<{
   tags: string[];

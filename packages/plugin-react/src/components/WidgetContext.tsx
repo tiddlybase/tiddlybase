@@ -7,11 +7,11 @@ export const WidgetParentContext =
 
 export type WidgetContextProps = {
   children: ReactRenderable;
-  parent: Widget;
+  parentWidget: Widget;
 };
 
 export const renderWithContext = ({
-  parent,
+  parentWidget: parent,
   children
 }: WidgetContextProps) => (
   <WidgetParentContext.Provider value={parent}>
