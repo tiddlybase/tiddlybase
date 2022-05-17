@@ -7,7 +7,7 @@ import wikiLinkPlugin from 'remark-wiki-link';
 import type { Root } from 'react-dom/client';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import * as ReactJSXRuntime from './react-jsx-runtime';
+import * as ReactJSXRuntime from 'react/jsx-runtime';
 
 // from: https://reactjs.org/blog/2022/03/08/react-18-upgrade-guide.html#updates-to-client-rendering-apis
 export const renderToDOM = (component: React.ReactChild, container: HTMLElement) => {
