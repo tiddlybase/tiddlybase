@@ -1,46 +1,32 @@
 // MDX and remark stuff
-import { compileSync } from '@mdx-js/mdx'
+import { compile as compileMDX } from '@mdx-js/mdx'
 import remarkGfm from 'remark-gfm' // Tables, footnotes, strikethrough, task lists, literal URLs.
 import wikiLinkPlugin from 'remark-wiki-link';
-
-// react stuff
-import type { Root } from 'react-dom/client';
-import React from 'react';
-import { createRoot } from 'react-dom/client';
 import * as ReactJSXRuntime from 'react/jsx-runtime';
 
-// from: https://reactjs.org/blog/2022/03/08/react-18-upgrade-guide.html#updates-to-client-rendering-apis
-export const renderToDOM = (component: React.ReactChild, container: HTMLElement) => {
-  const root = createRoot(container);
-  root.render(component);
-  return root;
-}
-
-export const unmount = (root: Root) => root.unmount();
 
 // replace async import expression with call to sync importFn()
-const fixImports = (body: string) => body.replace(/= await import\(/, "= importFn(");
+const fixImports = (body: string) => body.replace(/= await import\(/, "= await importFn(");
 
 const wrap = (name: string, body: string, contextVars: string[]) => `
-(function ${name}(${['jsxFns', 'importFn'].concat(contextVars).join(', ')}) {
+(async function ${name}(${['jsxFns', 'importFn'].concat(contextVars).join(', ')}) {
 ${fixImports(body)}
 });
 
 //# sourceURL=${name}.js
 `
 
-export const getComponent = (compiledJSX: any, importFn: any, components: any, contextValues: any[] = [], additionalProps: any = {}) => {
-  const fn: Function = compiledJSX(ReactJSXRuntime, importFn, ...contextValues).default;
-  return fn({
-    components,
-    ...additionalProps
-  }) as React.ReactChild;
+export const getComponent = async (compiledJSX: any, importFn: any, components: any, contextValues: any[] = []) => {
+  const mdxExports = await compiledJSX(ReactJSXRuntime, importFn, ...contextValues);
+  const fn: Function = mdxExports.default;
+  // react component returned
+  return (props:any) => fn({...props, components});
 }
 
-export const compile = (name: string, mdx: string, contextKeys: string[] = []) => {
+export const compile = async (name: string, mdx: string, contextKeys: string[] = []) => {
   try {
     // trimStart() is needed because mdx doesn't tolerate leading newlines
-    const compilerOutput = compileSync(mdx.trimStart(), {
+    const compilerOutput = await compileMDX(mdx.trimStart(), {
       remarkPlugins: [
         remarkGfm,
         [wikiLinkPlugin, {

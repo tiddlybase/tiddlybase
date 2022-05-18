@@ -49,7 +49,7 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
             })
             openTiddler(title);
             await onRenderPromise;
-            expect(getTiddlerDiv(title).querySelector('pre').innerText).toBe('{"children":null,"foo":"bar"}');
+            expect(getTiddlerDiv(title).querySelector('pre').innerText).toBe('{"foo":"bar"}');
         });
 
         it("Assert widget's destroy function called when removed from DOM", async function () {

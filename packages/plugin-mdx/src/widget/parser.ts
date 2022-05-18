@@ -18,7 +18,7 @@ class MDXParser implements Parser {
             "export": {
                 "name": "export",
                 "type": "string",
-                "value": "MDX"
+                "value": "MDXFactory"
             },
             "mdx": {
                 "name": "mdx",
