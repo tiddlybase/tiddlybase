@@ -8,12 +8,13 @@
   "scripts": {
     "build": "./build.sh",
     "build:dev": "./build.sh",
-    "browser-tests:build": "MODE=development yarn webpack -c webpack.test.config.js && yarn workspace @tiddlybase/browser-tests run test:build $(pwd)/browser-tests $(pwd)/../../dist/tests/plugin-react/test.html",
+    "browser-tests:build": "yarn workspace @tiddlybase/browser-tests run test:build $(pwd)/browser-tests $(pwd)/../../dist/tests/plugin-react/test.html",
     "browser-tests:run": "yarn workspace @tiddlybase/browser-tests run test:run $(pwd)/../../dist/tests/plugin-react/test.html",
     "browser-tests:open": "open $(pwd)/../../dist/tests/plugin-react/test.html",
     "test": "yarn browser-tests:build && yarn browser-tests:run"
   },
   "devDependencies": {
+    "@tiddlybase/plugin-browser-test-utils": "^0.0.0",
     "@tiddlybase/tw5-types": "^0.0.0",
     "@tiddlybase/webpack-config": "^0.0.0",
     "cross-env": "^7.0.3",

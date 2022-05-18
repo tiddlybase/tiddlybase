@@ -66,3 +66,7 @@ export const openTiddler = async (navigateTo:string) => {
     // force interruption of this function so that tiddlywiki events can be dispatched and acted upon.
     return await sleep(0);
 };
+
+export const getCurrentTiddler = () => $tw.wiki.getTiddler('$:/HistoryList')?.fields['current-tiddler']
+
+export const getTiddlerDiv = (title:string) => document.querySelectorAll(`div[data-tiddler-title="${title}"]`)?.[0];

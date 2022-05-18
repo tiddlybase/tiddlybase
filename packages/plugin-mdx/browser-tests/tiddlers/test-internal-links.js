@@ -15,11 +15,9 @@ tags: [[$:/tags/test-spec]]
         return
     }
 
-    const { openTiddler, sleep, toJSON } = require('$:/plugins/tiddlybase/browser-test-utils/test-utils.js');
+    const { openTiddler, sleep, getCurrentTiddler } = require('$:/plugins/tiddlybase/browser-test-utils/test-utils.js');
 
     const getLinkElement = (tiddler, target) => document.querySelector(`div[data-tiddler-title="${tiddler}"] a[href="#${target}"]`)
-
-    const getOpenTiddlers = () => $tw.wiki.getTiddler('$:/HistoryList').fields['current-tiddler'];
 
     describe("Navigation with internal links", function () {
 
@@ -36,7 +34,7 @@ tags: [[$:/tags/test-spec]]
             console.log('asdf');
             link.click();
             await sleep(0);
-            expect(getOpenTiddlers()).toEqual(target);
+            expect(getCurrentTiddler()).toEqual(target);
         });
 
     });

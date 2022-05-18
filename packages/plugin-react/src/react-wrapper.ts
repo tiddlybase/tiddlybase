@@ -19,13 +19,17 @@ const requireFunc = typeof __webpack_require__ === "function" ? __non_webpack_re
 
 const WidgetClass: WidgetConstructor = widget;
 
+export type ExtraProps = Record<string,string>;
+
 export type ReactWrapperProps = {
   module:string,
   export?:string,
-} & Record<string,string>
+} & ExtraProps
 
 export type WrappedPropsBase = {
-  parentWidget: Widget
+  require: (id: string) => any,
+  parentWidget: Widget,
+  children: ReactRenderable | null
 }
 
 export class ReactWrapper extends WidgetClass implements Widget{
@@ -64,7 +68,7 @@ export class ReactWrapper extends WidgetClass implements Widget{
     try {
       this.renderable = renderWithContext({
         parentWidget: this,
-        children: createElement(exportValue, {...props, parentWidget: this}, null)
+        children: createElement(exportValue, {...props, require: requireFunc, parentWidget: this}, null)
       })
     } catch (e) {
       this.renderable = ReactWrapperError({message: `Error rendering component '${exportName}': ${String(e)}`})

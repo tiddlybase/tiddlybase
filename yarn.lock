@@ -1775,7 +1775,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@tiddlybase/plugin-browser-test-utils@workspace:packages/plugin-browser-test-utils":
+"@tiddlybase/plugin-browser-test-utils@^0.0.0, @tiddlybase/plugin-browser-test-utils@workspace:packages/plugin-browser-test-utils":
   version: 0.0.0-use.local
   resolution: "@tiddlybase/plugin-browser-test-utils@workspace:packages/plugin-browser-test-utils"
   dependencies:
@@ -1816,7 +1816,9 @@ __metadata:
     "@rollup/plugin-node-resolve": ^13.2.1
     "@rollup/plugin-replace": ^4.0.0
     "@rollup/plugin-typescript": ^8.3.2
+    "@tiddlybase/plugin-browser-test-utils": ^0.0.0
     "@tiddlybase/plugin-tiddlybase-utils": ^0.0.0
+    "@tiddlybase/tw5-types": ^0.0.0
     "@tiddlybase/webpack-config": ^0.0.0
     "@types/mdast": ^3.0.10
     "@types/react": ^18.0.5
@@ -1848,6 +1850,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@tiddlybase/plugin-react@workspace:packages/plugin-react"
   dependencies:
+    "@tiddlybase/plugin-browser-test-utils": ^0.0.0
     "@tiddlybase/tw5-types": ^0.0.0
     "@tiddlybase/webpack-config": ^0.0.0
     cross-env: ^7.0.3
