@@ -1,6 +1,8 @@
 import type { Widget, Wiki } from "packages/tw5-types/src";
 import { LogContext } from "./LogContext";
 import { TranscludeTiddler } from "./TranscludeTiddler";
+import { TW5ReactContext } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
+import { useContext } from "react";
 
 const DEFAULT_EXTERNAL_LINK_PROPS = {
   className: "tc-tiddlylink-external",
@@ -26,7 +28,7 @@ const checkExistsAndShadow = (
 
 const getInternalLinkProps = (
   props: React.AnchorHTMLAttributes<HTMLAnchorElement>,
-  parentWidget: Widget
+  parentWidget?: Widget
 ): InternalLink | undefined => {
   if (
     props.className === "internal new" &&
@@ -53,7 +55,7 @@ const getInternalLinkProps = (
         label: props.href,
         tiddlerTitle: props.children,
       },
-      parentWidget.wiki
+      parentWidget?.wiki ?? $tw.wiki
     );
   }
   if (props.href?.startsWith("#") && typeof props.children === "string") {
@@ -68,7 +70,7 @@ const getInternalLinkProps = (
         label: props.children,
         tiddlerTitle: props.href.substring(1),
       },
-      parentWidget.wiki
+      parentWidget?.wiki ?? $tw.wiki
     );
   }
   // not internal link
@@ -78,14 +80,14 @@ const getInternalLinkProps = (
 const makeLinkClickHandler =
   (
     targetTiddler: string,
-    parentWidget: Widget
+    parentWidget?: Widget
   ): React.AnchorHTMLAttributes<HTMLAnchorElement>["onClick"] =>
   (event) => {
     // from tiddlywiki/core/modules/widgets/link.js:147
     const attributes = {
       type: "tm-navigate",
       navigateTo: targetTiddler,
-      navigateFromTitle: parentWidget.getVariable("storyTiddler"),
+      navigateFromTitle: parentWidget?.getVariable("storyTiddler"),
       navigateFromNode: this,
       navigateSuppressNavigation:
         event.metaKey || event.ctrlKey || event.button === 1,
@@ -114,17 +116,18 @@ const makeLinkClickHandler =
         navigateFromClientHeight: bounds.height,
       });
     }
-    parentWidget.dispatchEvent(attributes);
+    parentWidget?.dispatchEvent(attributes);
     event.preventDefault();
     event.stopPropagation();
     return false;
   };
 
-export const makeTW5Components = (parentWidget: Widget) => ({
+export const components = {
   LogContext,
   TranscludeTiddler,
   a(props: React.AnchorHTMLAttributes<HTMLAnchorElement>): React.ReactElement {
-    const internalLinkProps = getInternalLinkProps(props, parentWidget);
+    const context = useContext(TW5ReactContext);
+    const internalLinkProps = getInternalLinkProps(props, context?.parentWidget);
     console.log("internalLinkProps", internalLinkProps);
     if (internalLinkProps) {
       const classes: string[] = [];
@@ -145,7 +148,7 @@ export const makeTW5Components = (parentWidget: Widget) => ({
         <a
           className={classes.join(" ")}
           href={`#${encodeURIComponent(internalLinkProps.tiddlerTitle)}`}
-          onClick={makeLinkClickHandler(internalLinkProps.tiddlerTitle, parentWidget)}
+          onClick={makeLinkClickHandler(internalLinkProps.tiddlerTitle, context?.parentWidget)}
         >
           {internalLinkProps.label}
         </a>
@@ -163,4 +166,4 @@ export const makeTW5Components = (parentWidget: Widget) => ({
       </a>
     );
   },
-});
+};

@@ -1,8 +1,12 @@
 const { getFrontendConfig } = require('@tiddlybase/webpack-config');
+const { getOutputForSourceFile, DIST_ROOT} = require('@tiddlybase/webpack-config/src/plugin-utils');
 const path = require('path');
 
+const input = path.resolve(__dirname, 'src/index.ts');
+
 module.exports = () => getFrontendConfig({
-  input: path.resolve(__dirname, 'src/index.ts'),
-  tsConfig: path.resolve(__dirname, 'tsconfig.json'),
+  ...getOutputForSourceFile(input),
+  input,
+  outputDir: DIST_ROOT,
   outputFilename: "child-frame.js"
 });

@@ -6,21 +6,18 @@ import * as ReactJSXRuntime from 'react/jsx-runtime';
 
 
 // replace async import expression with call to sync importFn()
-const fixImports = (body: string) => body.replace(/= await import\(/, "= await importFn(");
+const fixImports = (body: string) => body.replace(/= await import\(/mg, "= await importFn(");
 
 const wrap = (name: string, body: string, contextVars: string[]) => `
-(async function ${name}(${['jsxFns', 'importFn'].concat(contextVars).join(', ')}) {
+(async function _mdx_generated(${['jsxFns', 'importFn'].concat(contextVars).join(', ')}) {
 ${fixImports(body)}
 });
 
 //# sourceURL=${name}.js
 `
 
-export const getComponent = async (compiledJSX: any, importFn: any, components: any, contextValues: any[] = []) => {
-  const mdxExports = await compiledJSX(ReactJSXRuntime, importFn, ...contextValues);
-  const fn: Function = mdxExports.default;
-  // react component returned
-  return (props:any) => fn({...props, components});
+export const getExports = async (compiledJSX: any, importFn: any, components: any, contextValues: any[] = []) => {
+  return await compiledJSX(ReactJSXRuntime, importFn, ...contextValues);
 }
 
 export const compile = async (name: string, mdx: string, contextKeys: string[] = []) => {

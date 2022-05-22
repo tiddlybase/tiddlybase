@@ -1,17 +1,18 @@
 const { getTW5PluginConfig } = require('@tiddlybase/webpack-config');
-const { findPluginSources, getJSBasename, getRelativePluginOutputPath, getPluginName, writePluginInfo } = require('@tiddlybase/webpack-config/src/plugin-utils');
+const { getOutputForSourceFile, findPluginSources, removePluginPrefix, writePluginInfo } = require('@tiddlybase/webpack-config/src/plugin-utils');
 const path = require('path');
 const pkg = require(path.join(__dirname, 'package.json'));
 
-const sources = findPluginSources(path.join(__dirname, 'src'));
+const sources = findPluginSources();
 const tsConfig = path.resolve(__dirname, 'tsconfig.json');
-const pluginName = getPluginName(pkg.name);
-const outputDir = getRelativePluginOutputPath(pluginName);
+const pluginName = removePluginPrefix(path.basename(process.cwd()));
 
 writePluginInfo(pkg);
 
-module.exports = () => sources.map(input => getTW5PluginConfig({
-      outputFilename: getJSBasename(input),
+module.exports = () => sources.map((input, ix) => getTW5PluginConfig({
+      ...getOutputForSourceFile(input),
       input,
       tsConfig,
-      outputDir}));
+      // only copy static for the first entry
+      copyStatic: ix===0
+    }));

@@ -1,10 +1,10 @@
-import type { Parser, ParseTree, Wiki } from "packages/tw5-types/src";
+import type { Parser, ParseTree } from "packages/tw5-types/src";
 
 class MDXParser implements Parser {
 
   tree: ParseTree[]
 
-  constructor(type: string|null|undefined, text:string, options?:{wiki:Wiki}) {
+  constructor(type: string|null|undefined, text:string) {
 
       this.tree = [
         {
@@ -28,7 +28,7 @@ class MDXParser implements Parser {
             "name": {
                 "name": "name",
                 "type": "string",
-                "value": "parserGeneratedMDX"
+                "value": undefined
             }
           }
         }

@@ -6,9 +6,14 @@
   "author": "Peter Neumark",
   "license": "Apache-2.0",
   "main": "src/webpack-common.js",
+  "scripts": {
+    "test": "yarn jasmine test/*.js"
+  },
   "devDependencies": {
     "copy-webpack-plugin": "^10.2.4",
+    "enhanced-resolve": "^5.9.3",
     "glob": "^7.2.0",
+    "jasmine": "^4.1.0",
     "terser-webpack-plugin": "^5.3.1",
     "ts-loader": "^9.2.6",
     "tsconfig-paths-webpack-plugin": "^3.5.2",

@@ -1,13 +1,11 @@
 import { monitorRemoval, unmonitorRemoval } from "@tiddlybase/plugin-react/src/dom-removal-detector";
 import type { Root } from 'react-dom/client';
 import { createRoot } from 'react-dom/client';
-import { createElement } from 'react';
 import type { ChangedTiddlers } from "@tiddlybase/tw5-types";
 import type { Widget, WidgetConstructor } from '@tiddlybase/tw5-types';
 import { ReactWrapperError } from "./components/error";
 import { ReactRenderable } from "./react-widget-types";
-import { renderWithContext } from "./components/WidgetContext";
-
+import { withContext } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { widget } = require('$:/core/modules/widgets/widget.js');
@@ -27,9 +25,9 @@ export type ReactWrapperProps = {
 } & ExtraProps
 
 export type WrappedPropsBase = {
-  require: (id: string) => any,
-  parentWidget: Widget,
-  children: ReactRenderable | null
+  require: (moduleName: string) => any,
+  parentWidget?: Widget,
+  children?: ReactRenderable | null
 }
 
 const errorMsg = (message: string) => ReactWrapperError({ message });
@@ -70,10 +68,11 @@ export class ReactWrapper extends WidgetClass implements Widget {
       isFactory = true;
     }
     try {
-      const component = isFactory ? await exportValue({require: requireFunc, parentWidget: this, ...props}) : exportValue;
-      return renderWithContext({
-        parentWidget: this,
-        children: createElement(component, props)
+      const Component = isFactory ? await exportValue({require: requireFunc, parentWidget: this, ...props}) : exportValue;
+      return withContext({
+        context: {parentWidget: this},
+        Component,
+        props
       })
     } catch (e) {
       return errorMsg(`Error rendering component '${exportName}': ${String(e)}`);

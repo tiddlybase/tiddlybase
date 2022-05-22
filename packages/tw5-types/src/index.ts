@@ -313,6 +313,7 @@ export interface WidgetConstructorOptions {
   wiki: Wiki; // mandatory reference to wiki associated with this render tree
   parentWidget?: Widget; // optional reference to a parent renderer node for the context chain
   document?: Document; // optional document object to use instead of global document
+  variables?: Record<string, any>
 }
 
 export interface WidgetConstructor {
@@ -565,6 +566,26 @@ export type WikiInfoConfig = Partial<{
   "display-link-icons": boolean
 }>
 
+// generated with JSON.stringify(Object.keys($tw.modules.types)).replace(/,/g, "|")
+export type ModuleType = "tiddlerfield"|"tiddlerdeserializer"|"startup"|"global"|"command"|"config"|"library"|"bitmapeditoroperation"|"texteditoroperation"|"filterrunprefix"|"filteroperator"|"allfilteroperator"|"formatfilteroperator"|"isfilteroperator"|"wikimethod"|"indexer"|"info"|"macro"|"parser"|"utils"|"wikirule"|"saver"|"authenticator"|"route"|"storyview"|"tiddlermethod"|"upgrader"|"animation"|"utils-node"|"widget"|"widget-subclass";
+
+export type TW5Module = {
+  definition: string | object,
+  exports: undefined | object
+  moduleType: ModuleType
+}
+
+export interface TW5Modules {
+  // applyMethods: ƒ (moduleType,targetObject)
+  // createClassFromModule: ƒ (moduleExports,baseClass)
+  // createClassesFromModules: ƒ (moduleType,subType,baseClass)
+  define: (moduleName:string,moduleType:ModuleType,definition:any)=>void;
+  execute: (moduleName:string, moduleRoot?:string)=>any;
+  // forEachModuleOfType: ƒ (moduleType,callback)
+  // getModulesByTypeAsHashmap: ƒ (moduleType,nameField)
+  titles: Record<string, TW5Module>;
+}
+
 export interface TW {
   utils: {
     // defined in tiddlywiki/core/modules/utils/dom/http.js
@@ -611,6 +632,7 @@ export interface TW {
     utils: unknown;
   },
   rootWidget: Widget,
+  modules: TW5Modules,
   // non-standard extension
   tiddlybase?: TWTiddlybase
 }
@@ -625,10 +647,9 @@ export type Parser = {
 }
 
 export type ParserOptions = Partial<{
-  wiki:Wiki,
-  parentWidget:Widget,
-  document:Document,
-  variables: Record<string, any>
+  parseAsInline: boolean,
+	wiki: Wiki,
+	_canonical_uri?: string
 }>;
 
 export interface ParserConstructor {
