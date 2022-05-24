@@ -4,7 +4,9 @@ import {
 } from "@tiddlybase/plugin-mdx/src/mdx-client/mdx-client";
 import { components } from "./components/TW5Components";
 import type { WrappedPropsBase } from "@tiddlybase/plugin-react/src/react-wrapper";
+import {withContext} from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
 import {} from "@tiddlybase/tw5-types";
+
 
 export type MDXFactoryProps = WrappedPropsBase & {
   mdx: string;
@@ -29,6 +31,7 @@ export const MDXFactory = async ({
     console.log("MDX ignoring children", children);
   }
   const mdxContext = {
+    withContext,
     wiki: parentWidget?.wiki ?? $tw.wiki,
   };
   const contextKeys: string[] = Object.keys(mdxContext).sort();

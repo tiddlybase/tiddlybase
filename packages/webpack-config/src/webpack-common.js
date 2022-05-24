@@ -4,7 +4,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 const fs = require('fs');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const {PROJECT_ROOT, getExternalImportPath, getBanner, transformMetaAddTitle, getStaticSourceDir, getStaticTargetDir, TW5_SHADOW_TIDDLER_PREFIX} = require('./plugin-utils');
+const {PROJECT_ROOT, getExternalImportPath, getBanner, transformMetaAddTitle, getStaticSourceDir, getStaticTargetDir, TW5_SHADOW_TIDDLER_PREFIX, DIST_ROOT} = require('./plugin-utils');
 
 const MODULES_DIR = path.resolve(PROJECT_ROOT, 'node_modules');
 
@@ -94,7 +94,7 @@ const getFrontendConfig = (baseOptions) => {
   config.plugins.push(
     new webpack.SourceMapDevToolPlugin({
       filename: '[file].map',
-      publicPath: '/sourcemaps/',
+      publicPath: path.join('/sourcemaps', path.relative(DIST_ROOT, config.output.path)) + '/',
     }),
   );
   // if static dif exists, copy files from static to dist dir

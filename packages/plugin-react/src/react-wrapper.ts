@@ -5,7 +5,7 @@ import type { ChangedTiddlers } from "@tiddlybase/tw5-types";
 import type { Widget, WidgetConstructor } from '@tiddlybase/tw5-types';
 import { ReactWrapperError } from "./components/error";
 import { ReactRenderable } from "./react-widget-types";
-import { withContext } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
+import { withContextProvider } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { widget } = require('$:/core/modules/widgets/widget.js');
@@ -69,7 +69,7 @@ export class ReactWrapper extends WidgetClass implements Widget {
     }
     try {
       const Component = isFactory ? await exportValue({require: requireFunc, parentWidget: this, ...props}) : exportValue;
-      return withContext({
+      return withContextProvider({
         context: {parentWidget: this},
         Component,
         props

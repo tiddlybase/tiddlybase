@@ -1,5 +1,5 @@
 import { Widget } from "@tiddlybase/tw5-types/src";
-import React, { createContext, ReactChild, useContext } from "react";
+import React, { createContext, useContext } from "react";
 import type { FunctionComponent } from 'react';
 
 export type TW5ReactContextType = {
@@ -8,28 +8,26 @@ export type TW5ReactContextType = {
 
 export const TW5ReactContext = createContext<TW5ReactContextType|null>(null);
 
-export type WithContextProps = {
+export type WithContextProviderProps = {
   context: TW5ReactContextType;
   Component: FunctionComponent<any>,
   props: any
 };
 
-export const LogContext = () => {
-  const value = useContext(TW5ReactContext);
-  console.log("context is", value);
-  return (<div>context has been logged</div>);
+export type ContextProps = {
+  context: TW5ReactContextType|null
 }
 
-export const NonContextualComponent = ({children}:{children:ReactChild}) => {
-  console.log("rendering NonContextualComponent");
-  return (<div>{children}</div>);
+export const withContext = <P extends {}>(Component:FunctionComponent<P & ContextProps>, props:P) => {
+  const context = useContext(TW5ReactContext);
+  return Component({...props, context});
 }
 
-export const withContext = ({
+export const withContextProvider = ({
   context,
   Component,
   props
-}: WithContextProps) => (
+}: WithContextProviderProps) => (
   <React.StrictMode>
     <TW5ReactContext.Provider value={context}>
       <Component {...{props}} />

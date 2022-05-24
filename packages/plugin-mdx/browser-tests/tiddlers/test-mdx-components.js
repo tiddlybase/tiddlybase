@@ -72,6 +72,32 @@ asdf
             expect(getTiddlerDiv(tiddlers[1].title).querySelector('pre').innerText).toBe(`{"children":"asdf","foo":"${tiddlers[1].title}"}`);
         });
 
+
+        it("should be able to import MDX tiddlers", async function () {
+            const tiddlers = [
+                { type, title: "mdxt3export", text: `import {TestComponent} from "$:/plugins/tiddlybase/browser-test-utils/TestComponent.js"
+export const literal = 15
+export const MyComponent = ({foo}) => (<div>
+    <TestComponent foo={foo}>asdf</TestComponent>
+</div>)`}, { type, title: "mdxt3import", text: `import {MyComponent} from "mdxt3export"
+
+export const NewComponent = () => withContext(({context}) => {
+    console.log("NewComponent got context", context);
+    return (<MyComponent foo={context?.parentWidget?.getVariable('currentTiddler') ?? 'unknown'} />);
+});
+
+<NewComponent />
+`}
+            ];
+            $tw.wiki.addTiddlers(tiddlers);
+            const onRenderPromise = new Promise(resolve => {
+                addCallback(resolve);
+            })
+            openTiddler(tiddlers[1].title);
+            await onRenderPromise;
+            expect(getTiddlerDiv(tiddlers[1].title).querySelector('pre').innerText).toBe(`{"children":"asdf","foo":"${tiddlers[1].title}"}`);
+        });
+
     });
 
 })();

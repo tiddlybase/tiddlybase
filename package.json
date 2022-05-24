@@ -8,7 +8,7 @@
   "scripts": {
     "start": "run serve -n -d --no-port-switching --symlinks -p 8080 dist",
     "start:functions": "yarn workspace @tiddlybase/functions run local",
-    "move_sourcemaps": "mkdir -p dist/sourcemaps && find dist -type f -name '*.js.map' -not -path 'dist/sourcemaps/*' -not -path 'dist/functions/*' -exec mv '{}' dist/sourcemaps/ \\;",
+    "move_sourcemaps": "yarn node ./scripts/move_sourcemaps.js",
     "test": "yarn workspaces foreach -t run test",
     "build": "MODE=production yarn workspaces foreach -p -t run build",
     "build:dev": "MODE=development yarn workspaces foreach -t run build:dev",
@@ -39,6 +39,7 @@
   },
   "devDependencies": {
     "firebase-tools": "^10.2.0",
+    "glob": "^8.0.3",
     "serve": "^13.0.2"
   }
 }
