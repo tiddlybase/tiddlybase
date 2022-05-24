@@ -18,7 +18,7 @@ export type ContextProps = {
   context: TW5ReactContextType|null
 }
 
-export const withContext = <P extends {}>(Component:FunctionComponent<P & ContextProps>, props:P) => {
+export const withContext = <P extends {}>(Component:FunctionComponent<P & ContextProps>) => (props:P) => {
   const context = useContext(TW5ReactContext);
   return Component({...props, context});
 }

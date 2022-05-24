@@ -77,16 +77,16 @@ asdf
             const tiddlers = [
                 { type, title: "mdxt3export", text: `import {TestComponent} from "$:/plugins/tiddlybase/browser-test-utils/TestComponent.js"
 export const literal = 15
-export const MyComponent = ({foo}) => (<div>
-    <TestComponent foo={foo}>asdf</TestComponent>
+export const MyComponent = ({foo, asdf}) => (<div>
+    <TestComponent foo={foo}>{asdf}</TestComponent>
 </div>)`}, { type, title: "mdxt3import", text: `import {MyComponent} from "mdxt3export"
 
-export const NewComponent = () => withContext(({context}) => {
+export const NewComponent = withContext(({context, asdf}) => {
     console.log("NewComponent got context", context);
-    return (<MyComponent foo={context?.parentWidget?.getVariable('currentTiddler') ?? 'unknown'} />);
+    return (<MyComponent asdf={asdf} foo={context?.parentWidget?.getVariable('currentTiddler') ?? 'unknown'} />);
 });
 
-<NewComponent />
+<NewComponent asdf="fdsa"/>
 `}
             ];
             $tw.wiki.addTiddlers(tiddlers);
@@ -95,7 +95,7 @@ export const NewComponent = () => withContext(({context}) => {
             })
             openTiddler(tiddlers[1].title);
             await onRenderPromise;
-            expect(getTiddlerDiv(tiddlers[1].title).querySelector('pre').innerText).toBe(`{"children":"asdf","foo":"${tiddlers[1].title}"}`);
+            expect(getTiddlerDiv(tiddlers[1].title).querySelector('pre').innerText).toBe(`{"children":"fdsa","foo":"${tiddlers[1].title}"}`);
         });
 
     });
