@@ -22,7 +22,7 @@ module-type: startup
   exports.platforms = ['browser'];
 
   exports.startup = function () {
-      $tw.Wiki.parsers['text/x-markdown'] = require("$:/plugins/tiddlybase/mdx/parser.js").MDXParser;
+      $tw.Wiki.parsers['text/x-markdown'] = require("$:/plugins/tiddlybase/mdx/parser.js")['text/x-markdown'];
   };
 
 })();

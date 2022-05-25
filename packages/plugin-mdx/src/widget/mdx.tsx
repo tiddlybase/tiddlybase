@@ -10,7 +10,7 @@ import {} from "@tiddlybase/tw5-types";
 
 export type MDXFactoryProps = WrappedPropsBase & {
   mdx: string;
-  name?: string;
+  title?: string;
 };
 
 export type MDXMetadata = {
@@ -19,14 +19,16 @@ export type MDXMetadata = {
 
 let invocationCounter = 0;
 
+export const PARSER_TITLE_PLACEHOLDER = "__parser_didnt_know__"
+
 export const MDXFactory = async ({
   parentWidget,
   children,
   require,
   mdx,
-  name,
+  title: name,
 }: MDXFactoryProps) => {
-  const definingTiddlerName:string|undefined = name ?? parentWidget?.getVariable("currentTiddler");
+  const definingTiddlerName:string|undefined = name === PARSER_TITLE_PLACEHOLDER ? parentWidget?.getVariable("currentTiddler") : name;
   if (children) {
     console.log("MDX ignoring children", children);
   }
@@ -58,7 +60,7 @@ export const MDXFactory = async ({
         children: null,
         require: (title) => $tw.modules.execute(title, definingTiddlerName),
         mdx: $tw.wiki.getTiddler(mdxTiddlerName)?.fields.text ?? "",
-        name: mdxTiddlerName,
+        title: mdxTiddlerName,
       });
     }
     mdxMetadata.dependencies.push(mdxTiddlerName);
@@ -80,7 +82,7 @@ export const MDXFactory = async ({
     $tw.modules.define(definingTiddlerName, "library", mdxExports);
   }
   return (props: any) => {
-    console.log("running default");
+    // console.log("running default");
     return mdxExports.default({ ...props, components })
   };
 };

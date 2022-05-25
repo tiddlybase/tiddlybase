@@ -1,4 +1,5 @@
 import type { Parser, ParseTree } from "packages/tw5-types/src";
+import { PARSER_TITLE_PLACEHOLDER } from "./mdx";
 
 class MDXParser implements Parser {
 
@@ -26,9 +27,9 @@ class MDXParser implements Parser {
                 "value": text
             },
             "name": {
-                "name": "name",
+                "name": "title",
                 "type": "string",
-                "value": undefined
+                "value": PARSER_TITLE_PLACEHOLDER
             }
           }
         }
@@ -36,4 +37,4 @@ class MDXParser implements Parser {
   }
 }
 
-export {MDXParser}
+exports['text/x-markdown'] = MDXParser;

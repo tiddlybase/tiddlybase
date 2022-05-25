@@ -25,7 +25,7 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
 
     const wikitextParser = $tw.Wiki.parsers["text/vnd.tiddlywiki"];
 
-    const mdxParser = require("$:/plugins/tiddlybase/mdx/parser.js").MDXParser;
+    const mdxParser = require("$:/plugins/tiddlybase/mdx/parser.js")['text/x-markdown'];
 
     const renderToDOM = async (text, parserConstructor, wiki = new $tw.Wiki()) => {
         const parser = new parserConstructor(null, text, { wiki });
