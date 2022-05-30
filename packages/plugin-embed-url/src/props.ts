@@ -1,7 +1,7 @@
 import { LINK_ICONS } from "./constants";
 
 export type LinkIcon = keyof typeof LINK_ICONS;
-export type ObjectType = 'image' | 'video' | 'embed' | 'link' | 'iframe';
+export type ObjectType = 'image' | 'video' | 'audio' | 'embed' | 'link' | 'iframe';
 
 export const EMBED_ATTRIBUTES = ['download', 'open-in-new-tab-on-click'] as const;
 export type EmbedAttribute = typeof EMBED_ATTRIBUTES[number];

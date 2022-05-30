@@ -34,6 +34,10 @@ const INNERHTML_GENERATORS: Record<ObjectType, HTMLGenerator> = {
       <video controls ${maybeAttribute('height', spec)} ${maybeAttribute('width', spec)}>
         <source src="${spec.resolvedSrc}" />
       </video>`),
+  'audio': spec => addInnerHTML(spec, `
+      <audio controls ${maybeAttribute('height', spec)} ${maybeAttribute('width', spec)}>
+        <source src="${spec.resolvedSrc}" />
+      </audio>`),
   'embed': spec => addInnerHTML(spec, `<embed src="${spec.resolvedSrc}" ${maybeAttribute('height', spec)} ${maybeAttribute('width', spec)} />`),
   'link': spec => {
     let extraAttributes: string[] = [];

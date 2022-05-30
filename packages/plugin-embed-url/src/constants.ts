@@ -1,16 +1,17 @@
 import { ObjectType } from "./props"
 
 export const EXTENSION_TO_OBJECT_TYPE: Record<string, ObjectType> = {
-  'jpg': 'image',
-  'jpeg': 'image',
-  'png': 'image',
   'gif': 'image',
   'heic': 'image',
-  'svg': 'image',
-  'mp4': 'video',
-  'mov': 'video',
+  'jpeg': 'image',
+  'jpg': 'image',
+  'm4a': 'audio',
   'mkv': 'video',
+  'mov': 'video',
+  'mp4': 'video',
   'pdf': 'embed',
+  'png': 'image',
+  'svg': 'image',
 }
 
 export const LINK_ICONS = {
