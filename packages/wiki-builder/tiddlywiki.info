@@ -12,7 +12,7 @@
         "tiddlybase/tiddlybase-utils",
         "tiddlybase/react",
         "tiddlybase/embed-url",
-        "tiddlybase/mdx"
+        "tiddlywiki/markdown"
     ],
     "themes": [
     ],
