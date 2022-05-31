@@ -24,7 +24,6 @@ export const PARSER_TITLE_PLACEHOLDER = "__parser_didnt_know__"
 export const MDXFactory = async ({
   parentWidget,
   children,
-  require,
   mdx,
   title: name,
 }: MDXFactoryProps) => {
@@ -58,13 +57,12 @@ export const MDXFactory = async ({
       await MDXFactory({
         parentWidget,
         children: null,
-        require: (title) => $tw.modules.execute(title, definingTiddlerName),
         mdx: $tw.wiki.getTiddler(mdxTiddlerName)?.fields.text ?? "",
         title: mdxTiddlerName,
       });
     }
     mdxMetadata.dependencies.push(mdxTiddlerName);
-    return require(mdxTiddlerName);
+    return $tw.modules.execute(mdxTiddlerName, definingTiddlerName);
   };
   const compiledFn = await compile(
     definingTiddlerName ?? `$:/mdx_generated_${invocationCounter++}`,

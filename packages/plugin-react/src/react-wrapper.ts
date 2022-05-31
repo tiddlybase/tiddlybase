@@ -25,7 +25,6 @@ export type ReactWrapperProps = {
 } & ExtraProps
 
 export type WrappedPropsBase = {
-  require: (moduleName: string) => any,
   parentWidget?: Widget,
   children?: ReactRenderable | null
 }
@@ -68,7 +67,7 @@ export class ReactWrapper extends WidgetClass implements Widget {
       isFactory = true;
     }
     try {
-      const Component = isFactory ? await exportValue({require: requireFunc, parentWidget: this, ...props}) : exportValue;
+      const Component = isFactory ? await exportValue({parentWidget: this, ...props}) : exportValue;
       return withContextProvider({
         context: {parentWidget: this},
         Component,

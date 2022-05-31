@@ -30,7 +30,7 @@ export const withContextProvider = ({
 }: WithContextProviderProps) => (
   <React.StrictMode>
     <TW5ReactContext.Provider value={context}>
-      <Component {...{props}} />
+      <Component {...props} />
     </TW5ReactContext.Provider>
   </React.StrictMode>
 );

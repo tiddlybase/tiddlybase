@@ -14,7 +14,7 @@ export type RenderCallback = (props: Props) => void;
 let renderCallbacks: RenderCallback[] = [];
 
 export const TestComponent = (props: Props) => {
-  const { parentWidget, require, ...extraProps } = props;
+  const { parentWidget, ...extraProps } = props;
   renderCallbacks.forEach((cb) => cb(props));
   return (
     <pre>{JSON.stringify(extraProps, Object.keys(extraProps).sort())}</pre>

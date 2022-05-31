@@ -71,14 +71,22 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
             assertCalls(0, 0);
 
             let nextDestroyCall = waitForDestroy({ label: 'destroy B1' });
-            await openTiddler("B1");
+            let onRenderPromise = new Promise(resolve => {
+                addCallback(resolve);
+            })
+            openTiddler("B1");
+            await onRenderPromise;
             assertCalls(1, 0);
-            await openTiddler("B2");
+            openTiddler("B2");
             expect((await nextDestroyCall).label).toEqual('destroy B1');
 
             nextDestroyCall = waitForDestroy({ label: 'destroy B2' });
             assertCalls(2, 1);
-            await openTiddler("Start");
+            onRenderPromise = new Promise(resolve => {
+                addCallback(resolve);
+            })
+            openTiddler("Start");
+            await onRenderPromise;
             expect((await nextDestroyCall).label).toEqual('destroy B2');
             assertCalls(2, 2);
         });
