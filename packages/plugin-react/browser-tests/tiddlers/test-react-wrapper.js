@@ -23,6 +23,17 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
 
     const ReactWrapper = require('$:/plugins/tiddlybase/react/react-wrapper.js').ReactWrapper;
 
+    let currentSpec = null;
+
+    jasmine.getEnv().addReporter({
+        specStarted: spec => {
+            currentSpec = spec;
+        },
+        specDone: spec => {
+            currentSpec = null;
+        }
+    });
+
     beforeEach(() => {
         clearCallbacks();
     })
@@ -42,53 +53,72 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
         it("should pass props to react component", async function () {
             const title = "props1"
             $tw.wiki.addTiddlers([
-                { title, text: `<$ReactWrapper module="$:/plugins/tiddlybase/browser-test-utils/TestComponent.js" export="TestComponent" foo="bar" />` }
+                { title, text: `<$ReactWrapper module="$:/plugins/tiddlybase/browser-test-utils/TestComponent.js" export="TestComponent" foo="props1" />` }
             ]);
             const onRenderPromise = new Promise(resolve => {
                 addCallback(resolve);
             })
             openTiddler(title);
             await onRenderPromise;
-            expect(getTiddlerDiv(title).querySelector('pre').innerText).toBe('{"foo":"bar"}');
+            expect(getTiddlerDiv(title).querySelector('pre').innerText).toBe('{"foo":"props1"}');
         });
 
         it("Assert widget's destroy function called when removed from DOM", async function () {
-
             // Spies are created on the prototype of the
-            initSpy(ReactWrapper.prototype, 'initReact');
-            const { waitFor: waitForDestroy } = initSpy(ReactWrapper.prototype, 'destroy');
-            const assertCalls = (initCalls, destroyCalls) => {
-                expect(ReactWrapper.prototype.initReact).toHaveBeenCalledTimes(initCalls);
-                expect(ReactWrapper.prototype.destroy).toHaveBeenCalledTimes(destroyCalls);
+            const {calls: initReactCalls} = initSpy(ReactWrapper.prototype, 'initReact');
+            const { waitFor: waitForDestroy, calls: destroyCalls } = initSpy(ReactWrapper.prototype, 'destroy');
+            const callsFilter = calls => calls.filter(({target}) => target?.attributes?.foo === 'B1')
+            const assertCalls = (initCallCount, destroyCallCount) => {
+                expect(callsFilter(initReactCalls).length).toEqual(initCallCount);
+                expect(callsFilter(destroyCalls).length).toEqual(destroyCallCount);
             }
             $tw.wiki.addTiddlers([
-                { title: "B1", text: `<$ReactWrapper module="$:/plugins/tiddlybase/browser-test-utils/TestComponent.js" export="TestComponent"/>` }
-            ]);
-            $tw.wiki.addTiddlers([
-                { title: "B2", text: "{{B1}}" }
+                { title: "B1", text: `<$ReactWrapper module="$:/plugins/tiddlybase/browser-test-utils/TestComponent.js" export="TestComponent" foo="B1"/>` }
             ]);
 
             assertCalls(0, 0);
-
             let nextDestroyCall = waitForDestroy({ label: 'destroy B1' });
             let onRenderPromise = new Promise(resolve => {
                 addCallback(resolve);
             })
-            openTiddler("B1");
+            await openTiddler("B1");
             await onRenderPromise;
-            assertCalls(1, 0);
-            openTiddler("B2");
-            expect((await nextDestroyCall).label).toEqual('destroy B1');
+            await openTiddler("Start");
+            let destroyCallData = await nextDestroyCall;
+            expect(destroyCallData.label).toEqual('destroy B1');
+            assertCalls(1,1);
+        });
 
-            nextDestroyCall = waitForDestroy({ label: 'destroy B2' });
-            assertCalls(2, 1);
-            onRenderPromise = new Promise(resolve => {
+
+        it("Assert widget's destroy function called when tiddler transcluded", async function () {
+            // Spies are created on the prototype of the
+            const {calls: initReactCalls} = initSpy(ReactWrapper.prototype, 'initReact');
+            const { waitFor: waitForDestroy, calls: destroyCalls } = initSpy(ReactWrapper.prototype, 'destroy');
+            // this callsFilter is important because initReact and destroy calls initiated by other tests
+            // may be registered while this test is running.
+            const callsFilter = calls => calls.filter(({target}) => target?.attributes?.foo === 'C1')
+            const assertCalls = (initCallCount, destroyCallCount) => {
+                expect(callsFilter(initReactCalls).length).toEqual(initCallCount);
+                expect(callsFilter(destroyCalls).length).toEqual(destroyCallCount);
+            }
+            $tw.wiki.addTiddlers([
+                { title: "C1", text: `<$ReactWrapper module="$:/plugins/tiddlybase/browser-test-utils/TestComponent.js" export="TestComponent" foo="C1"/>` }
+            ]);
+            $tw.wiki.addTiddlers([
+                { title: "C2", text: "{{C1}}" }
+            ]);
+
+            assertCalls(0, 0);
+            let nextDestroyCall = waitForDestroy({ label: 'destroy C2' });
+            let onRenderPromise = new Promise(resolve => {
                 addCallback(resolve);
             })
-            openTiddler("Start");
+            await openTiddler("C2");
             await onRenderPromise;
-            expect((await nextDestroyCall).label).toEqual('destroy B2');
-            assertCalls(2, 2);
+            await openTiddler("Start");
+            let destroyCallData = await nextDestroyCall;
+            expect(destroyCallData.label).toEqual('destroy C2');
+            assertCalls(1, 1);
         });
     });
 

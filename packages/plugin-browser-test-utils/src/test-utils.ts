@@ -37,24 +37,35 @@ export type WaitForArgs = {
 
 type WaitingResolveArgs<T> = Omit<WaitForResolution<T>, 'label'|'timeout'>;
 
-export const initSpy = <T>(obj:T, method:keyof T) => {
+export type InitSpyOptions<T> = Partial<{
+    qualifier: (resolutionData:WaitForResolution<T>)=>boolean
+}>;
+
+export const initSpy = <T>(obj:T, method:keyof T, options?:InitSpyOptions<T>) => {
     let waitingResolves:Array<(resolution:WaitingResolveArgs<T>)=>void> = [];
+    const calls:WaitForResolution<T>[] = [];
     const spy:jasmine.Spy<jasmine.Func> = spyOn<T>(obj, method).and.callFake(function (this:T, ...args) {
         let p:typeof waitingResolves[0];
-        console.log(`[spy:${method}] invoked function, waitingResolves`, waitingResolves)
-        for (p of waitingResolves) {
-            console.log("invoking resolver", p)
-            p({args, target: (this as unknown as T), method, spy});
+        const resolutionData:WaitForResolution<T> = {args, target: (this as unknown as T), method, spy};
+        const resolveWaitingPromises = options?.qualifier ? options.qualifier(resolutionData) : true;
+        if (resolveWaitingPromises) {
+            calls.push(resolutionData);
+            console.log(`[spy:${method}] invoked function, waitingResolves`, waitingResolves)
+            for (p of waitingResolves) {
+                console.log("invoking resolver", p)
+                p(resolutionData);
+            }
+            waitingResolves = [];
         }
         console.log(`[spy:${method}] calling original function ${method}`)
         return (spy.and as any).originalFn.apply(this, args);
     });
-    const waitFor = ({label, timeout = 1000}:Partial<WaitForArgs>) => new Promise((resolve, reject) => {
+    const waitFor = ({label, timeout = 1000}:Partial<WaitForArgs>):Promise<WaitForResolution<T>> => new Promise((resolve, reject) => {
         waitingResolves.push((waitingResolveArgs:WaitingResolveArgs<T>) => resolve({label, timeout, ...waitingResolveArgs}))
         console.log(`[waitFor:${method}] registering new wait for promise ${label}`, waitingResolves);
         sleep(timeout).then(() => reject(new Error(`timeout after waiting ${timeout} waiting ${label}`)));
     });
-    return {spy, waitFor}
+    return {spy, waitFor, calls}
 }
 
 let tw5Navigator:Widget|undefined = undefined;

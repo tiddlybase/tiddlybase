@@ -10,7 +10,7 @@ import { withContextProvider } from "@tiddlybase/plugin-react/src/components/TW5
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { widget } = require('$:/core/modules/widgets/widget.js');
 
-// insane webpack dynamic require stuff: https://stackoverflow.com/a/53074814
+// insane webpack dynamic require trick: https://stackoverflow.com/a/53074814
 declare var __webpack_require__: Function;
 declare var __non_webpack_require__: Function;
 const requireFunc = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require;
