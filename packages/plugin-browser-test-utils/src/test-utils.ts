@@ -50,19 +50,18 @@ export const initSpy = <T>(obj:T, method:keyof T, options?:InitSpyOptions<T>) =>
         const resolveWaitingPromises = options?.qualifier ? options.qualifier(resolutionData) : true;
         if (resolveWaitingPromises) {
             calls.push(resolutionData);
-            console.log(`[spy:${method}] invoked function, waitingResolves`, waitingResolves)
+            // console.log(`[spy:${method}] invoked function, waitingResolves`, waitingResolves)
             for (p of waitingResolves) {
-                console.log("invoking resolver", p)
                 p(resolutionData);
             }
             waitingResolves = [];
         }
-        console.log(`[spy:${method}] calling original function ${method}`)
+        // console.log(`[spy:${method}] calling original function ${method}`)
         return (spy.and as any).originalFn.apply(this, args);
     });
     const waitFor = ({label, timeout = 1000}:Partial<WaitForArgs>):Promise<WaitForResolution<T>> => new Promise((resolve, reject) => {
         waitingResolves.push((waitingResolveArgs:WaitingResolveArgs<T>) => resolve({label, timeout, ...waitingResolveArgs}))
-        console.log(`[waitFor:${method}] registering new wait for promise ${label}`, waitingResolves);
+        // console.log(`[waitFor:${method}] registering new wait for promise ${label}`, waitingResolves);
         sleep(timeout).then(() => reject(new Error(`timeout after waiting ${timeout} waiting ${label}`)));
     });
     return {spy, waitFor, calls}

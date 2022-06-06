@@ -17,11 +17,13 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
         return
     }
 
-    const { initSpy, openTiddler, sleep, getCurrentTiddler, getTiddlerDiv } = require('$:/plugins/tiddlybase/browser-test-utils/test-utils.js');
+    const { initSpy, openTiddler, getCurrentTiddler, getTiddlerDiv } = require('$:/plugins/tiddlybase/browser-test-utils/test-utils.js');
 
     const {addCallback, clearCallbacks} = require('$:/plugins/tiddlybase/browser-test-utils/TestComponent.js');
 
-    const ReactWrapper = require('$:/plugins/tiddlybase/react/react-wrapper.js').ReactWrapper;
+    const {list: ListWidget} = require('$:/core/modules/widgets/list.js');
+
+    const {ReactWrapper} = require('$:/plugins/tiddlybase/react/react-wrapper.js');
 
     let currentSpec = null;
 
@@ -120,6 +122,55 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
             expect(destroyCallData.label).toEqual('destroy C2');
             assertCalls(1, 1);
         });
+
+        it("Assert widget's destroy function called when widget removed from tiddler", async function () {
+            // Tiddler isn't closed, but the react widget within the tiddler is removed
+
+            // Spies are created on the prototype of the
+            const {calls: initReactCalls} = initSpy(ReactWrapper.prototype, 'initReact');
+            const {calls: refreshCalls} = initSpy(ListWidget.prototype, 'refresh');
+            const { waitFor: waitForDestroy, calls: destroyCalls } = initSpy(ReactWrapper.prototype, 'destroy', {qualifier: ({target}) => target?.attributes?.foo === 'D1'});
+            // this callsFilter is important because initReact and destroy calls initiated by other tests
+            // may be registered while this test is running.
+            const callsFilter = calls => calls.filter(({target}) => target?.attributes?.foo === 'D1')
+            const assertCalls = (initCallCount, destroyCallCount) => {
+                expect(callsFilter(initReactCalls).length).toEqual(initCallCount);
+                expect(callsFilter(destroyCalls).length).toEqual(destroyCallCount);
+            }
+            const tiddlers = [
+                { title: "D1",
+                  text: `<$ReactWrapper module="$:/plugins/tiddlybase/browser-test-utils/TestComponent.js" export="TestComponent" foo="D1"/>`,
+                  tags: ['includeD1'],
+                },
+                { title: "D2",
+                  text: `
+                    <$list filter="[tag[includeD1]]">
+                        <$transclude />
+                    </$list>`
+                }
+            ];
+            $tw.wiki.addTiddlers(tiddlers);
+
+            assertCalls(0, 0);
+            let nextDestroyCall = waitForDestroy({ label: 'destroy D2' });
+            let onRenderPromise = new Promise(resolve => {
+                addCallback(resolve);
+            })
+            await openTiddler("D2");
+            await onRenderPromise;
+            assertCalls(1, 0);
+            // remove tag, forcing tiddler to refresh, removing react-wrapper widget
+            $tw.wiki.addTiddlers([Object.assign({}, tiddlers[0], {tags: []})])
+            let destroyCallData = await nextDestroyCall;
+            expect(destroyCallData.label).toEqual('destroy D2');
+            // refresh call was made to parent tiddler
+            const refreshCall = refreshCalls.filter(({target}) => target?.attributes?.filter === '[tag[includeD1]]')[0];
+            // assert that the tiddler list widget which had it's refresh() invoked
+            // belongs to D2 and was passed in D1 it's changedTiddler argument.
+            expect(refreshCall?.args).toEqual([{'D1': { modified: true }}]);
+            expect(refreshCall?.target?.parentDomNode?.parentNode?.parentNode?.getAttribute('data-tiddler-title')).toEqual('D2')
+        });
+
     });
 
 })();
