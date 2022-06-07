@@ -1,25 +1,10 @@
 import type { Widget } from '@tiddlybase/tw5-types'
 import type {} from 'jasmine'
+import {findNavigator} from '@tiddlybase/plugin-tiddlybase-utils/src/navigator';
 export { toJSON } from './tojson';
 
+
 export const sleep = async (ms=1000) => new Promise(resolve => setTimeout(resolve, ms));
-
-export const findNavigator = (parent = $tw.rootWidget):Widget|undefined => {
-    const isNavigator = (child:Widget) => child?.parseTreeNode?.type === 'navigator'
-    for (let child of parent.children || []) {
-        if (isNavigator(child)) {
-            // console.log("found navigator as child", child);
-            return child;
-        }
-        // console.log("searching for navigator in children");
-        const descendent = findNavigator(child);
-        if (descendent) {
-            return descendent;
-        }
-
-    }
-    return undefined;
-  };
 
 export type WaitForResolution<T> = {
   label?: string;

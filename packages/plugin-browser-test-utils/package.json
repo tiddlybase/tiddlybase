@@ -10,6 +10,7 @@
     "build:dev": "MODE=development webpack"
   },
   "devDependencies": {
+    "@tiddlybase/plugin-tiddlybase-utils": "^0.0.0",
     "@tiddlybase/tw5-types": "^0.0.0",
     "@tiddlybase/webpack-config": "^0.0.0",
     "@types/jasmine": "^4.0.3",

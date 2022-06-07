@@ -1,6 +1,6 @@
 import { $tw } from "@tiddlybase/tw5-types";
 // use full package path so the import is externalized
-import { getWikiInfoConfigValue } from "@tiddlybase/plugin-tiddlybase-utils/src/wiki-info-config";
+import { getWikiInfoConfigValue } from "./wiki-info-config";
 
 const FILES_URL_PREFIX = getWikiInfoConfigValue("external-url-path-prefix") ?? "";
 const STORAGE_FILE_PREFIX = getWikiInfoConfigValue("default-storage-prefix");
