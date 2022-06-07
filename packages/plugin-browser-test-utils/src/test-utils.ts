@@ -71,9 +71,21 @@ let tw5Navigator:Widget|undefined = undefined;
 
 export const openTiddler = async (navigateTo:string) => {
     tw5Navigator = tw5Navigator ?? findNavigator();
-    tw5Navigator?.dispatchEvent({type: "tm-close-all-tiddlers"});
     tw5Navigator?.dispatchEvent({type: "tm-navigate", navigateTo})
     // force interruption of this function so that tiddlywiki events can be dispatched and acted upon.
+    return await sleep(0);
+};
+
+export const closeTiddler = async (title:string) => {
+    tw5Navigator = tw5Navigator ?? findNavigator();
+    tw5Navigator?.dispatchEvent({type: "tm-close-tiddler", param:title});
+    // force interruption of this function so that tiddlywiki events can be dispatched and acted upon.
+    return await sleep(0);
+}
+
+export const closeAllTiddlers = async () => {
+    tw5Navigator = tw5Navigator ?? findNavigator();
+    tw5Navigator?.dispatchEvent({type: "tm-close-all-tiddlers"});
     return await sleep(0);
 };
 

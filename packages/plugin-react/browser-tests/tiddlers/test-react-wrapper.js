@@ -17,7 +17,7 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
         return
     }
 
-    const { initSpy, openTiddler, getCurrentTiddler, getTiddlerDiv } = require('$:/plugins/tiddlybase/browser-test-utils/test-utils.js');
+    const { initSpy, openTiddler, closeAllTiddlers, closeTiddler, getCurrentTiddler, getTiddlerDiv } = require('$:/plugins/tiddlybase/browser-test-utils/test-utils.js');
 
     const {addCallback, clearCallbacks} = require('$:/plugins/tiddlybase/browser-test-utils/TestComponent.js');
 
@@ -31,13 +31,14 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
         specStarted: spec => {
             currentSpec = spec;
         },
-        specDone: spec => {
+        specDone: () => {
             currentSpec = null;
         }
     });
 
-    beforeEach(() => {
+    beforeEach(async () => {
         clearCallbacks();
+        return await closeAllTiddlers();
     })
 
     describe("Widget lifecycle", function () {
@@ -65,7 +66,7 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
             expect(getTiddlerDiv(title).querySelector('pre').innerText).toBe('{"foo":"props1"}');
         });
 
-        it("Assert widget's destroy function called when removed from DOM", async function () {
+        it("Assert widget's destroy function called when removed from DOM with closeAllTiddlers", async function () {
             // Spies are created on the prototype of the
             const {calls: initReactCalls} = initSpy(ReactWrapper.prototype, 'initReact');
             const { waitFor: waitForDestroy, calls: destroyCalls } = initSpy(ReactWrapper.prototype, 'destroy');
@@ -85,14 +86,14 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
             })
             await openTiddler("B1");
             await onRenderPromise;
-            await openTiddler("Start");
+            await closeAllTiddlers();
             let destroyCallData = await nextDestroyCall;
             expect(destroyCallData.label).toEqual('destroy B1');
             assertCalls(1,1);
         });
 
 
-        it("Assert widget's destroy function called when tiddler transcluded", async function () {
+        it("Assert widget's destroy function called when tiddler transcluded (closeTiddler)", async function () {
             // Spies are created on the prototype of the
             const {calls: initReactCalls} = initSpy(ReactWrapper.prototype, 'initReact');
             const { waitFor: waitForDestroy, calls: destroyCalls } = initSpy(ReactWrapper.prototype, 'destroy');
@@ -117,7 +118,7 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
             })
             await openTiddler("C2");
             await onRenderPromise;
-            await openTiddler("Start");
+            await closeTiddler("C2")
             let destroyCallData = await nextDestroyCall;
             expect(destroyCallData.label).toEqual('destroy C2');
             assertCalls(1, 1);
