@@ -35,7 +35,7 @@ describe("plugin title tiddlers", function() {
   it("getFilenameForImport", async function() {
     expect(getFilenameForImport('w.js', '/Users/asdf')).toEqual('/Users/asdf');
     expect(getFilenameForImport('/asdf/w.js', './foo')).toEqual('/asdf/foo');
-    expect(getFilenameForImport('/asdf/w.js', '@tiddlybase/plugin-react/src/dom-removal-detector')).toEqual(PROJECT_ROOT +'/packages/plugin-react/src/dom-removal-detector');
+    expect(getFilenameForImport('/asdf/w.js', '@tiddlybase/plugin-react/src/tiddler-removal-detector')).toEqual(PROJECT_ROOT +'/packages/plugin-react/src/tiddler-removal-detector');
     expect(getFilenameForImport('/asdf/w.js', 'tslib')).toEqual(undefined);
 
   });

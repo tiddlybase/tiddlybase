@@ -144,7 +144,7 @@ const getExternalImportPath = (importedBy, importName) => {
   /* importName can be
     * node module, eg: 'tslib', 'react-dom/client'
     * tiddlywiki module name, eg: '$:/core/modules/widgets/widget.js',
-    * tiddlybase import '@tiddlybase/plugin-react/src/dom-removal-detector',
+    * tiddlybase import '@tiddlybase/plugin-react/src/tiddler-removal-detector',
     * relative filename: './components/error',
     * abolute filename: '/Users/neumark/git/tiddlybase/packages/plugin-react/src/react-base-widget.ts',
 

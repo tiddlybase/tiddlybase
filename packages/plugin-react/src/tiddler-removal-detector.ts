@@ -1,5 +1,5 @@
 /**
- * dom-removal-detector
+ * tiddler-removal-detector
  * This module addresses the problem of React Root garbage collection.
  * React needs to be notified if it should no longer try to monitor a dom
  * subtree for changes. Ideally, when a Tiddlywiki widget's DOM element is no

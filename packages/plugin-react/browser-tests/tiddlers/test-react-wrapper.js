@@ -175,6 +175,37 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
             expect(removeChildDomNodesCalls.length).toEqual(1);
         });
 
+        it("Assert refresh called when attributes change", async function () {
+            const {waitFor: waitForRefresh, calls: refreshCalls} = initSpy(
+                ReactWrapper.prototype,
+                'refresh',
+                {qualifier: ({target}) => target?.attributes?.export === "TestComponent"});
+            const tiddlers = [
+                { title: "E1",
+                  text: ``,
+                  foo: 'bar1',
+                },
+                { title: "E2",
+                  text: `
+                    <$ReactWrapper module="$:/plugins/tiddlybase/browser-test-utils/TestComponent.js" export="TestComponent" foo={{E1!!foo}} />
+                  `
+                }
+            ];
+            $tw.wiki.addTiddlers(tiddlers);
+
+            let onRenderPromise = new Promise(resolve => {
+                addCallback(resolve);
+            })
+            await openTiddler("E2");
+            await onRenderPromise;
+            let nextRefreshCall = waitForRefresh({ label: 'refresh E2' });
+            $tw.wiki.addTiddlers([Object.assign({}, tiddlers[0], {foo: 'bar2'})]);
+
+            let refreshCallData = await nextRefreshCall;
+            expect(refreshCallData.label).toEqual('refresh E2');
+            expect(refreshCallData.target.attributes.foo).toEqual('bar2');
+        });
+
     });
 
 })();

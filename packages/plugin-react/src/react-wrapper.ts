@@ -1,4 +1,4 @@
-import { monitorRemoval, unmonitorRemoval } from "@tiddlybase/plugin-react/src/dom-removal-detector";
+import { monitorRemoval, unmonitorRemoval } from "@tiddlybase/plugin-react/src/tiddler-removal-detector";
 import type { Root } from 'react-dom/client';
 import { createRoot } from 'react-dom/client';
 import type { ChangedTiddlers } from "@tiddlybase/tw5-types";
