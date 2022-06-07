@@ -129,7 +129,8 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
 
             // Spies are created on the prototype of the
             const {calls: initReactCalls} = initSpy(ReactWrapper.prototype, 'initReact');
-            const {calls: refreshCalls} = initSpy(ListWidget.prototype, 'refresh');
+            const {calls: refreshCalls} = initSpy(ListWidget.prototype, 'refresh', {qualifier: ({target}) => target?.attributes?.filter === '[tag[includeD1]]'});
+            const {calls: removeChildDomNodesCalls} = initSpy(ReactWrapper.prototype, 'removeChildDomNodes', {qualifier: ({target}) => target?.attributes?.foo === 'D1'});
             const { waitFor: waitForDestroy, calls: destroyCalls } = initSpy(ReactWrapper.prototype, 'destroy', {qualifier: ({target}) => target?.attributes?.foo === 'D1'});
             // this callsFilter is important because initReact and destroy calls initiated by other tests
             // may be registered while this test is running.
@@ -165,11 +166,13 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
             let destroyCallData = await nextDestroyCall;
             expect(destroyCallData.label).toEqual('destroy D2');
             // refresh call was made to parent tiddler
-            const refreshCall = refreshCalls.filter(({target}) => target?.attributes?.filter === '[tag[includeD1]]')[0];
             // assert that the tiddler list widget which had it's refresh() invoked
             // belongs to D2 and was passed in D1 it's changedTiddler argument.
-            expect(refreshCall?.args).toEqual([{'D1': { modified: true }}]);
-            expect(refreshCall?.target?.parentDomNode?.parentNode?.parentNode?.getAttribute('data-tiddler-title')).toEqual('D2')
+            expect(refreshCalls.length).toEqual(1);
+            expect(refreshCalls[0].args).toEqual([{'D1': { modified: true }}]);
+            expect(refreshCalls[0].target?.parentDomNode?.parentNode?.parentNode?.getAttribute('data-tiddler-title')).toEqual('D2')
+            // removeChildDomNodes called by $list widget when child removed
+            expect(removeChildDomNodesCalls.length).toEqual(1);
         });
 
     });
