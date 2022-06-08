@@ -3,6 +3,7 @@ import { LogContext } from "./LogContext";
 import { TranscludeTiddler } from "./TranscludeTiddler";
 import { TW5ReactContext } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
 import { useContext } from "react";
+import type { NavigateEvent } from "packages/tw5-types/src/widget-events";
 
 const DEFAULT_EXTERNAL_LINK_PROPS = {
   className: "tc-tiddlylink-external",
@@ -84,7 +85,7 @@ const makeLinkClickHandler =
   ): React.AnchorHTMLAttributes<HTMLAnchorElement>["onClick"] =>
   (event) => {
     // from tiddlywiki/core/modules/widgets/link.js:147
-    const attributes = {
+    const navigateEvent:NavigateEvent = {
       type: "tm-navigate",
       navigateTo: targetTiddler,
       navigateFromTitle: parentWidget?.getVariable("storyTiddler"),
@@ -95,11 +96,11 @@ const makeLinkClickHandler =
       ctrlKey: event.ctrlKey,
       altKey: event.altKey,
       shiftKey: event.shiftKey,
-      event: event,
+      event: event.nativeEvent,
     };
     if (event.target instanceof HTMLAnchorElement) {
       const bounds = event.target.getBoundingClientRect();
-      Object.assign(attributes, {
+      Object.assign(navigateEvent, {
         navigateFromClientRect: {
           top: bounds.top,
           left: bounds.left,
@@ -116,7 +117,7 @@ const makeLinkClickHandler =
         navigateFromClientHeight: bounds.height,
       });
     }
-    parentWidget?.dispatchEvent(attributes);
+    parentWidget?.dispatchEvent(navigateEvent);
     event.preventDefault();
     event.stopPropagation();
     return false;

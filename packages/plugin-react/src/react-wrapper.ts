@@ -1,11 +1,11 @@
-import { monitorRemoval, unmonitorRemoval } from "@tiddlybase/plugin-react/src/tiddler-removal-detector";
+import { monitorRemoval, RemovalHandler, unmonitorRemoval } from "@tiddlybase/plugin-react/src/tiddler-removal-detector";
 import type { Root } from 'react-dom/client';
 import { createRoot } from 'react-dom/client';
-import type { ChangedTiddlers } from "@tiddlybase/tw5-types";
+import type { ChangedTiddlers, WidgetEvent } from "@tiddlybase/tw5-types";
 import type { Widget, WidgetConstructor } from '@tiddlybase/tw5-types';
 import { ReactWrapperError } from "./components/error";
-import { ReactRenderable } from "./react-widget-types";
 import { withContextProvider } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
+import { ReactNode } from "react";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { widget } = require('$:/core/modules/widgets/widget.js');
@@ -26,7 +26,7 @@ export type ReactWrapperProps = {
 
 export type WrappedPropsBase = {
   parentWidget?: Widget,
-  children?: ReactRenderable | null
+  children?: ReactNode
 }
 
 const errorMsg = (message: string) => ReactWrapperError({ message });
@@ -34,7 +34,8 @@ const errorMsg = (message: string) => ReactWrapperError({ message });
 export class ReactWrapper extends WidgetClass implements Widget {
 
   root?: Root;
-  renderable?: Promise<ReactRenderable>;
+  renderable?: Promise<ReactNode>;
+  onRemovalHandler:RemovalHandler|undefined = undefined;
 
   async getRenderable() {
     // initialize react component
@@ -88,16 +89,29 @@ export class ReactWrapper extends WidgetClass implements Widget {
       this.removeChildDomNodes();
     }
     const domNode = this.document.createElement('div');
-    this.getRenderable().then((renderable: ReactRenderable) => this.initReact(renderable, domNode, true));
+    this.getRenderable().then((renderable: ReactNode) => this.initReact(renderable, domNode));
     // Insert element
     parent.insertBefore(domNode, nextSibling);
     this.domNodes = [domNode];
 
   }
 
+  getContainingTiddlerTitle():string|null {
+    let element:HTMLElement|null = this.parentDomNode;
+    while (element) {
+      const tiddlerTitleAttribute = element.getAttribute('data-tiddler-title');
+      if (tiddlerTitleAttribute) {
+        return tiddlerTitleAttribute;
+      }
+      element = element.parentElement;
+    }
+    return null;
+  }
+
   destroy() {
-    if (this.domNodes[0]) {
-      unmonitorRemoval(this.domNodes[0])
+    const tiddlerTitle = this.getContainingTiddlerTitle();
+    if (tiddlerTitle) {
+      unmonitorRemoval(tiddlerTitle)
     }
     if (this.root) {
       this.root.unmount();
@@ -112,7 +126,7 @@ export class ReactWrapper extends WidgetClass implements Widget {
     super.removeChildDomNodes();
   }
 
-  async initReact(renderable: ReactRenderable, domNode: HTMLElement, addRemovalMonitor = false) {
+  async initReact(renderable: ReactNode, domNode: HTMLElement) {
     if (!domNode) {
       // silently do nothing if render() hasn't been called yet.
       return;
@@ -123,11 +137,16 @@ export class ReactWrapper extends WidgetClass implements Widget {
     if (renderable) {
       this.root.render(renderable)
     }
-    if (addRemovalMonitor) {
-      monitorRemoval(domNode, () => {
-        console.log("widget root DOM element orphaned, unmounting");
-        this.destroy();
-      });
+    if (!this.onRemovalHandler) {
+      const tiddlerTitle = this.getContainingTiddlerTitle();
+      if (tiddlerTitle) {
+        this.onRemovalHandler = (event:WidgetEvent) => {
+          console.log("widget removed, unmounting");
+          this.destroy();
+          return true;
+        }
+        monitorRemoval(tiddlerTitle, this.onRemovalHandler);
+      }
     }
   }
 
@@ -138,7 +157,7 @@ export class ReactWrapper extends WidgetClass implements Widget {
       console.log("attributes changed, rerendering component")
 
       // force rerender
-      this.getRenderable().then((renderable: ReactRenderable) => this.initReact(renderable, this.domNodes[0]));
+      this.getRenderable().then((renderable: ReactNode) => this.initReact(renderable, this.domNodes[0]));
       selfRefreshed = true;
     }
     // Widget children may be affected by changes, so push refresh down.

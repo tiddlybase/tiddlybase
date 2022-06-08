@@ -61,9 +61,9 @@ export const openTiddler = async (navigateTo:string) => {
     return await sleep(0);
 };
 
-export const closeTiddler = async (title:string) => {
+export const closeTiddler = async (tiddlerTitle:string) => {
     tw5Navigator = tw5Navigator ?? findNavigator();
-    tw5Navigator?.dispatchEvent({type: "tm-close-tiddler", param:title});
+    tw5Navigator?.dispatchEvent({type: "tm-close-tiddler", tiddlerTitle});
     // force interruption of this function so that tiddlywiki events can be dispatched and acted upon.
     return await sleep(0);
 }

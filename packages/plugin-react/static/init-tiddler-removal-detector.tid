@@ -20,8 +20,8 @@ module-type: startup
   exports.startup = function () {
     const removalDetector = require('$:/plugins/tiddlybase/react/tiddler-removal-detector.js');
     if (!removalDetector.isInstalled()) {
-      console.log("init dom removal detector");
-      removalDetector.install(window.document);
+      console.log("init tiddler removal detector");
+      removalDetector.install();
     }
   };
 

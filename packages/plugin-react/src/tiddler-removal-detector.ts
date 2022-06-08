@@ -36,86 +36,68 @@
  * the DOM element is replaced by the widget (eg: refresh, transclude, ...).
  */
 
+import { findNavigator } from '@tiddlybase/plugin-tiddlybase-utils/src/navigator';
+import type { WidgetEvent } from '@tiddlybase/tw5-types';
+import { CloseAllTiddlersEvent, CloseOtherTiddlersEvent, CloseTiddlerEvent } from 'packages/tw5-types/src/widget-events';
 
-export type MonitorCallback = (orphanNode: Node) => void;
+let _isInstalled = false;
 
-// monitoredElement -> callback
-let callbackMap = new Map<HTMLElement, MonitorCallback>();
+export type RemovalHandler = (event: WidgetEvent) => void;
 
-let observer: MutationObserver | undefined;
+// monitoredElement -> [callback]
+let registeredCallbacks: Record<string, RemovalHandler[]> = {};
 
-const isOrphan = (testNode: Node, removedNode:Node): boolean => {
-  // a node is an orphan if
-  // - it's parentNode is null
-  // - is a child of the freshly removed node.
-
-  if (!testNode?.parentNode || testNode?.parentNode === removedNode) {
-    return true;
-  }
-  // If parent is body, this node is still in the DOM.
-  // TODO: test this on fragments, if fragment's parent was removed,
-  // this could be a false heuristic.
-  if (testNode.parentNode.constructor.name === 'HTMLBodyElement') {
-    return false;
-  }
-  // otherwise, it's an orphan if it's parent is an orphan.
-  return isOrphan(testNode.parentNode, removedNode);
+export const monitorRemoval = (tiddlerTitle: string, callback: RemovalHandler) => {
+  console.log(`monitoring ${tiddlerTitle} for removal`)
+  registeredCallbacks[tiddlerTitle] = (registeredCallbacks[tiddlerTitle] ?? []).concat(callback);
 }
 
-export const monitorRemoval = (monitoredElement: HTMLElement, callback: MonitorCallback) => {
-  callbackMap.set(monitoredElement, callback);
+export const unmonitorRemoval = (tiddlerTitle: string) => {
+  delete registeredCallbacks[tiddlerTitle];
 }
 
-export const unmonitorRemoval = (monitoredElement: HTMLElement) => {
-  callbackMap.delete(monitoredElement);
-}
+export const isInstalled = () => _isInstalled;
 
-const maybeRemove = (removedNode: Node) => {
-  // naive strategy: for each monitored element, see if the
-  // removed node was a parent.
-  callbackMap.forEach((callback: MonitorCallback, monitoredElement: HTMLElement) => {
-    if (isOrphan(monitoredElement, removedNode)) {
-      callback(removedNode);
-      unmonitorRemoval(monitoredElement);
+const dispatchAndRemove = <T extends WidgetEvent>(tiddlerTitles: string[], event: T) => {
+  console.log(`dispatching removal event for`, tiddlerTitles);
+  for (let title of tiddlerTitles) {
+    for (let callback of registeredCallbacks[title] ?? []) {
+      callback(event);
     }
-  })
+    unmonitorRemoval(title);
+  }
 }
 
-export const isInstalled = () => !!observer;
-
-export const install = (document: Document) => {
+export const install = () => {
   if (isInstalled()) {
     console.log("already installed, doing nothing");
     return;
   }
-  // based on https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver
-
-  // Options for the observer (which mutations to observe)
-  const config: MutationObserverInit = { attributes: false, childList: true, subtree: true, characterData: false };
-
-  // Callback function to execute when mutations are observed
-  const callback: MutationCallback = (mutationsList, observer) => {
-    for (const mutation of mutationsList) {
-      if (mutation.removedNodes) {
-        mutation.removedNodes.forEach(node => {
-          // use string comparison to support fragments
-          if (node.constructor.name === 'HTMLDivElement') {
-            maybeRemove(node);
-          }
-        })
-      }
-    }
-  };
-  observer = new MutationObserver(callback);
-  observer.observe(document.body, config);
-}
-
-export const uninstall = () => {
-  if (observer) {
-    observer.disconnect();
-    callbackMap.clear();
-    observer = undefined;
-  } else {
-    console.log("not installed, doing nothing");
+  const navigator = findNavigator();
+  if (navigator) {
+    console.log("removal detector: install()");
+    // we should use addEventListeners(), but we don't have a
+    // typescript type for that function yet.
+    const originalHandleCloseAllTiddlerEvent = navigator.eventListeners["tm-close-all-tiddlers"];
+    navigator.addEventListener("tm-close-all-tiddlers", function (event: CloseAllTiddlersEvent) {
+      dispatchAndRemove(Object.keys(registeredCallbacks), event);
+      originalHandleCloseAllTiddlerEvent?.call(navigator, event);
+      return true;
+    });
+    const originalHandleCloseTiddlerEvent = navigator.eventListeners["tm-close-tiddler"];
+    navigator.addEventListener("tm-close-tiddler", function (event:CloseTiddlerEvent) {
+      dispatchAndRemove([event.tiddlerTitle!], event);
+      originalHandleCloseTiddlerEvent?.call(navigator, event);
+      return true;
+    });
+    const originalHandleCloseOtherTiddlersEvent = navigator.eventListeners["tm-close-other-tiddlers"];
+    navigator.addEventListener("tm-close-other-tiddlers", function (event:CloseOtherTiddlersEvent) {
+      dispatchAndRemove(Object.keys(registeredCallbacks).filter(t => t !== event.tiddlerTitle), event);
+      originalHandleCloseOtherTiddlersEvent?.call(navigator, event);
+      return true;
+    });
+    _isInstalled = true;
   }
 }
+
+// no uninstall() since there is no Widget.removeEventListener().
