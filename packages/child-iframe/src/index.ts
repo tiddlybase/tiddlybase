@@ -1,6 +1,6 @@
+/// <reference types="@tiddlybase/tw5-types/src/tiddlybase" />
 import { apiDefiner, makeAPIClient, makeRPC } from "@tiddlybase/rpc";
-import { ChildAPI, ParentAPI,  } from "@tiddlybase/rpc";
-import type {} from "@tiddlybase/tw5-types"
+import { ChildAPI, ParentAPI } from "@tiddlybase/rpc";
 
 
 const main = async () => {
@@ -12,9 +12,10 @@ const main = async () => {
   });
   const {user, isLocalEnv} = await parentClient('childIframeReady', []);
   console.log('child iframe recevied user info', user);
-  $tw.tiddlybase = $tw.tiddlybase ?? {};
-  $tw.tiddlybase.parentClient = parentClient;
-  $tw.tiddlybase.isLocalEnv = isLocalEnv;
+  const tiddlybase = $tw.tiddlybase ?? {};
+  tiddlybase.parentClient = parentClient;
+  tiddlybase.isLocalEnv = isLocalEnv;
+  $tw.tiddlybase = tiddlybase;
   $tw.boot.boot();
 }
 

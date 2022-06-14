@@ -1,9 +1,8 @@
-import type { Widget } from "@tiddlybase/tw5-types/src";
-
+/// <reference types="@tiddlybase/tw5-types/src/tiddlybase" />
 // duplicating type { ExtraProps, WrappedPropsBase } from "@tiddlybase/plugin-react/src/react-wrapper"
 // to void circular deps
 type WrappedPropsBase = {
-  parentWidget: Widget,
+  parentWidget: $tw.Widget,
   children: any
 }
 type ExtraProps = Record<string, string>;

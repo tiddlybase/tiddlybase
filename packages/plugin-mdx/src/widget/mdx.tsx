@@ -1,3 +1,5 @@
+/// <reference types="@tiddlybase/tw5-types/src/tiddlybase" />
+
 import {
   compile,
   getExports,
@@ -5,7 +7,7 @@ import {
 import { components } from "./components/TW5Components";
 import type { WrappedPropsBase } from "@tiddlybase/plugin-react/src/react-wrapper";
 import {withContext} from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
-import {} from "@tiddlybase/tw5-types";
+
 
 
 export type MDXFactoryProps = WrappedPropsBase & {

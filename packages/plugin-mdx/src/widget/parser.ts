@@ -1,9 +1,8 @@
-import type { Parser, ParseTree } from "packages/tw5-types/src";
 import { PARSER_TITLE_PLACEHOLDER } from "./mdx";
 
-class MDXParser implements Parser {
+class MDXParser implements $tw.Parser {
 
-  tree: ParseTree[]
+  tree: $tw.ParseTree[]
 
   constructor(type: string|null|undefined, text:string) {
 

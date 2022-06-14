@@ -1,4 +1,4 @@
-import type { Widget } from '@tiddlybase/tw5-types'
+/// <reference types="@tiddlybase/tw5-types/src/tiddlybase" />
 import type {} from 'jasmine'
 import {findNavigator} from '@tiddlybase/plugin-tiddlybase-utils/src/navigator';
 export { toJSON } from './tojson';
@@ -52,7 +52,7 @@ export const initSpy = <T>(obj:T, method:keyof T, options?:InitSpyOptions<T>) =>
     return {spy, waitFor, calls}
 }
 
-let tw5Navigator:Widget|undefined = undefined;
+let tw5Navigator:$tw.Widget|undefined = undefined;
 
 export const openTiddler = async (navigateTo:string) => {
     tw5Navigator = tw5Navigator ?? findNavigator();

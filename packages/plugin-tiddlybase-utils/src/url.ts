@@ -1,4 +1,3 @@
-import { $tw } from "@tiddlybase/tw5-types";
 // use full package path so the import is externalized
 import { getWikiInfoConfigValue } from "./wiki-info-config";
 

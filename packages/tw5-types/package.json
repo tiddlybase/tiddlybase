@@ -2,8 +2,11 @@
   "name": "@tiddlybase/tw5-types",
   "description": "In-browser trusted code running outside the sandbox",
   "version": "0.0.0",
-  "main": "src/index.ts",
   "private": true,
+  "main": "./src/index.ts",
   "author": "Peter Neumark",
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@tiddlybase/rpc": "^0.0.0"
+  }
 }

@@ -21,20 +21,7 @@
   },
   "workspaces": {
     "packages": [
-      "packages/browser-tests",
-      "packages/parent-frame",
-      "packages/child-iframe",
-      "packages/webpack-config",
-      "packages/cli",
-      "packages/rpc",
-      "packages/tw5-types",
-      "packages/plugin-embed-url",
-      "packages/plugin-tiddlybase-utils",
-      "packages/plugin-browser-test-utils",
-      "packages/plugin-react",
-      "packages/plugin-mdx",
-      "packages/wiki-builder",
-      "packages/functions"
+      "packages/*"
     ]
   },
   "devDependencies": {

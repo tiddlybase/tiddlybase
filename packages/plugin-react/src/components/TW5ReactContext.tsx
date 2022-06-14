@@ -1,9 +1,8 @@
-import { Widget } from "@tiddlybase/tw5-types/src";
 import React, { createContext, useContext } from "react";
 import type { FunctionComponent } from 'react';
 
 export type TW5ReactContextType = {
-  parentWidget: Widget;
+  parentWidget: $tw.Widget;
 };
 
 export const TW5ReactContext = createContext<TW5ReactContextType|null>(null);

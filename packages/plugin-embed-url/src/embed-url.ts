@@ -1,22 +1,21 @@
+/// <reference types="@tiddlybase/tw5-types/src/tiddlybase" />
+
 // from:
 // https://tiddlywiki.com/dev/static/Using%2520ES2016%2520for%2520Writing%2520Plugins.html
 // https://webpack.js.org/configuration/resolve/#resolvefallback
 // https://github.com/basarat/typescript-book/blob/master/docs/project/external-modules.md
 
-import type { } from "@tiddlybase/tw5-types"
-import type { ParseTree, Widget, WidgetConstructor } from '@tiddlybase/tw5-types';
 import { getDomNode } from "./helper";
 import { EmbedURLProps } from "./props";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { widget } = require('$:/core/modules/widgets/widget.js');
 
-const WidgetClass: WidgetConstructor = widget;
-class EmbedURL extends WidgetClass implements Widget {
+class EmbedURL extends (widget as typeof $tw.Widget) {
 
   private props?: EmbedURLProps;
 
-  constructor(parseTreeNode: ParseTree, options: any) {
+  constructor(parseTreeNode: $tw.ParseTree, options: any) {
     super(parseTreeNode, options);
   }
 

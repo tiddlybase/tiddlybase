@@ -1,4 +1,3 @@
-import { $tw, WikiInfoConfig } from "@tiddlybase/tw5-types";
 import {DEFAULT_CONFIG} from "@tiddlybase/tw5-types/src/default-config";
 
 const WIKI_INFO_CONFIG_TIDDLER = '$:/config/wikiInfoConfig';
@@ -11,7 +10,7 @@ const parseTiddlerField = (key:string):any => {
   return undefined;
 }
 
-export const getWikiInfoConfigValue = <T extends keyof WikiInfoConfig>(key: T):WikiInfoConfig[T] => {
+export const getWikiInfoConfigValue = <T extends keyof $tw.WikiInfoConfig>(key: T):$tw.WikiInfoConfig[T] => {
   // If running under node or as TiddlyDesktop, $tw.boot.wikiInfo is available.
   // If running in the browser as a "built" HTML wiki, then config values may be
   // read from WIKI_INFO_CONFIG_TIDDLER.

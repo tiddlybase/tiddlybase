@@ -1,9 +1,9 @@
-import type { Widget, Wiki } from "packages/tw5-types/src";
+/// <reference types="@tiddlybase/tw5-types/src/tiddlybase" />
+
 import { LogContext } from "./LogContext";
 import { TranscludeTiddler } from "./TranscludeTiddler";
 import { TW5ReactContext } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
 import { useContext } from "react";
-import type { NavigateEvent } from "packages/tw5-types/src/widget-events";
 
 const DEFAULT_EXTERNAL_LINK_PROPS = {
   className: "tc-tiddlylink-external",
@@ -20,7 +20,7 @@ type InternalLink = {
 
 const checkExistsAndShadow = (
   link: Omit<InternalLink, "tiddlerExists" | "isShadowTiddler">,
-  wiki: Wiki
+  wiki: $tw.Wiki
 ): InternalLink => ({
   ...link,
   tiddlerExists: wiki.tiddlerExists(link.tiddlerTitle),
@@ -29,7 +29,7 @@ const checkExistsAndShadow = (
 
 const getInternalLinkProps = (
   props: React.AnchorHTMLAttributes<HTMLAnchorElement>,
-  parentWidget?: Widget
+  parentWidget?: $tw.Widget
 ): InternalLink | undefined => {
   if (
     props.className === "internal new" &&
@@ -81,11 +81,11 @@ const getInternalLinkProps = (
 const makeLinkClickHandler =
   (
     targetTiddler: string,
-    parentWidget?: Widget
+    parentWidget?: $tw.Widget
   ): React.AnchorHTMLAttributes<HTMLAnchorElement>["onClick"] =>
   (event) => {
     // from tiddlywiki/core/modules/widgets/link.js:147
-    const navigateEvent:NavigateEvent = {
+    const navigateEvent:$twWidgetEvents.NavigateEvent = {
       type: "tm-navigate",
       navigateTo: targetTiddler,
       navigateFromTitle: parentWidget?.getVariable("storyTiddler"),

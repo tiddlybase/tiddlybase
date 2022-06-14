@@ -1,11 +1,10 @@
-import type { Widget, WidgetConstructor } from "packages/tw5-types/src";
 import React from "react";
 import { TW5ReactContext } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { transclude } = require("$:/core/modules/widgets/transclude.js");
 
-const TranscludeClass: WidgetConstructor = transclude;
+const TranscludeClass: typeof $tw.Widget = transclude;
 
 export interface TranscludeTiddlerParams {
   tiddler: string;
@@ -18,7 +17,7 @@ export class TranscludeTiddler extends React.Component<TranscludeTiddlerParams> 
   }
 
   el: HTMLDivElement | null = null;
-  transcludeWidget: Widget | null = null;
+  transcludeWidget: $tw.Widget | null = null;
 
   static contextType = TW5ReactContext;
   declare context: React.ContextType<typeof TW5ReactContext>;

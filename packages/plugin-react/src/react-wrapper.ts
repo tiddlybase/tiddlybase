@@ -1,8 +1,6 @@
 import { monitorRemoval, RemovalHandler, unmonitorRemoval } from "@tiddlybase/plugin-react/src/tiddler-removal-detector";
 import type { Root } from 'react-dom/client';
 import { createRoot } from 'react-dom/client';
-import type { ChangedTiddlers, WidgetEvent } from "@tiddlybase/tw5-types";
-import type { Widget, WidgetConstructor } from '@tiddlybase/tw5-types';
 import { ReactWrapperError } from "./components/error";
 import { withContextProvider } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
 import { ReactNode } from "react";
@@ -15,8 +13,6 @@ declare var __webpack_require__: Function;
 declare var __non_webpack_require__: Function;
 const requireFunc = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require;
 
-const WidgetClass: WidgetConstructor = widget;
-
 export type ExtraProps = Record<string, string>;
 
 export type ReactWrapperProps = {
@@ -25,13 +21,13 @@ export type ReactWrapperProps = {
 } & ExtraProps
 
 export type WrappedPropsBase = {
-  parentWidget?: Widget,
+  parentWidget?: $tw.Widget,
   children?: ReactNode
 }
 
 const errorMsg = (message: string) => ReactWrapperError({ message });
 
-export class ReactWrapper extends WidgetClass implements Widget {
+export class ReactWrapper extends (widget as typeof $tw.Widget) {
 
   root?: Root;
   renderable?: Promise<ReactNode>;
@@ -140,7 +136,7 @@ export class ReactWrapper extends WidgetClass implements Widget {
     if (!this.onRemovalHandler) {
       const tiddlerTitle = this.getContainingTiddlerTitle();
       if (tiddlerTitle) {
-        this.onRemovalHandler = (event:WidgetEvent) => {
+        this.onRemovalHandler = (event:$twWidgetEvents.WidgetEvent) => {
           console.log("widget removed, unmounting");
           this.destroy();
           return true;
@@ -150,7 +146,7 @@ export class ReactWrapper extends WidgetClass implements Widget {
     }
   }
 
-  refresh(changedTiddlers: ChangedTiddlers): boolean {
+  refresh(changedTiddlers: $tw.ChangedTiddlers): boolean {
     var changedAttributes = this.computeAttributes();
     let selfRefreshed = false;
     if (Object.keys(changedAttributes).length > 0) {

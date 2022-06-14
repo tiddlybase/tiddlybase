@@ -1,3 +1,5 @@
+/// <reference types="@tiddlybase/tw5-types/src/tiddlybase" />
+
 /**
  * tiddler-removal-detector
  * This module addresses the problem of React Root garbage collection.
@@ -37,12 +39,10 @@
  */
 
 import { findNavigator } from '@tiddlybase/plugin-tiddlybase-utils/src/navigator';
-import type { WidgetEvent } from '@tiddlybase/tw5-types';
-import { CloseAllTiddlersEvent, CloseOtherTiddlersEvent, CloseTiddlerEvent } from 'packages/tw5-types/src/widget-events';
 
 let _isInstalled = false;
 
-export type RemovalHandler = (event: WidgetEvent) => void;
+export type RemovalHandler = (event: $twWidgetEvents.WidgetEvent) => void;
 
 // monitoredElement -> [callback]
 let registeredCallbacks: Record<string, RemovalHandler[]> = {};
@@ -58,7 +58,7 @@ export const unmonitorRemoval = (tiddlerTitle: string) => {
 
 export const isInstalled = () => _isInstalled;
 
-const dispatchAndRemove = <T extends WidgetEvent>(tiddlerTitles: string[], event: T) => {
+const dispatchAndRemove = <T extends $twWidgetEvents.WidgetEvent>(tiddlerTitles: string[], event: T) => {
   console.log(`dispatching removal event for`, tiddlerTitles);
   for (let title of tiddlerTitles) {
     for (let callback of registeredCallbacks[title] ?? []) {
@@ -79,19 +79,19 @@ export const install = () => {
     // we should use addEventListeners(), but we don't have a
     // typescript type for that function yet.
     const originalHandleCloseAllTiddlerEvent = navigator.eventListeners["tm-close-all-tiddlers"];
-    navigator.addEventListener("tm-close-all-tiddlers", function (this:any, event: CloseAllTiddlersEvent) {
+    navigator.addEventListener("tm-close-all-tiddlers", function (this:any, event: $twWidgetEvents.CloseAllTiddlersEvent) {
       dispatchAndRemove(Object.keys(registeredCallbacks), event);
       originalHandleCloseAllTiddlerEvent?.call(this, event);
       return true;
     });
     const originalHandleCloseTiddlerEvent = navigator.eventListeners["tm-close-tiddler"];
-    navigator.addEventListener("tm-close-tiddler", function (this:any, event:CloseTiddlerEvent) {
+    navigator.addEventListener("tm-close-tiddler", function (this:any, event:$twWidgetEvents.CloseTiddlerEvent) {
       dispatchAndRemove([event.tiddlerTitle!], event);
       originalHandleCloseTiddlerEvent?.call(this, event);
       return true;
     });
     const originalHandleCloseOtherTiddlersEvent = navigator.eventListeners["tm-close-other-tiddlers"];
-    navigator.addEventListener("tm-close-other-tiddlers", function (this:any, event:CloseOtherTiddlersEvent) {
+    navigator.addEventListener("tm-close-other-tiddlers", function (this:any, event:$twWidgetEvents.CloseOtherTiddlersEvent) {
       dispatchAndRemove(Object.keys(registeredCallbacks).filter(t => t !== event.tiddlerTitle), event);
       originalHandleCloseOtherTiddlersEvent?.call(this, event);
       return true;
