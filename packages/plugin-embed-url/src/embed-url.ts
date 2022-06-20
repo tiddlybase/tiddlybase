@@ -1,4 +1,4 @@
-/// <reference types="@tiddlybase/tw5-types/src/tiddlybase" />
+import type {} from "@tiddlybase/tw5-types/src/index"
 
 // from:
 // https://tiddlywiki.com/dev/static/Using%2520ES2016%2520for%2520Writing%2520Plugins.html

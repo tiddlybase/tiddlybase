@@ -1,4 +1,4 @@
-/// <reference types="@tiddlybase/tw5-types/src/tiddlybase" />
+import {} from "@tiddlybase/tw5-types/src/index"
 import { apiDefiner, makeAPIClient, makeRPC } from "@tiddlybase/rpc";
 import { ChildAPI, ParentAPI } from "@tiddlybase/rpc";
 

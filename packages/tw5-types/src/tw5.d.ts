@@ -1,5 +1,4 @@
 /// <reference types="./widget-events" />
-// Based on template at https://www.typescriptlang.org/docs/handbook/declaration-files/templates/global-d-ts.html#global-library-template
 
 // Type definitions for tiddlywiki 5.2.2
 // Project: tiddlywiki
@@ -94,19 +93,19 @@ declare namespace $tw {
     attributes: Record<string, string>;
     children: Widget[];
     domNodes: HTMLElement[];
-    eventListeners: Partial<Record<$twWidgetEvents.MessageType, (event: any) => boolean>>;
+    eventListeners: Partial<Record<$tw.Widget.MessageType, (event: any) => boolean>>;
     constructor(parseTreeNode: ParseTree, options: {
       wiki: Wiki; // mandatory reference to wiki associated with this render tree
       parentWidget?: Widget; // optional reference to a parent renderer node for the context chain
       document?: Document; // optional document object to use instead of global document
       variables?: Record<string, any>
     });
-    addEventListener<T extends $twWidgetEvents.WidgetEvent>(type: T["type"], handler: $twWidgetEvents.WidgetEventHandler<T>): void;
+    addEventListener<T extends $tw.Widget.WidgetEvent>(type: T["type"], handler: $tw.Widget.WidgetEventHandler<T>): void;
     // TODO: don't know how to type this properly
     // Can likely be solved using: https://instil.co/blog/crazy-powerful-typescript-tuple-types/
     // addEventListeners<T extends [...any[]]>(listeners: ConvertEventListeners<T>): void;
 
-    dispatchEvent(event: $twWidgetEvents.WidgetEvent): void;
+    dispatchEvent(event: $tw.Widget.WidgetEvent): void;
 
     allowActionPropagation(): boolean;
     assignAttributes(domNode: HTMLElement, options: any): void;

@@ -1,4 +1,4 @@
-/// <reference types="@tiddlybase/tw5-types/src/tiddlybase" />
+import type {} from "@tiddlybase/tw5-types/src/index"
 
 import { LogContext } from "./LogContext";
 import { TranscludeTiddler } from "./TranscludeTiddler";
@@ -85,7 +85,7 @@ const makeLinkClickHandler =
   ): React.AnchorHTMLAttributes<HTMLAnchorElement>["onClick"] =>
   (event) => {
     // from tiddlywiki/core/modules/widgets/link.js:147
-    const navigateEvent:$twWidgetEvents.NavigateEvent = {
+    const navigateEvent:$tw.Widget.NavigateEvent = {
       type: "tm-navigate",
       navigateTo: targetTiddler,
       navigateFromTitle: parentWidget?.getVariable("storyTiddler"),

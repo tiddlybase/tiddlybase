@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { ReactWrapperError } from "./components/error";
 import { withContextProvider } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
 import { ReactNode } from "react";
+import type {} from "@tiddlybase/tw5-types/src/index"
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { widget } = require('$:/core/modules/widgets/widget.js');
@@ -136,7 +137,7 @@ export class ReactWrapper extends (widget as typeof $tw.Widget) {
     if (!this.onRemovalHandler) {
       const tiddlerTitle = this.getContainingTiddlerTitle();
       if (tiddlerTitle) {
-        this.onRemovalHandler = (event:$twWidgetEvents.WidgetEvent) => {
+        this.onRemovalHandler = (event:$tw.Widget.WidgetEvent) => {
           console.log("widget removed, unmounting");
           this.destroy();
           return true;

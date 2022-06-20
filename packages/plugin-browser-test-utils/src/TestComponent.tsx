@@ -1,4 +1,4 @@
-/// <reference types="@tiddlybase/tw5-types/src/tiddlybase" />
+import type {} from "@tiddlybase/tw5-types/src/index"
 // duplicating type { ExtraProps, WrappedPropsBase } from "@tiddlybase/plugin-react/src/react-wrapper"
 // to void circular deps
 type WrappedPropsBase = {

@@ -1,4 +1,4 @@
-/// <reference types="@tiddlybase/tw5-types/src/tiddlybase" />
+import type {} from "@tiddlybase/tw5-types/src/index"
 import type {} from 'jasmine'
 import {findNavigator} from '@tiddlybase/plugin-tiddlybase-utils/src/navigator';
 export { toJSON } from './tojson';
