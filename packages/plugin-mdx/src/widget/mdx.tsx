@@ -4,9 +4,10 @@ import {
   compile,
   getExports,
 } from "@tiddlybase/plugin-mdx/src/mdx-client/mdx-client";
-import { components } from "./components/TW5Components";
+import { components as baseComponents} from "./components/TW5Components";
 import type { WrappedPropsBase } from "@tiddlybase/plugin-react/src/react-wrapper";
 import {withContext} from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
+import React from "react";
 
 
 
@@ -22,6 +23,12 @@ export type MDXMetadata = {
 let invocationCounter = 0;
 
 export const PARSER_TITLE_PLACEHOLDER = "__parser_didnt_know__"
+
+const customComponents:Record<string, React.FunctionComponent> = {};
+
+export const registerComponent = (name:string, component:React.FunctionComponent) => {
+  customComponents[name] = component;
+}
 
 export const MDXFactory = async ({
   parentWidget,
@@ -45,6 +52,7 @@ export const MDXFactory = async ({
   const mdxMetadata: MDXMetadata = {
     dependencies: [],
   };
+  const components = {...baseComponents, ...customComponents};
   const importFn = async (mdxTiddlerName: string) => {
     // To require() a module, it must have been registered with TiddlyWiki
     // either at boot time (js modules) or because MDX has already compiled and
@@ -83,6 +91,6 @@ export const MDXFactory = async ({
   }
   return (props: any) => {
     // console.log("running default");
-    return mdxExports.default({ ...props, components })
+    return mdxExports.default({ ...props, components})
   };
 };

@@ -1,3 +1,4 @@
+/// <reference types="./types" />
 // MDX and remark stuff
 import { compile as compileMDX } from '@mdx-js/mdx'
 import remarkGfm from 'remark-gfm' // Tables, footnotes, strikethrough, task lists, literal URLs.

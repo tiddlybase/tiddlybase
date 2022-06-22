@@ -363,7 +363,7 @@ declare namespace $tw {
 
     // === TiddlyBase additions ===
     "default-storage-prefix": string,
-    // relative path of external files referenced by embed-url plugin.
+    // relative path of external files referenced by embed-media plugin.
     "default-file-location": string,
     // prefix for relative URLs considered external files which are part of the
     // wiki, hosted on google storage or the local file filesystem (for TiddlyDesktop).
