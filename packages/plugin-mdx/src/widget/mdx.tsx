@@ -90,7 +90,6 @@ export const MDXFactory = async ({
     $tw.modules.define(definingTiddlerName, "library", mdxExports);
   }
   return (props: any) => {
-    // console.log("running default");
     return mdxExports.default({ ...props, components})
   };
 };
