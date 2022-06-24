@@ -1,15 +1,14 @@
-import type {} from "@tiddlybase/tw5-types/src/index"
+import type {} from "@tiddlybase/tw5-types/src/index";
 
 import {
   compile,
   getExports,
 } from "@tiddlybase/plugin-mdx/src/mdx-client/mdx-client";
-import { components as baseComponents} from "./components/TW5Components";
+import { components as baseComponents } from "./components/TW5Components";
 import type { WrappedPropsBase } from "@tiddlybase/plugin-react/src/react-wrapper";
-import {withContext} from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
+import { withContext } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
 import React from "react";
-
-
+import * as ReactJSXRuntime from "react/jsx-runtime";
 
 export type MDXFactoryProps = WrappedPropsBase & {
   mdx: string;
@@ -22,13 +21,16 @@ export type MDXMetadata = {
 
 let invocationCounter = 0;
 
-export const PARSER_TITLE_PLACEHOLDER = "__parser_didnt_know__"
+export const PARSER_TITLE_PLACEHOLDER = "__parser_didnt_know__";
 
-const customComponents:Record<string, React.FunctionComponent> = {};
+const customComponents: Record<string, React.FunctionComponent> = {};
 
-export const registerComponent = (name:string, component:React.FunctionComponent) => {
+export const registerComponent = (
+  name: string,
+  component: React.FunctionComponent
+) => {
   customComponents[name] = component;
-}
+};
 
 export const MDXFactory = async ({
   parentWidget,
@@ -36,12 +38,29 @@ export const MDXFactory = async ({
   mdx,
   title: name,
 }: MDXFactoryProps) => {
-  const definingTiddlerName:string|undefined = name === PARSER_TITLE_PLACEHOLDER ? parentWidget?.getVariable("currentTiddler") : name;
+  const definingTiddlerName: string | undefined =
+    name === PARSER_TITLE_PLACEHOLDER
+      ? parentWidget?.getVariable("currentTiddler")
+      : name;
   if (children) {
     console.log("MDX ignoring children", children);
   }
   const mdxContext = {
     withContext,
+    render: (component: React.FunctionComponent) => {
+      return (ReactJSXRuntime as any).jsx(
+        withContext(({ context }) =>
+          component({
+            context,
+            parentWidget: context?.parentWidget,
+            tiddler: context?.parentWidget?.wiki?.getTiddler(
+              context?.parentWidget?.getVariable("currentTiddler")
+            ),
+          })
+        ),
+        {} // no props passed
+      );
+    },
     wiki: parentWidget?.wiki ?? $tw.wiki,
   };
   const contextKeys: string[] = Object.keys(mdxContext).sort();
@@ -52,7 +71,7 @@ export const MDXFactory = async ({
   const mdxMetadata: MDXMetadata = {
     dependencies: [],
   };
-  const components = {...baseComponents, ...customComponents};
+  const components = { ...baseComponents, ...customComponents };
   const importFn = async (mdxTiddlerName: string) => {
     // To require() a module, it must have been registered with TiddlyWiki
     // either at boot time (js modules) or because MDX has already compiled and
@@ -90,6 +109,6 @@ export const MDXFactory = async ({
     $tw.modules.define(definingTiddlerName, "library", mdxExports);
   }
   return (props: any) => {
-    return mdxExports.default({ ...props, components})
+    return mdxExports.default({ ...props, components });
   };
 };
