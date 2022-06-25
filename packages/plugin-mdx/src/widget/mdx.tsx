@@ -4,7 +4,7 @@ import {
   compile,
   getExports,
 } from "@tiddlybase/plugin-mdx/src/mdx-client/mdx-client";
-import { components as baseComponents } from "./components/TW5Components";
+import { components as baseComponents, makeWikiLink } from "./components/TW5Components";
 import type { WrappedPropsBase } from "@tiddlybase/plugin-react/src/react-wrapper";
 import { withContext } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
 import React from "react";
@@ -56,12 +56,13 @@ export const MDXFactory = async ({
             tiddler: context?.parentWidget?.wiki?.getTiddler(
               context?.parentWidget?.getVariable("currentTiddler")
             ),
+            link: (targetTiddler: string, label?: string) => makeWikiLink(context, targetTiddler, label)
           })
         ),
         {} // no props passed
       );
     },
-    wiki: parentWidget?.wiki ?? $tw.wiki,
+    wiki: parentWidget?.wiki ?? $tw.wiki
   };
   const contextKeys: string[] = Object.keys(mdxContext).sort();
   const contextValues: any[] = contextKeys.reduce((acc, key) => {

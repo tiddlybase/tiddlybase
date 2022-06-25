@@ -1,8 +1,11 @@
-import type {} from "@tiddlybase/tw5-types/src/index"
+import type {} from "@tiddlybase/tw5-types/src/index";
 
 import { LogContext } from "./LogContext";
 import { TranscludeTiddler } from "./TranscludeTiddler";
-import { TW5ReactContext } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
+import {
+  TW5ReactContext,
+  TW5ReactContextType,
+} from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
 import { useContext } from "react";
 
 const DEFAULT_EXTERNAL_LINK_PROPS = {
@@ -85,7 +88,7 @@ const makeLinkClickHandler =
   ): React.AnchorHTMLAttributes<HTMLAnchorElement>["onClick"] =>
   (event) => {
     // from tiddlywiki/core/modules/widgets/link.js:147
-    const navigateEvent:$tw.Widget.NavigateEvent = {
+    const navigateEvent: $tw.Widget.NavigateEvent = {
       type: "tm-navigate",
       navigateTo: targetTiddler,
       navigateFromTitle: parentWidget?.getVariable("storyTiddler"),
@@ -123,12 +126,56 @@ const makeLinkClickHandler =
     return false;
   };
 
+export const makeWikiLink = (
+  context: TW5ReactContextType | null,
+  targetTiddler: string,
+  label?: string
+) => {
+  const internalLinkProps = getInternalLinkProps(
+    {
+      children: targetTiddler,
+      className: "internal new",
+      href: label ?? targetTiddler,
+    },
+    context?.parentWidget
+  );
+  const classes: string[] = [];
+  // from tiddlywiki/core/modules/widgets/link.js:68
+  classes.push("tc-tiddlylink");
+  if (internalLinkProps!.isShadowTiddler) {
+    classes.push("tc-tiddlylink-shadow");
+  }
+  if (
+    !internalLinkProps!.tiddlerExists &&
+    !internalLinkProps!.isShadowTiddler
+  ) {
+    classes.push("tc-tiddlylink-missing");
+  } else if (internalLinkProps!.tiddlerExists) {
+    classes.push("tc-tiddlylink-resolves");
+  }
+  return (
+    <a
+      className={classes.join(" ")}
+      href={`#${encodeURIComponent(internalLinkProps!.tiddlerTitle)}`}
+      onClick={makeLinkClickHandler(
+        internalLinkProps!.tiddlerTitle,
+        context?.parentWidget
+      )}
+    >
+      {internalLinkProps!.label}
+    </a>
+  );
+};
+
 export const components = {
   LogContext,
   TranscludeTiddler,
   a(props: React.AnchorHTMLAttributes<HTMLAnchorElement>): React.ReactElement {
     const context = useContext(TW5ReactContext);
-    const internalLinkProps = getInternalLinkProps(props, context?.parentWidget);
+    const internalLinkProps = getInternalLinkProps(
+      props,
+      context?.parentWidget
+    );
     console.log("internalLinkProps", internalLinkProps);
     if (internalLinkProps) {
       const classes: string[] = [];
@@ -149,7 +196,10 @@ export const components = {
         <a
           className={classes.join(" ")}
           href={`#${encodeURIComponent(internalLinkProps.tiddlerTitle)}`}
-          onClick={makeLinkClickHandler(internalLinkProps.tiddlerTitle, context?.parentWidget)}
+          onClick={makeLinkClickHandler(
+            internalLinkProps.tiddlerTitle,
+            context?.parentWidget
+          )}
         >
           {internalLinkProps.label}
         </a>
