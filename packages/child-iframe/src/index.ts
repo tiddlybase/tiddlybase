@@ -1,11 +1,11 @@
 import {} from "@tiddlybase/tw5-types/src/index"
-import { apiDefiner, makeAPIClient, makeRPC } from "@tiddlybase/rpc";
+import { apiDefiner, apiClient, makeRPC } from "@tiddlybase/rpc";
 import { ChildAPI, ParentAPI } from "@tiddlybase/rpc";
 
 
 const main = async () => {
   const rpc = makeRPC();
-  const parentClient = makeAPIClient<ParentAPI>(rpc, window.parent)
+  const parentClient = apiClient<ParentAPI>(rpc, window.parent)
   const def = apiDefiner<ChildAPI>(rpc);
   def('testParentChild', async (message:string) => {
     console.log(message);

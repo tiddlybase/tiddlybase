@@ -38,7 +38,6 @@ const objFilter = <K extends keyof any=string,V=any>(fn: (k: K, v: V) => boolean
 const convertUser = (firebaseUser:User):TiddlyBaseUser => objFilter<keyof TiddlyBaseUser, any>((k) => USER_FIELDS.includes(k), firebaseUser) as TiddlyBaseUser;
 
 export const createParentApi = (rpc:MiniIframeRPC, user:User, iframe:Window) => {
-  // const childClient = makeAPIClient<ChildAPI>(rpc, iframe);
   const def = apiDefiner<ParentAPI>(rpc);
   const exposeCallable = (fn:Parameters<typeof def>[0]) => def(fn, getStub(fn))
   def('childIframeReady', async () => {

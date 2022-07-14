@@ -11,19 +11,21 @@ export const makeRPC = () =>
     },
   });
 
+type AnyFunction = (...args: any[]) => any;
+
 // Only preserves fields of an interface which have function type
 type FuncFields<T> = {
-  [P in keyof T]: T[P] extends (...args: any[]) => any ? T[P] : never;
+  [P in keyof T]: T[P] extends AnyFunction ? T[P] : never;
 };
 
-export const makeAPIClient =
-  <T>(rpc: MiniIframeRPC, iframe: Window) =>
+export const apiClient =
+  <T>(rpc: MiniIframeRPC, iframe: Window, prefix:string="") =>
   <K extends keyof FuncFields<T>>(method: K, args: Parameters<FuncFields<T>[K]>) =>
-    rpc.invoke(iframe, null, method as string, args) as ReturnType<FuncFields<T>[K]>;
+    rpc.invoke(iframe, null, `${prefix}${method as string}`, args) as ReturnType<FuncFields<T>[K]>;
 
 export const apiDefiner =
-  <T>(rpc: MiniIframeRPC) =>
-  <K extends keyof FuncFields<T>>(procedureName: K, implementation: FuncFields<T>[K]): void =>
-    rpc.register(procedureName as string, implementation);
+  <T>(rpc: MiniIframeRPC, prefix:string="") =>
+  <K extends keyof FuncFields<T>>(method: K, implementation: FuncFields<T>[K]): void =>
+    rpc.register(`${prefix}${method as string}`, implementation);
 
 export type RPCClient<T> = <K extends keyof FuncFields<T>>(method: K, args: Parameters<FuncFields<T>[K]>) => ReturnType<FuncFields<T>[K]>;
