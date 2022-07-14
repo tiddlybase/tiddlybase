@@ -42,6 +42,6 @@ export const compile = async (name: string, mdx: string, contextKeys: string[] =
     const jsSource = wrap(name, String(compilerOutput.value), contextKeys)
     return eval(jsSource);
   } catch (e) {
-    throw new Error((e as Error).message);
+    throw new Error(`${Object.entries((e as any)?.position?.start ?? {}).map(([k, v]) => `${k}: ${String(v)}`).join(" ")} ${(e as Error).message}`);
   }
 }

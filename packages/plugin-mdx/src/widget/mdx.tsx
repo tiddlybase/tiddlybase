@@ -46,6 +46,7 @@ export const MDXFactory = async ({
     console.log("MDX ignoring children", children);
   }
   const mdxContext = {
+    React,
     withContext,
     render: (component: React.FunctionComponent) => {
       return (ReactJSXRuntime as any).jsx(
