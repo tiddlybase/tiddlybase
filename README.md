@@ -93,7 +93,7 @@ yarn run firebase functions:config:set signup.whitelist="$(cat whitelist.json | 
 To add someone's address to the whitelist, do:
 
 ```bash
-yarn run firebase functions:config:get | jq '.signup.whitelist | fromjson | sort' > whitelist.json
+yarn run firebase functions:config:get | jq '.signup.whitelist | fromjson | sort' > whitelist.json
 # edit whitelist.json
 yarn run firebase functions:config:set signup.whitelist="$(cat whitelist.json | jq . -c)"
 ```
