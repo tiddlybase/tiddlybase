@@ -1,11 +1,12 @@
 import MiniIframeRPC from "mini-iframe-rpc";
-import { apiDefiner, ParentAPI } from "@tiddlybase/rpc";
+import { apiDefiner } from "@tiddlybase/rpc";
+import { TopLevelAPIForWikiSandbox } from "@tiddlybase/rpc/src/top-level-api";
 import type { CallableFunctionType} from "@tiddlybase/functions/src/apis";
 import {getDownloadURL as _getDownloadURL, getStorage, ref} from '@firebase/storage';
 import { getFunctions, httpsCallable, HttpsCallable, connectFunctionsEmulator } from "@firebase/functions";
 import { firebaseApp, firebaseAuth, isLocalEnv } from './init';
 import type {User} from '@firebase/auth'
-import { TiddlyBaseUser, USER_FIELDS } from "packages/rpc/src/parent-api";
+import { TiddlyBaseUser, USER_FIELDS } from "@tiddlybase/rpc/src/top-level-api";
 import { deleteAccount } from "./login";
 
 const storage = getStorage(firebaseApp);
@@ -38,7 +39,7 @@ const objFilter = <K extends keyof any=string,V=any>(fn: (k: K, v: V) => boolean
 const convertUser = (firebaseUser:User):TiddlyBaseUser => objFilter<keyof TiddlyBaseUser, any>((k) => USER_FIELDS.includes(k), firebaseUser) as TiddlyBaseUser;
 
 export const createParentApi = (rpc:MiniIframeRPC, user:User, iframe:Window) => {
-  const def = apiDefiner<ParentAPI>(rpc);
+  const def = apiDefiner<TopLevelAPIForWikiSandbox>(rpc);
   const exposeCallable = (fn:Parameters<typeof def>[0]) => def(fn, getStub(fn))
   def('childIframeReady', async () => {
     return {

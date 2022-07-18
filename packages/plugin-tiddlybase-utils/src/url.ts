@@ -56,8 +56,8 @@ const nonSandboxedRelativePath = (path:string) => joinPaths(LOCAL_FILE_PREFIX, p
 const getFilesURL = (path: string): string | Promise<string> => {
   // if running within the child iframe, make RPC call to parent for full url
   // of google storage resource.
-  if ($tw?.tiddlybase?.inSandboxedIframe && $tw?.tiddlybase?.parentClient) {
-    return $tw.tiddlybase.parentClient('getDownloadURL', [joinPaths(STORAGE_FILE_PREFIX, path)])
+  if ($tw?.tiddlybase?.inSandboxedIframe && $tw?.tiddlybase?.topLevelClient) {
+    return $tw.tiddlybase.topLevelClient('getDownloadURL', [joinPaths(STORAGE_FILE_PREFIX, path)])
   }
   // if running under TiddlyDesktop, get URL of local file
   if ($tw?.desktop) {

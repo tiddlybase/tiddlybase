@@ -2,7 +2,7 @@
 
 declare namespace $tw {
   export type TWTiddlybase = Partial<{
-    parentClient: import("@tiddlybase/rpc").RPCClient<import("@tiddlybase/rpc").ParentAPI>
+    topLevelClient: import("@tiddlybase/rpc").APIClient<import("@tiddlybase/rpc/src/top-level-api").TopLevelAPIForWikiSandbox>
     parentLocation: Partial<Location>
     inSandboxedIframe: boolean
     isLocalEnv: boolean

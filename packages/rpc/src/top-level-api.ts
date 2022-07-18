@@ -1,5 +1,6 @@
 import type { AddNumbers, NotifyAdmin } from "@tiddlybase/functions/src/apis";
 import type { User } from '@firebase/auth';
+import { ParentAPIBase } from "./base";
 
 export const USER_FIELDS = ['emailVerified', 'displayName', 'photoURL', 'providerId', 'uid'] as const;
 
@@ -10,8 +11,7 @@ export interface ChildInitProps {
   isLocalEnv: boolean
 }
 
-export interface ParentAPI {
-  childIframeReady: () => Promise<ChildInitProps>;
+export interface TopLevelAPIForWikiSandbox extends ParentAPIBase<ChildInitProps> {
   getDownloadURL: (filename: string) => Promise<string>;
   addNumbers: AddNumbers;
   notifyAdmin: NotifyAdmin;

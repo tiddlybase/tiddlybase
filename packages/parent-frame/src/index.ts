@@ -3,7 +3,7 @@ import { User } from '@firebase/auth';
 import { makeRPC } from '@tiddlybase/rpc';
 import { firebaseAuth, isLocalEnv, StartTW5, ui } from './init';
 import { handleSignedInUser, handleSignedOutUser, toggleVisibleDOMSection } from './login';
-import { createParentApi, getDownloadURL } from './parent-api-impl';
+import { createParentApi, getDownloadURL } from './top-level-api-impl';
 
 const getWikiURL = async () => {
   return (isLocalEnv ? 'wiki.html' : await getDownloadURL('csaladwiki/wiki.html')) + window.location.hash;
