@@ -6,6 +6,9 @@ import wikiLinkPlugin from 'remark-wiki-link';
 import * as ReactJSXRuntime from 'react/jsx-runtime';
 import remarkPresetLintConsistent from 'remark-preset-lint-consistent'
 import remarkPresetLintRecommended from 'remark-preset-lint-recommended'
+import { MDXErrorDetails } from './mdx-error-details';
+
+export type CompilationResult = {error: MDXErrorDetails|Error} | {warnings: Array<MDXErrorDetails>, compiledFn: any}
 
 // replace async import expression with call to sync importFn()
 const fixImports = (body: string) => body.replace(/= await import\(/mg, "= await importFn(");
@@ -18,11 +21,11 @@ ${fixImports(body)}
 //# sourceURL=${name}.js
 `
 
-export const getExports = async (compiledJSX: any, importFn: any, components: any, contextValues: any[] = []) => {
+export const getExports = async (compiledJSX: any, importFn: any, contextValues: any[] = []) => {
   return await compiledJSX(ReactJSXRuntime, importFn, ...contextValues);
 }
 
-export const compile = async (name: string, mdx: string, contextKeys: string[] = []) => {
+export const compile = async (name: string, mdx: string, contextKeys: string[] = []):Promise<CompilationResult> => {
   try {
     // trimStart() is needed because mdx doesn't tolerate leading newlines
     const compilerOutput = await compileMDX(mdx.trimStart(), {
@@ -44,9 +47,8 @@ export const compile = async (name: string, mdx: string, contextKeys: string[] =
     });
     const jsSource = wrap(name, String(compilerOutput.value), contextKeys);
     console.log("compilerOutput", compilerOutput);
-    return eval(jsSource);
+    return {compiledFn: eval(jsSource), warnings: compilerOutput.messages as MDXErrorDetails[]};
   } catch (e) {
-    console.log("compiler error", Object.assign({}, e));
-    throw new Error(`${Object.entries((e as any)?.position?.start ?? {}).map(([k, v]) => `${k}: ${String(v)}`).join(" ")} ${(e as Error).message}`);
+    return {error: Object.assign({}, e as Error)};
   }
 }

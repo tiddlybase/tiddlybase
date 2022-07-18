@@ -27,6 +27,6 @@
   "devDependencies": {
     "firebase-tools": "^10.2.0",
     "glob": "^8.0.3",
-    "serve": "^13.0.2"
+    "serve": "^14.0.1"
   }
 }

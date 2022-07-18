@@ -4,12 +4,17 @@ import {
   compile,
   getExports,
 } from "@tiddlybase/plugin-mdx/src/mdx-client/mdx-client";
-import { components as baseComponents, makeWikiLink } from "./components/TW5Components";
+import {
+  components as baseComponents,
+  makeWikiLink,
+} from "./components/TW5Components";
 import type { WrappedPropsBase } from "@tiddlybase/plugin-react/src/react-wrapper";
-import { ReactWrapperError } from "@tiddlybase/plugin-react/src/react-wrapper";
 import { withContext } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
 import React from "react";
 import * as ReactJSXRuntime from "react/jsx-runtime";
+import { isMDXErrorDetails, MDXError } from "./components/MDXError";
+import { JSError } from "packages/plugin-react/src/components/JSError";
+import type { MDXErrorDetails } from "../mdx-client/mdx-error-details";
 
 export type MDXFactoryProps = WrappedPropsBase & {
   mdx: string;
@@ -33,6 +38,11 @@ export const registerComponent = (
   customComponents[name] = component;
 };
 
+const errorMessage = (e: Error | MDXErrorDetails, title?: string) => () =>
+  isMDXErrorDetails(e)
+    ? MDXError({ title, details: e })
+    : JSError({ title, error: e });
+
 export const MDXFactory = async ({
   parentWidget,
   children,
@@ -51,20 +61,28 @@ export const MDXFactory = async ({
     withContext,
     render: (component: React.FunctionComponent) => {
       return (ReactJSXRuntime as any).jsx(
-        withContext(({ context }) =>
-          component({
-            context,
-            parentWidget: context?.parentWidget,
-            tiddler: context?.parentWidget?.wiki?.getTiddler(
-              context?.parentWidget?.getVariable("currentTiddler")
-            ),
-            link: (targetTiddler: string, label?: string) => makeWikiLink(context, targetTiddler, label)
-          })
-        ),
+        withContext(({ context }) => {
+          try {
+            return component({
+              context,
+              parentWidget: context?.parentWidget,
+              tiddler: context?.parentWidget?.wiki?.getTiddler(
+                context?.parentWidget?.getVariable("currentTiddler")
+              ),
+              link: (targetTiddler: string, label?: string) =>
+                makeWikiLink(context, targetTiddler, label),
+            });
+          } catch (e) {
+            return errorMessage(
+              e as Error | MDXErrorDetails,
+              "Error rendering component passed to render() helper function"
+            )();
+          }
+        }),
         {} // no props passed
       );
     },
-    wiki: parentWidget?.wiki ?? $tw.wiki
+    wiki: parentWidget?.wiki ?? $tw.wiki,
   };
   const contextKeys: string[] = Object.keys(mdxContext).sort();
   const contextValues: any[] = contextKeys.reduce((acc, key) => {
@@ -96,26 +114,53 @@ export const MDXFactory = async ({
     mdxMetadata.dependencies.push(mdxTiddlerName);
     return $tw.modules.execute(mdxTiddlerName, definingTiddlerName);
   };
-  const compiledFn = await compile(
-    definingTiddlerName ?? `$:/mdx_generated_${invocationCounter++}`,
-    mdx,
-    contextKeys
-  );
-  const mdxExports = await getExports(
-    compiledFn,
-    importFn,
-    components,
-    contextValues
-  );
+  let compiledFn: any;
+  let warnings: Array<MDXErrorDetails> = [];
+  try {
+    const compilationResult = await compile(
+      definingTiddlerName ?? `$:/mdx_generated_${invocationCounter++}`,
+      mdx,
+      contextKeys
+    );
+    if ("error" in compilationResult) {
+      return errorMessage(
+        compilationResult.error as Error | MDXErrorDetails,
+        "Error compiling MDX source"
+      );
+    }
+    compiledFn = compilationResult.compiledFn;
+    warnings = compilationResult.warnings;
+  } catch (e) {
+    return errorMessage(
+      e as Error | MDXErrorDetails,
+      "Error compiling MDX source 2"
+    );
+  }
+  let mdxExports: any;
+  try {
+    mdxExports = await getExports(compiledFn, importFn, contextValues);
+  } catch (e) {
+    return errorMessage(
+      e as Error | MDXErrorDetails,
+      "Error executing compiled MDX"
+    );
+  }
+
   mdxExports.mdxMetadata = mdxMetadata;
   if (definingTiddlerName) {
     $tw.modules.define(definingTiddlerName, "library", mdxExports);
   }
   return (props: any) => {
     try {
-      return mdxExports.default({ ...props, components });
+      return [
+        ...warnings.map((details) => MDXError({ details })),
+        mdxExports.default({ ...props, components }),
+      ];
     } catch (e) {
-      return ReactWrapperError(e as Error)
+      return JSError({
+        title: "Error rendering default MDX component",
+        error: e as Error,
+      });
     }
   };
 };

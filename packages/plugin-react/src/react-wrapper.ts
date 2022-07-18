@@ -1,11 +1,10 @@
 import { monitorRemoval, RemovalHandler, unmonitorRemoval } from "@tiddlybase/plugin-react/src/tiddler-removal-detector";
 import type { Root } from 'react-dom/client';
 import { createRoot } from 'react-dom/client';
-import { ReactWrapperError } from "./components/error";
+import { JSError } from "./components/JSError";
 import { withContextProvider } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
 import { ReactNode } from "react";
 import type {} from "@tiddlybase/tw5-types/src/index"
-export {ReactWrapperError} from './components/error'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { widget } = require('$:/core/modules/widgets/widget.js');
@@ -27,7 +26,10 @@ export type WrappedPropsBase = {
   children?: ReactNode
 }
 
-const errorMsg = (message: string) => ReactWrapperError({ name: 'react-wrapper-error', message });
+const errorMsg = (message: string, title?:string) => JSError({
+  title: title ?? 'Error rendering react component',
+  error: { name: 'react-wrapper-error', message }
+});
 
 export class ReactWrapper extends (widget as typeof $tw.Widget) {
 
@@ -54,7 +56,10 @@ export class ReactWrapper extends (widget as typeof $tw.Widget) {
       if ((e as any)?.code === 'MODULE_NOT_FOUND') {
         return errorMsg(`The module '${moduleName}' could not be found.`)
       }
-      return errorMsg(`require error: ${String(e)}`)
+      return JSError({
+        title: 'Module require error',
+        error: Object.assign({}, e as Error)
+      });
     }
     const exportValue = module[exportName];
     if (exportValue === undefined) {
@@ -73,7 +78,7 @@ export class ReactWrapper extends (widget as typeof $tw.Widget) {
         props
       })
     } catch (e) {
-      return errorMsg(`Error rendering component '${exportName}': ${String(e)}`);
+      return JSError({error: e as Error});
     }
   }
 
