@@ -6,6 +6,7 @@ import {
 } from "@tiddlybase/plugin-mdx/src/mdx-client/mdx-client";
 import { components as baseComponents, makeWikiLink } from "./components/TW5Components";
 import type { WrappedPropsBase } from "@tiddlybase/plugin-react/src/react-wrapper";
+import { ReactWrapperError } from "@tiddlybase/plugin-react/src/react-wrapper";
 import { withContext } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
 import React from "react";
 import * as ReactJSXRuntime from "react/jsx-runtime";
@@ -111,6 +112,10 @@ export const MDXFactory = async ({
     $tw.modules.define(definingTiddlerName, "library", mdxExports);
   }
   return (props: any) => {
-    return mdxExports.default({ ...props, components });
+    try {
+      return mdxExports.default({ ...props, components });
+    } catch (e) {
+      return ReactWrapperError(e as Error)
+    }
   };
 };

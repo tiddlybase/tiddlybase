@@ -5,6 +5,7 @@ import { ReactWrapperError } from "./components/error";
 import { withContextProvider } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
 import { ReactNode } from "react";
 import type {} from "@tiddlybase/tw5-types/src/index"
+export {ReactWrapperError} from './components/error'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { widget } = require('$:/core/modules/widgets/widget.js');
@@ -18,7 +19,7 @@ export type ExtraProps = Record<string, string>;
 
 export type ReactWrapperProps = {
   module: string,
-  export?: string,
+  export?: string
 } & ExtraProps
 
 export type WrappedPropsBase = {
@@ -26,7 +27,7 @@ export type WrappedPropsBase = {
   children?: ReactNode
 }
 
-const errorMsg = (message: string) => ReactWrapperError({ message });
+const errorMsg = (message: string) => ReactWrapperError({ name: 'react-wrapper-error', message });
 
 export class ReactWrapper extends (widget as typeof $tw.Widget) {
 

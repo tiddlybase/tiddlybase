@@ -1,1 +1,1 @@
-export const ReactWrapperError = ({message}:{message:String}) => (<div>{message}</div>);
+export const ReactWrapperError = (err:Error) => (<div>{err.message}</div>);
