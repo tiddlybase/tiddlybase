@@ -82,16 +82,25 @@ export const MDXError = (props: MDXErrorProps) => {
     }
   }
   console.dir(props);
+  const title = props.title ?? props.details.ruleId
   return (
     <div style={{
       border: '1px solid #eee',
       borderLeftColor: props.fatal ? '#eb4747' : '#eb9f47',
+      backgroundColor: props.fatal ? 'rgb(220 59 59 / 51%)' : 'rgb(220 158 86 / 51%)',
       padding: '20px',
       margin: '20px 0',
       borderLeftWidth: '5px',
       borderRadius: '3px'
     }}>
-      {props.details.message}
+      {title && (<h3>{title }</h3>)}
+      <div>
+      {props.details.position.start.line && (
+        <>On line {props.details.position.start.line} column {props.details.position.start.column || 0}: </>
+      )}
+      {props.details.message}{" "}
+      {props.details.url && (<a href={props.details.url} rel="noopener noreferrer" target="_blank">See explanation.</a>)}
+      </div>
       {props.mdx && (
         <code>
           {props.mdx.substring(
