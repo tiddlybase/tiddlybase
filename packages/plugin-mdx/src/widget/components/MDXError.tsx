@@ -50,25 +50,26 @@ const positionToOffset = (fullText: string, pos: Position): number => {
 };
 
 export interface MDXErrorProps {
+  fatal?: boolean,
   mdx?: string;
   title?: string;
   details: MDXErrorDetails;
 }
 
-export const extractPosition = (mdx: string, reason:string):MDXErrorDetails["position"]|undefined => {
+export const extractPosition = (
+  mdx: string,
+  reason: string
+): MDXErrorDetails["position"] | undefined => {
   const position = getPosition(reason);
   if (position) {
     if (typeof position.start.offset !== "number") {
-      position.start.offset = positionToOffset(
-        mdx,
-        position.start
-      );
+      position.start.offset = positionToOffset(mdx, position.start);
     }
     if (typeof position.end.offset !== "number") {
       position.end.offset = positionToOffset(mdx, position.end);
     }
   }
-  return position
+  return position;
 };
 
 export const MDXError = (props: MDXErrorProps) => {
@@ -77,12 +78,28 @@ export const MDXError = (props: MDXErrorProps) => {
   if (props.mdx && props.details.position.start.line === null) {
     const newPosition = extractPosition(props.mdx, props.details.reason);
     if (newPosition) {
-      props.details.position = newPosition
+      props.details.position = newPosition;
     }
   }
   console.dir(props);
-  return <>
-  <div>{props.details.message}</div>
-  {props.mdx && (<code>{props.mdx.substring(props.details.position.start.offset ?? 0, props.details.position.end.offset)}</code>)}
-  </>;
+  return (
+    <div style={{
+      border: '1px solid #eee',
+      borderLeftColor: props.fatal ? '#eb4747' : '#eb9f47',
+      padding: '20px',
+      margin: '20px 0',
+      borderLeftWidth: '5px',
+      borderRadius: '3px'
+    }}>
+      {props.details.message}
+      {props.mdx && (
+        <code>
+          {props.mdx.substring(
+            props.details.position.start.offset ?? 0,
+            props.details.position.end.offset
+          )}
+        </code>
+      )}
+    </div>
+  );
 };

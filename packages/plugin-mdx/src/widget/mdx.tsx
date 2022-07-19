@@ -53,7 +53,7 @@ export const MDXFactory = async ({
   }
   const errorMessage = (e: Error | MDXErrorDetails, title?: string) => () =>
   isMDXErrorDetails(e)
-    ? MDXError({ title, mdx, details: e })
+    ? MDXError({ title, mdx, details: e, fatal: true })
     : JSError({ title, error: e });
   const mdxContext = {
     React,
