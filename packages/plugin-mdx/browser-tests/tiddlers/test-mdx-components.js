@@ -31,7 +31,8 @@ tags: [[$:/tags/test-spec]]
             const title = "mdxc1"
             const text = `import {TestComponent} from "$:/plugins/tiddlybase/browser-test-utils/TestComponent.js"
 
-<TestComponent foo="bar">asdf</TestComponent>`;
+<TestComponent foo="bar">asdf</TestComponent>
+`;
             $tw.wiki.addTiddlers([
                 { title, text, type}
             ]);

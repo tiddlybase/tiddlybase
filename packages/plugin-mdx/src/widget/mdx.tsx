@@ -38,11 +38,6 @@ export const registerComponent = (
   customComponents[name] = component;
 };
 
-const errorMessage = (e: Error | MDXErrorDetails, title?: string) => () =>
-  isMDXErrorDetails(e)
-    ? MDXError({ title, details: e })
-    : JSError({ title, error: e });
-
 export const MDXFactory = async ({
   parentWidget,
   children,
@@ -56,6 +51,10 @@ export const MDXFactory = async ({
   if (children) {
     console.log("MDX ignoring children", children);
   }
+  const errorMessage = (e: Error | MDXErrorDetails, title?: string) => () =>
+  isMDXErrorDetails(e)
+    ? MDXError({ title, mdx, details: e })
+    : JSError({ title, error: e });
   const mdxContext = {
     React,
     withContext,
@@ -153,7 +152,7 @@ export const MDXFactory = async ({
   return (props: any) => {
     try {
       return [
-        ...warnings.map((details) => MDXError({ details })),
+        ...warnings.map((details) => MDXError({ mdx, details })),
         mdxExports.default({ ...props, components }),
       ];
     } catch (e) {

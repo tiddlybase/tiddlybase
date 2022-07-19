@@ -10,7 +10,8 @@
     "browser-tests:build": "yarn workspace @tiddlybase/browser-tests run test:build $(pwd)/browser-tests $(pwd)/../../dist/tests/plugin-mdx/test.html",
     "browser-tests:run": "yarn workspace @tiddlybase/browser-tests run test:run $(pwd)/../../dist/tests/plugin-mdx/test.html",
     "browser-tests:open": "open $(pwd)/../../dist/tests/plugin-mdx/test.html",
-    "test": "yarn browser-tests:build && yarn browser-tests:run"
+    "test": "yarn test:unit && yarn browser-tests:build && yarn browser-tests:run",
+    "test:unit": "jest -c jest.config.js"
   },
   "peerDependencies": {
     "react": "^18.0.0",
@@ -33,6 +34,7 @@
     "@types/react-test-renderer": "^18.0.0",
     "acorn-dynamic-import": "^4.0.0",
     "assert": "^2.0.0",
+    "jest": "^28.1.3",
     "react-test-renderer": "^18.0.0",
     "remark-gfm": "^3.0.1",
     "remark-mdx": "^2.1.1",
@@ -44,6 +46,7 @@
     "rollup-plugin-peer-deps-external": "^2.2.4",
     "rollup-plugin-polyfill-node": "^0.9.0",
     "rollup-plugin-terser": "^7.0.2",
+    "ts-jest": "^28.0.7",
     "tslib": "^2.3.1",
     "typescript": "^4.6.3",
     "unified": "^10.1.2",

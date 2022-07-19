@@ -6,6 +6,7 @@ import wikiLinkPlugin from 'remark-wiki-link';
 import * as ReactJSXRuntime from 'react/jsx-runtime';
 import remarkPresetLintConsistent from 'remark-preset-lint-consistent'
 import remarkPresetLintRecommended from 'remark-preset-lint-recommended'
+import remarkLintListItemIndent from 'remark-lint-list-item-indent'
 import { MDXErrorDetails } from './mdx-error-details';
 
 export type CompilationResult = {error: MDXErrorDetails|Error} | {warnings: Array<MDXErrorDetails>, compiledFn: any}
@@ -32,6 +33,10 @@ export const compile = async (name: string, mdx: string, contextKeys: string[] =
       remarkPlugins: [
         remarkPresetLintConsistent,
         remarkPresetLintRecommended,
+        // override the "consistent" config for this rule,
+        // see https://github.com/remarkjs/remark-lint/tree/main/packages/remark-lint-list-item-indent#recommendation
+        // for details
+        [remarkLintListItemIndent, 'space'],
         remarkGfm,
         [wikiLinkPlugin, {
           pageResolver: (x: string) => [x],

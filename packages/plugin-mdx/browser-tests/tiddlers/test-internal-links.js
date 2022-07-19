@@ -35,14 +35,13 @@ tags: [[$:/tags/test-spec]]
 
             const testComponentMDX = `import {TestComponent} from "$:/plugins/tiddlybase/browser-test-utils/TestComponent.js"
 
-            <TestComponent />
-
-            `
+<TestComponent />
+`;
             const target = "InternalLinkTarget";
             const source = "InternalLinkSource";
             $tw.wiki.addTiddlers([
-                { title: source, text: `${testComponentMDX}[[${target}]]`, type: "text/x-markdown"},
-                { title: target, text: `${testComponentMDX}- foo\n- bar`, type: "text/x-markdown"}
+                { title: source, text: `${testComponentMDX}[[${target}]]\n`, type: "text/x-markdown"},
+                { title: target, text: `${testComponentMDX}- foo\n- bar\n`, type: "text/x-markdown"}
             ]);
 
 
