@@ -24,7 +24,7 @@ const createWikiIframe = async () => {
   const iframe = document.createElement('iframe');
   iframe.src = src!;
   // see: https://stackoverflow.com/questions/25387977/typescript-iframe-sandbox-property-undefined-domsettabletokenlist-has-no-cons
-  (<any>iframe).sandbox = 'allow-scripts allow-downloads allow-popups allow-popups-to-escape-sandbox allow-forms';
+  (<any>iframe).sandbox = 'allow-scripts allow-downloads allow-popups allow-popups-to-escape-sandbox allow-forms allow-modals';
   // todo: this could be configurable to use a different tw5 build for eg mobile devices / translations, etc
   iframe.name = JSON.stringify(window.location);
   iframe.frameBorder="0"
