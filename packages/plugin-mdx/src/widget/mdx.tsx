@@ -9,7 +9,10 @@ import {
   makeWikiLink,
 } from "./components/TW5Components";
 import type { WrappedPropsBase } from "@tiddlybase/plugin-react/src/react-wrapper";
-import { withContext } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
+import {
+  TW5ReactContextType,
+  withContext,
+} from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
 import React from "react";
 import * as ReactJSXRuntime from "react/jsx-runtime";
 import { isMDXErrorDetails, MDXError } from "./components/MDXError";
@@ -38,6 +41,29 @@ export const registerComponent = (
   customComponents[name] = component;
 };
 
+const getCustomComponentProps = (
+  context: TW5ReactContextType
+) => ({
+  context,
+  parentWidget: context.parentWidget,
+  tiddler: context.parentWidget?.wiki?.getTiddler(
+    context.parentWidget?.getVariable("currentTiddler")
+  ),
+  /**
+   * link - Render a clickable link which displays another tiddler.
+   * @param targetTiddler
+   * @param label
+   * @returns
+   */
+  link: (targetTiddler: string, label?: string) =>
+    makeWikiLink(context, targetTiddler, label),
+});
+
+/**
+ * CustomComponentProps is the inteface presented to
+ */
+export type CustomComponentProps = ReturnType<typeof getCustomComponentProps>
+
 export const MDXFactory = async ({
   parentWidget,
   children,
@@ -52,25 +78,17 @@ export const MDXFactory = async ({
     console.log("MDX ignoring children", children);
   }
   const errorMessage = (e: Error | MDXErrorDetails, title?: string) => () =>
-  isMDXErrorDetails(e)
-    ? MDXError({ title, mdx, details: e, fatal: true })
-    : JSError({ title, error: e });
+    isMDXErrorDetails(e)
+      ? MDXError({ title, mdx, details: e, fatal: true })
+      : JSError({ title, error: e });
   const mdxContext = {
     React,
     withContext,
-    render: (component: React.FunctionComponent) => {
+    render: (component: React.FunctionComponent<CustomComponentProps|null>) => {
       return (ReactJSXRuntime as any).jsx(
         withContext(({ context }) => {
           try {
-            return component({
-              context,
-              parentWidget: context?.parentWidget,
-              tiddler: context?.parentWidget?.wiki?.getTiddler(
-                context?.parentWidget?.getVariable("currentTiddler")
-              ),
-              link: (targetTiddler: string, label?: string) =>
-                makeWikiLink(context, targetTiddler, label),
-            });
+            return component(context ? getCustomComponentProps(context) : null);
           } catch (e) {
             return errorMessage(
               e as Error | MDXErrorDetails,
