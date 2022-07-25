@@ -11,10 +11,10 @@
     "build:debug": "NODE_OPTIONS=--inspect-brk TIDDLYWIKI_PLUGIN_PATH=../../dist/plugins tiddlywiki . --output ../../dist --build wiki --verbose"
   },
   "dependencies": {
-    "@tiddlybase/plugin-embed-media": "^0.0.0",
-    "@tiddlybase/plugin-mdx": "^0.0.0",
-    "@tiddlybase/plugin-react": "^0.0.0",
-    "@tiddlybase/plugin-tiddlybase-utils": "^0.0.0"
+    "@tiddlybase/plugin-embed-media": "workspace:*",
+    "@tiddlybase/plugin-mdx": "workspace:*",
+    "@tiddlybase/plugin-react": "workspace:*",
+    "@tiddlybase/plugin-tiddlybase-utils": "workspace:*"
   },
   "devDependencies": {
     "tiddlywiki": "^5.2.2"

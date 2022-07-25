@@ -11,9 +11,9 @@
     "test": "jest"
   },
   "devDependencies": {
-    "@tiddlybase/rpc": "^0.0.0",
-    "@tiddlybase/tw5-types": "^0.0.0",
-    "@tiddlybase/webpack-config": "^0.0.0",
+    "@tiddlybase/rpc": "workspace:*",
+    "@tiddlybase/tw5-types": "workspace:*",
+    "@tiddlybase/webpack-config": "workspace:*",
     "cross-env": "^7.0.3",
     "jest": "^27.5.1",
     "ts-jest": "^27.1.4",

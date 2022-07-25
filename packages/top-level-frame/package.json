@@ -10,9 +10,9 @@
     "build:dev": "MODE=development webpack"
   },
   "devDependencies": {
-    "@tiddlybase/functions": "^0.0.0",
-    "@tiddlybase/rpc": "^0.0.0",
-    "@tiddlybase/webpack-config": "^0.0.0",
+    "@tiddlybase/functions": "workspace:*",
+    "@tiddlybase/rpc": "workspace:*",
+    "@tiddlybase/webpack-config": "workspace:*",
     "firebase": "^9.6.6",
     "firebaseui": "^6.0.0",
     "mini-iframe-rpc": "1.7.3",

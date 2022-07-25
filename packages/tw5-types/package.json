@@ -8,6 +8,6 @@
   "author": "Peter Neumark",
   "license": "Apache-2.0",
   "dependencies": {
-    "@tiddlybase/rpc": "^0.0.0"
+    "@tiddlybase/rpc": "workspace:*"
   }
 }
