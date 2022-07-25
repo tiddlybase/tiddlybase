@@ -1,5 +1,5 @@
 {
-  "name": "@tiddlybase/parent-frame",
+  "name": "@tiddlybase/top-level-frame",
   "description": "In-browser trusted code running outside the sandbox",
   "version": "0.0.0",
   "private": true,

@@ -7,5 +7,5 @@ const input = path.resolve(__dirname, 'src/index.ts');
 module.exports = () => getFrontendConfig({
   input,
   outputDir: DIST_ROOT,
-  outputFilename: "parent-frame.js"
+  outputFilename: "top-level-frame.js"
 });

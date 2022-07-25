@@ -1995,19 +1995,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@tiddlybase/child-iframe@workspace:packages/child-iframe":
-  version: 0.0.0-use.local
-  resolution: "@tiddlybase/child-iframe@workspace:packages/child-iframe"
-  dependencies:
-    "@tiddlybase/rpc": "workspace:*"
-    "@tiddlybase/tw5-types": "workspace:*"
-    "@tiddlybase/webpack-config": "workspace:*"
-    typescript: ^4.5.5
-    webpack: ^5.68.0
-    webpack-cli: ^4.9.2
-  languageName: unknown
-  linkType: soft
-
 "@tiddlybase/cli@workspace:packages/cli":
   version: 0.0.0-use.local
   resolution: "@tiddlybase/cli@workspace:packages/cli"
@@ -2044,22 +2031,6 @@ __metadata:
     tslib: ^2.3.1
     typescript: ^4.5.5
     webpack: ^5.70.0
-    webpack-cli: ^4.9.2
-  languageName: unknown
-  linkType: soft
-
-"@tiddlybase/parent-frame@workspace:packages/parent-frame":
-  version: 0.0.0-use.local
-  resolution: "@tiddlybase/parent-frame@workspace:packages/parent-frame"
-  dependencies:
-    "@tiddlybase/functions": ^0.0.0
-    "@tiddlybase/rpc": ^0.0.0
-    "@tiddlybase/webpack-config": ^0.0.0
-    firebase: ^9.6.6
-    firebaseui: ^6.0.0
-    mini-iframe-rpc: 1.7.3
-    typescript: ^4.5.5
-    webpack: ^5.68.0
     webpack-cli: ^4.9.2
   languageName: unknown
   linkType: soft
@@ -2190,6 +2161,35 @@ __metadata:
   resolution: "@tiddlybase/rpc@workspace:packages/rpc"
   dependencies:
     mini-iframe-rpc: 1.7.3
+  languageName: unknown
+  linkType: soft
+
+"@tiddlybase/sandboxed-wiki-frame@workspace:packages/sandboxed-wiki-frame":
+  version: 0.0.0-use.local
+  resolution: "@tiddlybase/sandboxed-wiki-frame@workspace:packages/sandboxed-wiki-frame"
+  dependencies:
+    "@tiddlybase/rpc": "workspace:*"
+    "@tiddlybase/tw5-types": "workspace:*"
+    "@tiddlybase/webpack-config": "workspace:*"
+    typescript: ^4.5.5
+    webpack: ^5.68.0
+    webpack-cli: ^4.9.2
+  languageName: unknown
+  linkType: soft
+
+"@tiddlybase/top-level-frame@workspace:packages/top-level-frame":
+  version: 0.0.0-use.local
+  resolution: "@tiddlybase/top-level-frame@workspace:packages/top-level-frame"
+  dependencies:
+    "@tiddlybase/functions": ^0.0.0
+    "@tiddlybase/rpc": ^0.0.0
+    "@tiddlybase/webpack-config": ^0.0.0
+    firebase: ^9.6.6
+    firebaseui: ^6.0.0
+    mini-iframe-rpc: 1.7.3
+    typescript: ^4.5.5
+    webpack: ^5.68.0
+    webpack-cli: ^4.9.2
   languageName: unknown
   linkType: soft
 
