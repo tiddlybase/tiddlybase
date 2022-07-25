@@ -11,7 +11,7 @@ export interface ChildInitProps {
   isLocalEnv: boolean
 }
 
-export interface TopLevelAPIForWikiSandbox extends ParentAPIBase<ChildInitProps> {
+export interface TopLevelAPIForSandboxedWiki extends ParentAPIBase<ChildInitProps> {
   getDownloadURL: (filename: string) => Promise<string>;
   addNumbers: AddNumbers;
   notifyAdmin: NotifyAdmin;
