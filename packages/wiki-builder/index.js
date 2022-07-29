@@ -1,5 +1,6 @@
-{
-    "description": "Empty edition",
+const getTiddlyWikiInfo = () => ({
+    // TODO: get config, plugins and included wikis from tiddlybase config
+    "description": "Empty tiddlybase edition",
     "includeWikis": [
 		{"path": "../../../csaladi_naplo/headless", "read-only": true}
 	],
@@ -15,13 +16,24 @@
         "tiddlybase/mdx"
     ],
     "themes": [
+        "tiddlywiki/vanilla",
     ],
     "build": {
-        "wiki": [
+        "wiki.html": [
             "--rendertiddler",
             "$:/core/save/all",
             "wiki.html",
             "text/plain"
+        ],
+        "wiki.json": [
+            "--savejson",
+            "wiki.json"
         ]
     }
+})
+
+if (require.main === module) {
+   console.log(JSON.stringify(getTiddlyWikiInfo(), null, 4)) 
 }
+
+module.exports = {getTiddlyWikiInfo};
