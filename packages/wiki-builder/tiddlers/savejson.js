@@ -1,5 +1,5 @@
 /*\
-title: $:/temp/savejson.js
+title: $:/tiddlybase/wikibuilder/savejson.js
 type: application/javascript
 module-type: command
 
@@ -23,7 +23,7 @@ var Command = function(params,commander,callback) {
 	this.callback = callback;
 };
 
-const filter = "[is[tiddler]] -[prefix[$:/state/popup/]] -[prefix[$:/temp/]] -[prefix[$:/HistoryList]] -[status[pending]plugin-type[import]] -[[$:/boot/boot.css]] -[type[application/javascript]library[yes]] -[[$:/boot/boot.js]] -[[$:/boot/bootprefix.js]] -[[$:/core]] +[sort[title]]";
+const filter = "[is[tiddler]] -[prefix[$:/state/popup/]] -[prefix[$:/temp/]] -[prefix[$:/tiddlybase/wikibuilder/]] -[prefix[$:/HistoryList]] -[status[pending]plugin-type[import]] -[[$:/boot/boot.css]] -[type[application/javascript]library[yes]] -[[$:/boot/boot.js]] -[[$:/boot/bootprefix.js]] -[[$:/core]] +[sort[title]]";
 
 Command.prototype.execute = function() {
 	if(this.params.length < 1) {

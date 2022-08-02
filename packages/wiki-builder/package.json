@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@tiddlybase/plugin-embed-media": "workspace:*",
+    "@tiddlybase/plugin-init": "workspace:*",
     "@tiddlybase/plugin-mdx": "workspace:*",
     "@tiddlybase/plugin-react": "workspace:*",
     "@tiddlybase/plugin-tiddlybase-utils": "workspace:*"

@@ -2070,6 +2070,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@tiddlybase/plugin-init@workspace:*, @tiddlybase/plugin-init@workspace:packages/plugin-init":
+  version: 0.0.0-use.local
+  resolution: "@tiddlybase/plugin-init@workspace:packages/plugin-init"
+  dependencies:
+    "@tiddlybase/rpc": "workspace:*"
+    "@tiddlybase/tw5-types": "workspace:*"
+    "@tiddlybase/webpack-config": "workspace:*"
+    "@tiddlybase/webshared": "workspace:*"
+    typescript: ^4.5.5
+    webpack: ^5.68.0
+    webpack-cli: ^4.9.2
+  languageName: unknown
+  linkType: soft
+
 "@tiddlybase/plugin-mdx@workspace:*, @tiddlybase/plugin-mdx@workspace:packages/plugin-mdx":
   version: 0.0.0-use.local
   resolution: "@tiddlybase/plugin-mdx@workspace:packages/plugin-mdx"
@@ -2167,19 +2181,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@tiddlybase/sandboxed-wiki-frame@workspace:packages/sandboxed-wiki-frame":
-  version: 0.0.0-use.local
-  resolution: "@tiddlybase/sandboxed-wiki-frame@workspace:packages/sandboxed-wiki-frame"
-  dependencies:
-    "@tiddlybase/rpc": "workspace:*"
-    "@tiddlybase/tw5-types": "workspace:*"
-    "@tiddlybase/webpack-config": "workspace:*"
-    typescript: ^4.5.5
-    webpack: ^5.68.0
-    webpack-cli: ^4.9.2
-  languageName: unknown
-  linkType: soft
-
 "@tiddlybase/top-level-frame@workspace:packages/top-level-frame":
   version: 0.0.0-use.local
   resolution: "@tiddlybase/top-level-frame@workspace:packages/top-level-frame"
@@ -2187,6 +2188,7 @@ __metadata:
     "@tiddlybase/functions": "workspace:*"
     "@tiddlybase/rpc": "workspace:*"
     "@tiddlybase/webpack-config": "workspace:*"
+    "@tiddlybase/webshared": "workspace:*"
     firebase: ^9.6.6
     firebaseui: ^6.0.0
     mini-iframe-rpc: 1.7.3
@@ -2222,11 +2224,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@tiddlybase/webshared@workspace:*, @tiddlybase/webshared@workspace:packages/webshared":
+  version: 0.0.0-use.local
+  resolution: "@tiddlybase/webshared@workspace:packages/webshared"
+  languageName: unknown
+  linkType: soft
+
 "@tiddlybase/wiki-builder@workspace:packages/wiki-builder":
   version: 0.0.0-use.local
   resolution: "@tiddlybase/wiki-builder@workspace:packages/wiki-builder"
   dependencies:
     "@tiddlybase/plugin-embed-media": "workspace:*"
+    "@tiddlybase/plugin-init": "workspace:*"
     "@tiddlybase/plugin-mdx": "workspace:*"
     "@tiddlybase/plugin-react": "workspace:*"
     "@tiddlybase/plugin-tiddlybase-utils": "workspace:*"

@@ -1,0 +1,20 @@
+{
+  "clientConfig": {
+      "projectId": "peterneumark-com",
+      "appId": "1:1019270346260:web:2064fdcb65a50ee1c51901",
+      "databaseURL": "https://peterneumark-com.firebaseio.com",
+      "storageBucket": "peterneumark-com.appspot.com",
+      "locationId": "europe-west",
+      "apiKey": "AIzaSyCOmUqLxAe2O-elEnk-ykX76P45IAZ5Ouc",
+      "authDomain": "peterneumark-com.firebaseapp.com",
+      "messagingSenderId": "1019270346260",
+      "measurementId": "G-BSFV9RQZJP"
+  },
+  "functions": {
+      "locations": "europe-west3"
+  },
+  "wikiSettings": {
+      "default-storage-prefix": "csaladwiki/files",
+      "display-link-icons": true
+  }
+}

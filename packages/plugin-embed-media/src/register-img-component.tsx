@@ -2,7 +2,7 @@ import { registerComponent } from "@tiddlybase/plugin-mdx/src/widget/mdx";
 import { EmbedMedia } from "./embed-media";
 
 export const name = "register-img-component";
-export const platforms = ["browser", "node"];
+export const platforms = ["browser"];
 export const after = ["load-modules"];
 export const before = ["startup"];
 export const synchronous = true;

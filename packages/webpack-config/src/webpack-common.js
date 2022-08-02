@@ -4,19 +4,19 @@ const TerserPlugin = require('terser-webpack-plugin');
 const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 const fs = require('fs');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const {PROJECT_ROOT, getExternalImportPath, getBanner, transformMetaAddTitle, getStaticSourceDir, getStaticTargetDir, TW5_SHADOW_TIDDLER_PREFIX, DIST_ROOT} = require('./plugin-utils');
+const { PROJECT_ROOT, getExternalImportPath, getBanner, transformMetaAddTitle, getStaticSourceDir, getStaticTargetDir, TW5_SHADOW_TIDDLER_PREFIX, DIST_ROOT } = require('./plugin-utils');
 
 const MODULES_DIR = path.resolve(PROJECT_ROOT, 'node_modules');
 
 const EXTERNAL_MODULES = {
-    // make firebase and firebase-ui external
-    // firebase: 'global firebase',
-    // firebaseui: 'global firebaseui',
-    // defined in plugin-react package
-    'react': 'commonjs $:/plugins/tiddlybase/react/react.js',
-    'react-dom': 'commonjs $:/plugins/tiddlybase/react/react-dom.js',
-    'react-dom/client': 'commonjs $:/plugins/tiddlybase/react/react-dom.js',
-    'react/jsx-runtime': 'commonjs $:/plugins/tiddlybase/react/react-jsx-runtime.js'
+  // make firebase and firebase-ui external
+  // firebase: 'global firebase',
+  // firebaseui: 'global firebaseui',
+  // defined in plugin-react package
+  'react': 'commonjs $:/plugins/tiddlybase/react/react.js',
+  'react-dom': 'commonjs $:/plugins/tiddlybase/react/react-dom.js',
+  'react-dom/client': 'commonjs $:/plugins/tiddlybase/react/react-dom.js',
+  'react/jsx-runtime': 'commonjs $:/plugins/tiddlybase/react/react-jsx-runtime.js'
 }
 
 const getBaseConfig = ({
@@ -26,6 +26,8 @@ const getBaseConfig = ({
   outputSubdir = '',
   tsConfig = path.resolve(process.cwd(), 'tsconfig.json'),
   mode = process.env['MODE'] ?? 'production',
+  externals,
+  banner
 }) => ({
   mode,
   entry: input,
@@ -58,9 +60,10 @@ const getBaseConfig = ({
   resolve: {
     modules: [MODULES_DIR],
     extensions: ['.json', '.js', '.tsx', '.ts'],
-    plugins: [ new TsconfigPathsPlugin({configFile: tsConfig}) ]
+    plugins: [new TsconfigPathsPlugin({ configFile: tsConfig })]
   },
   plugins: [],
+  externals: externals ?? []
 });
 
 const getNodeConfig = (baseOptions) => {
@@ -74,7 +77,7 @@ const getNodeConfig = (baseOptions) => {
     externalsPresets: {
       node: true,
     },
-    externals: [nodeExternals({
+    externals: baseOptions.externals ?? [nodeExternals({
       allowlist: [/^@tiddlybase/],
       modulesDir: MODULES_DIR
     })],
@@ -97,7 +100,7 @@ const getFrontendConfig = (baseOptions) => {
       publicPath: path.join('/sourcemaps', path.relative(DIST_ROOT, config.output.path)) + '/',
     }),
   );
-  // if static dif exists, copy files from static to dist dir
+  // if static dir exists, copy files from static to dist dir
   if (baseOptions.copyStatic !== false) {
     const copyOptions = {
       from: getStaticSourceDir(),
@@ -116,21 +119,43 @@ const getFrontendConfig = (baseOptions) => {
   Object.assign(config.output, {
     library: { type: 'window' }
   });
-  config.optimization = config.mode === 'production'
-    ? {
-        minimize: true,
-        minimizer: [new TerserPlugin()]
-      }
-    : { minimize: false };
+  if (config.mode === 'production') {
+    config.optimization = {
+      minimize: true,
+      minimizer: [new TerserPlugin({
+        terserOptions: {
+          output: Object.assign(
+            { comments: false },
+            baseOptions.banner ? { preamble: baseOptions.banner } : {}
+          )
+        },
+        extractComments: false,
+      })]
+    }
+  } else {
+    config.optimization = { minimize: false };
+    if (baseOptions.banner) {
+      // BannerPlugin is only used in dev mode
+      config.plugins.push(
+        new webpack.BannerPlugin({
+          banner: baseOptions.banner,
+          raw: true,
+        }),
+      )
+    }
+  }
+
+
   return config;
 };
 
 const getTW5PluginConfig = (options) => {
-  const config = getFrontendConfig(options);
-  Object.assign(config, {
-    externals: [
+  const config = getFrontendConfig({
+    ...options,
+    banner: options.banner ?? getBanner(options.input),
+    externals: options.externals ?? [
       EXTERNAL_MODULES,
-      function ({ contextInfo: {issuer: importedBy}, request: importName }, callback) {
+      function ({ contextInfo: { issuer: importedBy }, request: importName }, callback) {
         // if importedBy is '', then this is not a real import, it's the file being processed
         // we should not report it as external.
 
@@ -165,34 +190,13 @@ const getTW5PluginConfig = (options) => {
         // Continue without externalizing the import
         return callback();
       },
-    ],
+    ]
   });
   Object.assign(config.output, {
     library: { type: 'commonjs' },
     globalObject: 'globalThis',
   });
-  if (config.mode === 'production') {
-      config.optimization.minimizer = [
-          new TerserPlugin({
-            terserOptions: {
-              output: {
-                preamble: getBanner(config.entry, options.outputDir, options.outputSubdir, options.outputFilename, options.sourcePrefix),
-                comments: false,
-              },
-            },
-            extractComments: false,
-          }),
-        ]
-  } else { // dev build
-      // BannerPlugin is only used in dev mode
-      config.plugins.push(
-        new webpack.BannerPlugin({
-          banner: getBanner(config.entry, options.outputDir, options.outputSubdir, options.outputFilename, options.sourcePrefix),
-          raw: true,
-        }),
-      );
-  }
   return config;
 };
 
-module.exports = { getNodeConfig, getFrontendConfig, getTW5PluginConfig};
+module.exports = { getNodeConfig, getFrontendConfig, getTW5PluginConfig };

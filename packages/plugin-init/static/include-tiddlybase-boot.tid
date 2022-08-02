@@ -1,0 +1,6 @@
+title: $:/plugins/tiddlybase/init/include-tiddlybase-boot
+tags: $:/tags/RawMarkupWikified
+
+`<script>`
+{{$:/plugins/tiddlybase/init/tiddlybase-boot.js}}
+`</script>`

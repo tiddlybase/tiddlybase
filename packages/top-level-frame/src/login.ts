@@ -1,11 +1,11 @@
 import { GoogleAuthProvider, GithubAuthProvider, EmailAuthProvider, PhoneAuthProvider, getAuth, User } from '@firebase/auth'
 import * as firebaseui from 'firebaseui';
-import { firebaseAuth, ui, StartTW5 } from './init';
+import { FirebaseState, StartTW5 } from './types';
 
 export const toggleVisibleDOMSection = (selectedSectionId?: string) => {
   console.log('toggleVisibleDOMSection', selectedSectionId);
   // rehide all sections
-  [...(document.querySelectorAll('.section'))].forEach(section => {
+  document.querySelectorAll('.section').forEach(section => {
     (section as any).style.display = 'none';
   });
   // show newly selected section
@@ -18,7 +18,7 @@ const sleep = (ms:number) => new Promise((resolve) => {
   setTimeout(resolve, ms);
 })
 
-function getUiConfig(startTW5: (user: User) => Promise<void>) {
+function getUiConfig(firebaseState:FirebaseState, startTW5: StartTW5) {
   console.log('running getUiConfig');
   return {
     callbacks: {
@@ -36,14 +36,14 @@ function getUiConfig(startTW5: (user: User) => Promise<void>) {
             // new signin, must refresh token before loading wiki
             console.log("refreshing access token!");
             // force token refresh so new custom claims propagate
-            return firebaseAuth.currentUser?.getIdToken(true)
+            return firebaseState.auth.currentUser?.getIdToken(true)
           }).then((...args: any[]) => {
             console.log("refreshed token, got", args);
-            handleSignedInUser(startTW5, firebaseAuth.currentUser!);
+            handleSignedInUser(firebaseState, startTW5, firebaseState.auth.currentUser!);
           });
         } else if (authResult.user) {
           console.log("welcome, existing user!");
-          handleSignedInUser(startTW5, authResult.user);
+          handleSignedInUser(firebaseState, startTW5, authResult.user);
         }
         // Do not redirect.
         return false;
@@ -109,7 +109,7 @@ function getUiConfig(startTW5: (user: User) => Promise<void>) {
  * Displays the UI for a signed in user.
  * @param {!firebase.User} user
  */
-export const handleSignedInUser = async function (startTW5: StartTW5, user: User) {
+export const handleSignedInUser = async function (firebaseState:FirebaseState, startTW5: StartTW5, user: User) {
   console.log('running handleSignedInUser');
   toggleVisibleDOMSection('user-signed-in');
   await startTW5(user);
@@ -118,10 +118,10 @@ export const handleSignedInUser = async function (startTW5: StartTW5, user: User
 /**
  * Displays the UI for a signed out user.
  */
-export const handleSignedOutUser = async function (startTW5: StartTW5) {
+export const handleSignedOutUser = async function (firebaseState:FirebaseState, startTW5: StartTW5) {
   console.log('running handleSignedOutUser');
   toggleVisibleDOMSection('user-signed-out');
-  ui.start('#firebaseui-container', getUiConfig(startTW5));
+  firebaseState.ui.start('#firebaseui-container', getUiConfig(firebaseState, startTW5));
 };
 
 /**

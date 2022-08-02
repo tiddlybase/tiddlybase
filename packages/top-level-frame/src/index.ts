@@ -1,28 +1,20 @@
-import type { FirebaseError } from '@firebase/util';
 import { User } from '@firebase/auth';
 import { makeRPC } from '@tiddlybase/rpc';
-import { firebaseAuth, isLocalEnv, StartTW5, ui } from './init';
-import { handleSignedInUser, handleSignedOutUser, toggleVisibleDOMSection } from './login';
-import { createParentApi, getDownloadURL } from './top-level-api-impl';
+import { handleSignedInUser, handleSignedOutUser } from './login';
+import { createParentApi } from './top-level-api-impl';
+import { TiddlybaseConfig } from '@tiddlybase/webshared/src/tiddlybase-config-schema';
+import {DEFAULT_BUILD_NAME, TIDDLYBASE_CONFIG_URL} from '@tiddlybase/webshared/src/constants'
+import {parseSearchParams, isLocal, getWikiName} from '@tiddlybase/webshared/src/search-params'
+import {initializeApp} from '@firebase/app'
+import {getAuth} from '@firebase/auth'
+import * as firebaseui from 'firebaseui';
+import { FirebaseState, StartTW5 } from './types';
 
-const getWikiURL = async () => {
-  return (isLocalEnv ? 'wiki.html' : await getDownloadURL('csaladwiki/wiki.html')) + window.location.hash;
-}
-
-const createWikiIframe = async () => {
-  let src:string;
-  try {
-    src = await getWikiURL();
-  } catch (e) {
-    const err = e as FirebaseError
-    if (err?.code === 'storage/unauthorized') {
-      toggleVisibleDOMSection('user-unauthorized');
-    }
-    return;
-  }
+const createWikiIframe = async (build?:string) => {
+  let src = `/${build ?? DEFAULT_BUILD_NAME}.html${window.location.hash}`;
   const parentElement = document.getElementById('wiki-frame-parent');
   const iframe = document.createElement('iframe');
-  iframe.src = src!;
+  iframe.src = src;
   // see: https://stackoverflow.com/questions/25387977/typescript-iframe-sandbox-property-undefined-domsettabletokenlist-has-no-cons
   (<any>iframe).sandbox = 'allow-scripts allow-downloads allow-popups allow-popups-to-escape-sandbox allow-forms allow-modals';
   // todo: this could be configurable to use a different tw5 build for eg mobile devices / translations, etc
@@ -33,11 +25,22 @@ const createWikiIframe = async () => {
   return iframe;
 };
 
+
+
 /**
  * Initializes the app.
  */
 const initApp = async () => {
   console.log('running initApp')
+  const searchParams:Record<string, string> = parseSearchParams(window.location.search);
+  console.log('parsed url search params', searchParams);
+  const config:TiddlybaseConfig  = await (await fetch(TIDDLYBASE_CONFIG_URL)).json();
+  console.log('got tiddlybase config', config);
+  const app = initializeApp(config.clientConfig);
+  const auth = getAuth(app);
+  const ui = new firebaseui.auth.AuthUI(auth);
+  const local = isLocal(searchParams)
+  const firebaseState:FirebaseState = {app, auth, ui, config, local};
 
   let tw5Started = false;
 
@@ -48,10 +51,10 @@ const initApp = async () => {
     }
     // just in case, remove any previous wiki iframes
     console.log('running startTW5');
-    const iframe = await createWikiIframe();
+    const iframe = await createWikiIframe(searchParams["build"]);
     if (iframe) {
       const rpc = makeRPC();
-      createParentApi(rpc, user, iframe.contentWindow!);
+      createParentApi(rpc, user, firebaseState, getWikiName(searchParams));
       console.log("child iframe created");
       tw5Started = true;
     } else {
@@ -61,9 +64,9 @@ const initApp = async () => {
 
   // Listen to change in auth state so it displays the correct UI for when
   // the user is signed in or not.
-  firebaseAuth.onAuthStateChanged(function (user: User | null) {
+  auth.onAuthStateChanged(function (user: User | null) {
     console.log('running onAuthStateChanged callback');
-    user ? handleSignedInUser(startTW5, user!) : handleSignedOutUser(startTW5);
+    user ? handleSignedInUser(firebaseState, startTW5, user!) : handleSignedOutUser(firebaseState, startTW5);
   });
   // Initialize the FirebaseUI Widget using Firebase.
 

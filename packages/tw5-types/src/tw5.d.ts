@@ -411,7 +411,7 @@ declare namespace $tw {
     export const error: (message: string) => void;
     export const domMaker: (tag: string, options: DomMakerOptions) => HTMLElement;
     export const formatDateString: (date: Date, format: string) => string;
-    export const getLocationPath: () => string;
+    export let getLocationPath: () => string;
   }
 
   export namespace boot {
@@ -419,6 +419,7 @@ declare namespace $tw {
     export const wikiInfo: undefined | {
       config: Partial<WikiInfoConfig>;
     }
+    export let suppressBoot: boolean;
   }
   export const wiki: Wiki;
   export const preloadTiddlerArray: (tiddlerFields: TiddlerFields[]) => void;

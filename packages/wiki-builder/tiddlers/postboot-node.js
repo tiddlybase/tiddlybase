@@ -1,5 +1,5 @@
 /*\
-title: $:/postboot-node.js
+title: $:/tiddlybase/wikibuilder/postboot-node.js
 type: application/javascript
 module-type: startup
 
