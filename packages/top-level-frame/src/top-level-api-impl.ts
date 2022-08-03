@@ -10,6 +10,7 @@ import { deleteAccount } from "./login";
 import { FirebaseState } from "./types";
 import {FirebaseStorage} from '@firebase/storage';
 import {Functions} from '@firebase/functions'
+import { getWikiName, isLocal as getIsLocal, ParsedSearchParams } from "packages/webshared/src/search-params";
 
 export const devSetup = (functions:Functions) => connectFunctionsEmulator(functions, "localhost", 5001);
 
@@ -34,12 +35,13 @@ const objFilter = <K extends keyof any=string,V=any>(fn: (k: K, v: V) => boolean
 
 const convertUser = (firebaseUser:User):TiddlyBaseUser => objFilter<keyof TiddlyBaseUser, any>((k) => USER_FIELDS.includes(k), firebaseUser) as TiddlyBaseUser;
 
-export const createParentApi = (rpc:MiniIframeRPC, user:User, firebaseState:FirebaseState, wikiName: string) => {
+export const createParentApi = (rpc:MiniIframeRPC, user:User, firebaseState:FirebaseState, searchParams:ParsedSearchParams) => {
+  const isLocal = getIsLocal(searchParams);
   const def = apiDefiner<TopLevelAPIForSandboxedWiki>(rpc);
 
   if (firebaseState.config.functions) {
     const functions = getFunctions(firebaseState.app, firebaseState.config.functions.location);
-    if (firebaseState.local) {
+    if (isLocal) {
       devSetup(functions);
     }
     const exposeCallable = (fn:Parameters<typeof def>[0]) => def(fn, getStub(functions, fn))
@@ -51,7 +53,8 @@ export const createParentApi = (rpc:MiniIframeRPC, user:User, firebaseState:Fire
     return {
       user: convertUser(user),
       wikiSettings: firebaseState.config.wikiSettings,
-      wikiName
+      wikiName: getWikiName(searchParams),
+      isLocal
     }
   });
   def('getDownloadURL', getDownloadURL(getStorage(firebaseState.app)));

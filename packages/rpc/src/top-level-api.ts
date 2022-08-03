@@ -10,7 +10,8 @@ export type TiddlyBaseUser = Pick<User,typeof USER_FIELDS[number]>
 export interface ChildInitProps {
   user: TiddlyBaseUser,
   wikiSettings?: TiddlybaseConfig["wikiSettings"],
-  wikiName: string // wiki.json to load
+  wikiName: string, // wiki.json to load,
+  isLocal: boolean
 }
 
 export interface TopLevelAPIForSandboxedWiki extends ParentAPIBase<ChildInitProps> {

@@ -6,7 +6,7 @@
   "license": "Apache-2.0",
   "packageManager": "yarn@3.1.1",
   "scripts": {
-    "start": "run serve -n -d --no-port-switching --symlinks -p 8080 dist",
+    "start": "run serve -n -d --no-port-switching --symlinks --cors -p 8080 dist",
     "start:functions": "yarn workspace @tiddlybase/functions run local",
     "move_sourcemaps": "yarn node ./scripts/move_sourcemaps.js",
     "test": "yarn workspaces foreach -t run test",

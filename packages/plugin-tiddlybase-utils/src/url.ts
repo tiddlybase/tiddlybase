@@ -22,8 +22,6 @@ const isAbsoluteUrl = (url: string) => {
   return lowercase.startsWith('http://') || lowercase.startsWith('https://') || lowercase.startsWith('//');
 }
 
-export const getParentURL = () => $tw?.tiddlybase?.parentLocation?.href;
-
 export const getExtension = (url:string) => {
   const pathName = new URL(url, "http://www.example.com").pathname;
   if (pathName.indexOf('.') < 0) {
@@ -70,17 +68,12 @@ const getFilesURL = (path: string): string | Promise<string> => {
 }
 
 export const resolveURL = (url: string) => {
-  // absolute URL, no modification needed
-  if (isAbsoluteUrl(url)) {
-    return url;
-  }
   // 'files' URL, either a google storage file or in the TiddlyDesktop case
   // a local file.
-  if (url.startsWith(FILES_URL_PREFIX)) {
+  if (!isAbsoluteUrl(url) && url.startsWith(FILES_URL_PREFIX)) {
     // strip files URL prefix
     return getFilesURL(url.substring(FILES_URL_PREFIX.length));
   }
-  // Regular relative URL. If running in a sandboxed iframe, prefix
-  // with parent window's URL.
-  return (getParentURL() ?? '') + url;
+  // Absolute or non-file relative URL. No modificatio needed.
+  return url;
 }

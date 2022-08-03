@@ -4,10 +4,12 @@
   export const synchronous = true;
   export const platforms = ['browser'];
 
+  const originalGetLocationPath = $tw.utils.getLocationPath;
+
   const fixGetLocationPath = () => {
     // replace $tw.utils.getLocationPath() so it uses parent frame's URL
-    // http://localhost:8080/?local_wiki=true#2021-04-10%20Nasz%C3%A1j%20Kosdr%C3%B3l
-    $tw.utils.getLocationPath = () => $tw?.tiddlybase?.parentLocation?.href?.split('#')?.[0]!
+    // TODO: this is pretty loose, could produce faulty results sometimes
+    $tw.utils.getLocationPath = () => originalGetLocationPath().replace(window.location.pathname, '/');
   };
 
   export const startup = function () {

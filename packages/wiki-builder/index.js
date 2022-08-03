@@ -1,14 +1,16 @@
 const getTiddlyWikiInfo = () => ({
     // TODO: get config, plugins and included wikis from tiddlybase config
     "description": "Empty tiddlybase edition",
-        
+    /*        
     "includeWikis": [
 		{"path": "../../../csaladi_naplo/headless", "read-only": true}
 	],
-    
+    */
     "config": {
+        /*
         "default-storage-prefix": "csaladwiki/files",
         "display-link-icons": true
+        */
     },
     "plugins": [
         "tiddlywiki/codemirror",
@@ -30,7 +32,7 @@ const getTiddlyWikiInfo = () => ({
         ],
         "wiki.json": [
             "--savejson",
-            "wiki.json"
+            "default-wiki.json"
         ]
     }
 })

@@ -11,5 +11,4 @@ export interface FirebaseState {
   auth: ReturnType<typeof getAuth>,
   ui: firebaseui.auth.AuthUI,
   config: TiddlybaseConfig,
-  local:boolean
 }

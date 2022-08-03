@@ -3,9 +3,8 @@
 declare namespace $tw {
   export type TWTiddlybase = Partial<{
     topLevelClient: import("@tiddlybase/rpc").APIClient<import("@tiddlybase/rpc/src/top-level-api").TopLevelAPIForSandboxedWiki>
-    parentLocation: Partial<Location>
-    inSandboxedIframe: boolean
-    isLocalEnv: boolean
+    inSandboxedIframe: boolean,
+    isLocal: boolean
   }>;
 
   // tiddlybase extension
