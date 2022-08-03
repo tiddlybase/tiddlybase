@@ -1,4 +1,4 @@
-import { GoogleAuthProvider, GithubAuthProvider, EmailAuthProvider, PhoneAuthProvider, getAuth, User } from '@firebase/auth'
+import { getAuth, User } from '@firebase/auth'
 import * as firebaseui from 'firebaseui';
 import { FirebaseState, StartTW5 } from './types';
 
@@ -21,6 +21,7 @@ const sleep = (ms:number) => new Promise((resolve) => {
 function getUiConfig(firebaseState:FirebaseState, startTW5: StartTW5) {
   console.log('running getUiConfig');
   return {
+    ...firebaseState.config.authentication,
     callbacks: {
       // Called when the user has been successfully signed in.
       // Note: types in node_modules/firebaseui/dist/index.d.ts
@@ -53,55 +54,6 @@ function getUiConfig(firebaseState:FirebaseState, startTW5: StartTW5) {
         console.log('auth error', error);
       },
     },
-    // Opens IDP Providers sign-in flow in a popup.
-    // TODO: change this to 'redirect'
-    signInFlow: 'redirect',
-    signInOptions: [
-      {
-        provider: GoogleAuthProvider.PROVIDER_ID,
-        // get this from GCP Credentials page
-        // TODO: make this come from config.json
-        clientId: '1019270346260-fh2s7fjmige0qlu6nonmm514rvrafbd9.apps.googleusercontent.com',
-      },
-      /*
-      {
-        provider: firebase.auth.FacebookAuthProvider.PROVIDER_ID,
-        scopes :[
-          'public_profile',
-          'email',
-          'user_likes',
-          'user_friends'
-        ]
-      },
-      */
-      //firebase.auth.TwitterAuthProvider.PROVIDER_ID,
-      GithubAuthProvider.PROVIDER_ID,
-      {
-        provider: EmailAuthProvider.PROVIDER_ID,
-        // Whether the display name should be displayed in Sign Up page.
-        requireDisplayName: true,
-        signInMethod: 'emailLink',
-      },
-      {
-        provider: PhoneAuthProvider.PROVIDER_ID,
-        recaptchaParameters: {
-          size: 'normal',
-        },
-      },
-      /*{
-        provider: 'microsoft.com',
-        loginHintKey: 'login_hint'
-      },
-      {
-        provider: 'apple.com',
-      },
-      firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID*/
-    ],
-    // TODO: Terms of service url.
-    tosUrl: '/tos.html',
-    // TODO: Privacy policy url.
-    privacyPolicyUrl: '/privacy.html',
-    credentialHelper: firebaseui.auth.CredentialHelper.GOOGLE_YOLO,
   };
 }
 

@@ -1,4 +1,5 @@
 import type {TiddlybaseWikiSettings} from '@tiddlybase/webshared/src/tiddlybase-wiki-settings'
+import type * as firebaseui from 'firebaseui';
 
 export interface TiddlybaseConfig {
   clientConfig: {
@@ -14,6 +15,7 @@ export interface TiddlybaseConfig {
   },
   functions?: {
     location: string
-  }
+  },
+  authentication: firebaseui.auth.Config,
   wikiSettings?: TiddlybaseWikiSettings
 }

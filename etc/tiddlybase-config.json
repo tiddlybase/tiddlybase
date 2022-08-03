@@ -13,6 +13,32 @@
   "functions": {
       "locations": "europe-west3"
   },
+  "authentication": {
+    "signInFlow": "redirect",
+    "signInOptions": [
+        {
+            "provider": "google.com",
+            "clientId": "1019270346260-fh2s7fjmige0qlu6nonmm514rvrafbd9.apps.googleusercontent.com"
+        },
+        {
+            "provider": "github.com"
+        },
+        {
+            "provider": "password",
+            "requireDisplayName": true,
+            "signInMethod": "emailLink"
+        },
+        {
+            "provider": "phone",
+            "recaptchaParameters": {
+                "size": "normal"
+            }
+        }
+    ],
+    "tosUrl": "/tos.html",
+    "privacyPolicyUrl": "/privacy.html",
+    "credentialHelper": "googleyolo"
+  },
   "wikiSettings": {
       "default-storage-prefix": "csaladwiki/files",
       "display-link-icons": true
