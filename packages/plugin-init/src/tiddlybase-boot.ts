@@ -2,8 +2,8 @@ import type { } from "@tiddlybase/tw5-types/src/index"
 import { apiDefiner, apiClient, makeRPC } from "@tiddlybase/rpc";
 import type { TopLevelAPIForSandboxedWiki } from "@tiddlybase/rpc/src/top-level-api";
 import type { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
-import { getWikiName } from "@tiddlybase/webshared/src/search-params";
-import { createWikiInfoConfig } from "@tiddlybase/webshared/src/wiki-info";
+import { getWikiName } from "@tiddlybase/shared/src/search-params";
+import { createWikiInfoConfig } from "@tiddlybase/shared/src/wiki-info";
 
 (() => {
 

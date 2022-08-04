@@ -1,5 +1,5 @@
 {
-  "name": "@tiddlybase/webshared",
+  "name": "@tiddlybase/shared",
   "description": "minimal code shared by both top-level-frame and sandboxed wiki startup code",
   "version": "0.0.0",
   "private": true,

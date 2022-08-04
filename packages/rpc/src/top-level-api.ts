@@ -1,7 +1,7 @@
 import type { AddNumbers, NotifyAdmin } from "@tiddlybase/functions/src/apis";
 import type { User } from '@firebase/auth';
 import { ParentAPIBase } from "./base";
-import {TiddlybaseConfig} from "@tiddlybase/webshared/src/tiddlybase-config-schema"
+import {TiddlybaseConfig} from "@tiddlybase/shared/src/tiddlybase-config-schema"
 
 export const USER_FIELDS = ['emailVerified', 'displayName', 'photoURL', 'providerId', 'uid'] as const;
 

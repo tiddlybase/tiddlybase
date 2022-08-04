@@ -2,9 +2,9 @@ import { User } from '@firebase/auth';
 import { makeRPC } from '@tiddlybase/rpc';
 import { handleSignedInUser, handleSignedOutUser } from './login';
 import { createParentApi } from './top-level-api-impl';
-import { TiddlybaseConfig } from '@tiddlybase/webshared/src/tiddlybase-config-schema';
-import {TIDDLYBASE_CONFIG_URL} from '@tiddlybase/webshared/src/constants'
-import {parseSearchParams, getBuild} from '@tiddlybase/webshared/src/search-params'
+import { TiddlybaseConfig } from '@tiddlybase/shared/src/tiddlybase-config-schema';
+import {TIDDLYBASE_CONFIG_URL} from '@tiddlybase/shared/src/constants'
+import {parseSearchParams, getBuild} from '@tiddlybase/shared/src/search-params'
 import {initializeApp} from '@firebase/app'
 import {getAuth} from '@firebase/auth'
 import * as firebaseui from 'firebaseui';

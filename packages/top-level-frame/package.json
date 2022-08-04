@@ -12,8 +12,8 @@
   "devDependencies": {
     "@tiddlybase/functions": "workspace:*",
     "@tiddlybase/rpc": "workspace:*",
+    "@tiddlybase/shared": "workspace:*",
     "@tiddlybase/webpack-config": "workspace:*",
-    "@tiddlybase/webshared": "workspace:*",
     "firebase": "^9.6.6",
     "firebaseui": "^6.0.0",
     "mini-iframe-rpc": "1.7.3",

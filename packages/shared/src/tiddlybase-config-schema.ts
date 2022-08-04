@@ -1,4 +1,4 @@
-import type {TiddlybaseWikiSettings} from '@tiddlybase/webshared/src/tiddlybase-wiki-settings'
+import type {TiddlybaseWikiSettings} from '@tiddlybase/shared/src/tiddlybase-wiki-settings'
 import type * as firebaseui from 'firebaseui';
 
 export interface TiddlybaseConfig {

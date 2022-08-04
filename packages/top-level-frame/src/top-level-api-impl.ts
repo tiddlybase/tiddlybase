@@ -10,7 +10,7 @@ import { deleteAccount } from "./login";
 import { FirebaseState } from "./types";
 import {FirebaseStorage} from '@firebase/storage';
 import {Functions} from '@firebase/functions'
-import { getWikiName, isLocal as getIsLocal, ParsedSearchParams } from "packages/webshared/src/search-params";
+import { getWikiName, isLocal as getIsLocal, ParsedSearchParams } from "packages/shared/src/search-params";
 
 export const devSetup = (functions:Functions) => connectFunctionsEmulator(functions, "localhost", 5001);
 
