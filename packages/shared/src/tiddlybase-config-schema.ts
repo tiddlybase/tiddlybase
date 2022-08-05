@@ -1,6 +1,17 @@
-import type {TiddlybaseWikiSettings} from '@tiddlybase/shared/src/tiddlybase-wiki-settings'
+import type {} from '@tiddlybase/tw5-types/src/index'
 import type * as firebaseui from 'firebaseui';
 
+export interface WikiLaunchConfig {
+  build: string,
+  wikiNames: string[],
+  settings?: Partial<$tw.WikiInfoConfig>
+}
+
+/**
+ * This interface describes the schema of the `tiddlybase-config.json` file.
+ * The contents of this file is meant to be consumed by the code in
+ * @tiddlybase/top-level-frame.
+ */
 export interface TiddlybaseConfig {
   clientConfig: {
       projectId: string,
@@ -13,9 +24,10 @@ export interface TiddlybaseConfig {
       messagingSenderId: string,
       measurementId: string
   },
+  authentication: firebaseui.auth.Config,
+  storage: $tw.StorageConfig,
   functions?: {
     location: string
   },
-  authentication: firebaseui.auth.Config,
-  wikiSettings?: TiddlybaseWikiSettings
+  launchConfigs?: Record<string, WikiLaunchConfig>
 }

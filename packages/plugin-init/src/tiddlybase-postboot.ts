@@ -13,7 +13,7 @@
   };
 
   export const startup = function () {
-    if ($tw?.tiddlybase?.inSandboxedIframe) {
+    if (!!$tw?.tiddlybase?.topLevelClient) {
       fixGetLocationPath();
     }
   };

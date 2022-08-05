@@ -1,21 +1,9 @@
 // use full package path so the import is externalized
 import { getWikiInfoConfigValue } from "./wiki-info-config";
+import {joinPaths} from '@tiddlybase/shared/src/join-paths'
 
-const FILES_URL_PREFIX = getWikiInfoConfigValue("external-url-path-prefix") ?? "";
-const STORAGE_FILE_PREFIX = getWikiInfoConfigValue("default-storage-prefix");
-const LOCAL_FILE_PREFIX = getWikiInfoConfigValue("default-file-location");
-
-const PATH_SEPARATOR = "/";
-
-// remove separators at beginning and end of path
-// TODO: would be nice if separator wasn't repeated int he regexps...
-const trimSeparators = (path:string|undefined) => path && path.replace(/^[\/]+/, '').replace(/[\/]+$/, '')
-
-// NOTE: removes leading and trailing '/'
-const joinPaths = (...parts:Array<string|undefined>) => parts
-  .map(trimSeparators)
-  .filter(part => part && part?.length > 0)
-  .join(PATH_SEPARATOR);
+const FILES_URL_PREFIX = getWikiInfoConfigValue("external-url-path-prefix");
+const LOCAL_FILE_PREFIX = getWikiInfoConfigValue("default-local-file-location");
 
 const isAbsoluteUrl = (url: string) => {
   const lowercase = url.toLowerCase().trim();
@@ -40,7 +28,7 @@ const getDesktopPathPrefix = () => {
     let pathPrefix = ([...(new URLSearchParams(window.location.search))].find(([k, v]) => k === 'pathname') ?? [])[1];
     // add default file location from tiddlywiki.info
     // TODO: handle case when this is an absolute path!
-    return joinPaths(pathPrefix, LOCAL_FILE_PREFIX);
+    return joinPaths(pathPrefix ?? '', LOCAL_FILE_PREFIX);
   }
   return '';
 }
@@ -51,11 +39,13 @@ const desktopPrefix = getDesktopPathPrefix();
 // Simply return relative path, but add the local file prefix
 const nonSandboxedRelativePath = (path:string) => joinPaths(LOCAL_FILE_PREFIX, path);
 
+const getFullStoragePath = (relativePath:string) => joinPaths($tw?.tiddlybase?.storageConfig?.filesPath ?? '', relativePath)
+
 const getFilesURL = (path: string): string | Promise<string> => {
   // if running within the child iframe, make RPC call to parent for full url
   // of google storage resource.
-  if ($tw?.tiddlybase?.inSandboxedIframe && $tw?.tiddlybase?.topLevelClient) {
-    return $tw.tiddlybase.topLevelClient('getDownloadURL', [joinPaths(STORAGE_FILE_PREFIX, path)])
+  if ($tw?.tiddlybase?.topLevelClient) {
+    return $tw.tiddlybase.topLevelClient('getDownloadURL', [getFullStoragePath(path)])
   }
   // if running under TiddlyDesktop, get URL of local file
   if ($tw?.desktop) {

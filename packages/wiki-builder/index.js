@@ -1,7 +1,8 @@
 const getTiddlyWikiInfo = () => ({
     // TODO: get config, plugins and included wikis from tiddlybase config
     "description": "Empty tiddlybase edition",
-    /*        
+    
+    /* include the original wiki when building a wiki.json file
     "includeWikis": [
 		{"path": "../../../csaladi_naplo/headless", "read-only": true}
 	],
@@ -13,6 +14,7 @@ const getTiddlyWikiInfo = () => ({
         */
     },
     "plugins": [
+        /* comment out all plugins when building a wiki.json file */
         "tiddlywiki/codemirror",
         "tiddlybase/init",
         "tiddlybase/tiddlybase-utils",

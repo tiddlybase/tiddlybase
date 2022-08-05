@@ -2232,6 +2232,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@tiddlybase/shared@workspace:packages/shared"
   dependencies:
+    "@tiddlybase/tw5-types": "workspace:*"
     firebaseui: ^6.0.0
   languageName: unknown
   linkType: soft

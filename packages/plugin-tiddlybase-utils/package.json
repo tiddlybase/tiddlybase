@@ -14,6 +14,7 @@
     "@tiddlybase/rpc": "workspace:*",
     "@tiddlybase/tw5-types": "workspace:*",
     "@tiddlybase/webpack-config": "workspace:*",
+    "@tiddlybase/shared": "workspace:*",
     "cross-env": "^7.0.3",
     "jest": "^27.5.1",
     "ts-jest": "^27.1.4",

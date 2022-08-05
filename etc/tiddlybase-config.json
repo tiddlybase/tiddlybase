@@ -39,6 +39,10 @@
     "privacyPolicyUrl": "/privacy.html",
     "credentialHelper": "googleyolo"
   },
+  "storage": {
+    "filesPath": "csaladwiki/files",
+    "wikisPath": "csaladwiki/wikis"
+  },
   "wikiSettings": {
       "default-storage-prefix": "csaladwiki/files",
       "display-link-icons": true

@@ -1,10 +1,11 @@
 /// <reference types="." />
 
 export const DEFAULT_CONFIG:$tw.WikiInfoConfig = {
-  "display-link-icons": true,
-  "default-file-location": "files",
-  "external-url-path-prefix": "files/",
-  "default-storage-prefix": "",
+  // official properties
   "default-tiddler-location": "tiddlers",
-  "retain-original-tiddler-path": false
+  "retain-original-tiddler-path": false,
+  // Tiddlybase extensions
+  "display-link-icons": true,
+  "default-local-file-location": "files",
+  "external-url-path-prefix": "files/",
 }
