@@ -7,7 +7,7 @@ import { getCommandModules as getGenerateModules } from './generate';
 
 const app = admin.initializeApp();
 
-const { getclaims, setclaim, setclaimjson, getuser } = getUsersModules(app);
+const { getclaims, setrole, setclaimjson, getuser } = getUsersModules(app);
 const generateCommands = getGenerateModules(app);
 
 const main = async (argv:string[]) => {
@@ -19,7 +19,7 @@ const main = async (argv:string[]) => {
   .describe('c', 'location of tiddlybase-config.json')
   .default('c', 'tiddlybase-config.json')
   .command(getclaims)
-  .command(setclaim)
+  .command(setrole)
   .command(setclaimjson)
   .command(getuser)
   .command(generateCommands['generate:storage.rules'])

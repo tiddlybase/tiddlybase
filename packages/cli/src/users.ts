@@ -1,6 +1,9 @@
 import * as admin from 'firebase-admin';
 import { Arguments, Argv, CommandModule } from 'yargs';
 import {inspect} from 'util';
+import {USER_ROLES} from '@tiddlybase/shared/src/user-roles'
+import { requireSingleConfig } from './config';
+import { getJWTRoleClaim } from 'packages/shared/src/tiddlybase-config-schema';
 
 const RE_UID = /^[a-zA-Z0-9]+$/;
 
@@ -16,8 +19,8 @@ export const getUser = async (app: admin.app.App, uidOrEmail: string): Promise<a
 
 export const getCommandModules = (app: admin.app.App): Record<string, CommandModule> => {
   return {
-    setclaim: {
-      command: 'setclaim <userid|email> key value',
+    setrole: {
+      command: 'setrole <userid|email> role',
       describe: 'set a custom claim on a user',
       builder: (argv: Argv) =>
         argv
@@ -25,18 +28,22 @@ export const getCommandModules = (app: admin.app.App): Record<string, CommandMod
             describe: 'User id or email address',
             type: 'string',
           })
-          .positional('key', {
-            describe: 'Claim key',
-            type: 'string',
-          })
-          .positional('value', {
-            describe: 'Claim value',
+          .positional('role', {
+            describe: 'role name',
             type: 'string',
           }),
       handler: async (args: Arguments) => {
         const user = await getUser(app, args.userid as string);
-        const claims = {...user.customClaims};
-        Object.assign(claims, {[args.key as string]: args.value as string})
+        const roleName = (args.role as string).toUpperCase();
+        if (!(roleName in USER_ROLES)) {
+          throw new Error('Unknown role '+args.role);
+        }
+        const roleNumber = USER_ROLES[roleName];
+        const config = requireSingleConfig(args);
+        const claims = {
+          ...user.customClaims,
+          [getJWTRoleClaim(config)]: roleNumber
+        };
         await app.auth().setCustomUserClaims(user.uid, claims);
         console.log(inspect(claims));
       },
