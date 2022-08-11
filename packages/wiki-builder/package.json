@@ -6,19 +6,16 @@
   "author": "Peter Neumark",
   "license": "Apache-2.0",
   "scripts": {
-    "build": "node index.js > tiddlywiki.info && yarn workspace @tiddlybase/root run move_sourcemaps && TIDDLYWIKI_PLUGIN_PATH=../../dist/plugins tiddlywiki . --output ../../dist/tiddlybase_public --build wiki.html --verbose",
-    "build:json": "node json-builder.js > tiddlywiki.info && yarn workspace @tiddlybase/root run move_sourcemaps && TIDDLYWIKI_PLUGIN_PATH=../../dist/plugins yarn tiddlywiki . --output ../../dist/ --build wiki.json --verbose",
-    "build:dev": "yarn run build",
-    "build:debug": "node index.js > tiddlywiki.info && NODE_OPTIONS=--inspect-brk TIDDLYWIKI_PLUGIN_PATH=../../dist/plugins tiddlywiki . --output ../../dist --build wiki.html --verbose"
+    "build": "yarn workspace @tiddlybase/root run move_sourcemaps && yarn run build:default-build",
+    "build:default-build": "yarn workspace @tiddlybase/cli run cli buildwiki -t html -p $(pwd)/../../dist/plugins -o $(pwd)/../../dist/tiddlybase_public/default-build.html $(pwd)/default-build",
+    "build:dev": "yarn run build"
   },
   "dependencies": {
+    "@tiddlybase/cli": "workspace:*",
     "@tiddlybase/plugin-embed-media": "workspace:*",
     "@tiddlybase/plugin-init": "workspace:*",
     "@tiddlybase/plugin-mdx": "workspace:*",
     "@tiddlybase/plugin-react": "workspace:*",
     "@tiddlybase/plugin-tiddlybase-utils": "workspace:*"
-  },
-  "devDependencies": {
-    "tiddlywiki": "^5.2.2"
   }
 }

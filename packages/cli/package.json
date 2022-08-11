@@ -11,7 +11,8 @@
   "scripts": {
     "clean": "rm -rf dist/*",
     "build": "webpack",
-    "build:dev": "MODE=development webpack"
+    "build:dev": "MODE=development webpack",
+    "cli": "ts-node src/cli.ts"
   },
   "devDependencies": {
     "@tiddlybase/shared": "workspace:*",

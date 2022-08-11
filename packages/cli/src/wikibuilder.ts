@@ -23,11 +23,13 @@ const JSON_BUILDER_FILTER = [
   "-[prefix[$:/status]]",
   "-[prefix[$:/temp/]]",
   "-[prefix[$:/tiddlybase/wikibuilder/]]",
-  "-[prefix[$:/HistoryList]]",
   // Except drafts
   "-[has[draft.of]]",
   // Except pending imports
   "-[status[pending]plugin-type[import]]",
+  // Except these tiddlers which should come from the user's session
+  "-[[$:/HistoryList]]",
+  "-[[$:/StoryList]]",
   // Except the following built-in tiddlers
   "-[[$:/boot/boot.css]]",
   "-[[$:/library/sjcl.js]]",
