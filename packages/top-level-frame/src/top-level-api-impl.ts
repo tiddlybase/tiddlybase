@@ -10,6 +10,8 @@ import { deleteAccount } from "./login";
 import { FirebaseState } from "./types";
 import { FirebaseStorage } from '@firebase/storage';
 import { Functions } from '@firebase/functions'
+import { getStorageConfig } from "packages/shared/src/tiddlybase-config-schema";
+import { toggleVisibleDOMSection,replaceChildrenWithText } from "./dom-utils";
 
 export const devSetup = (functions: Functions) => connectFunctionsEmulator(functions, "localhost", 5001);
 
@@ -51,7 +53,7 @@ export const createParentApi = (rpc: MiniIframeRPC, user: User, firebaseState: F
     return {
       user: convertUser(user),
       launchConfig: firebaseState.launchConfig,
-      storageConfig: firebaseState.tiddlybaseConfig.storage,
+      storageConfig: getStorageConfig(firebaseState.tiddlybaseConfig),
       parentLocation: JSON.parse(JSON.stringify(window.location)),
       isLocal
     }
@@ -59,4 +61,8 @@ export const createParentApi = (rpc: MiniIframeRPC, user: User, firebaseState: F
   def('getDownloadURL', getDownloadURL(getStorage(firebaseState.app)));
   def('authSignOut', firebaseState.auth.signOut.bind(firebaseState.auth));
   def('authDeleteAccount', deleteAccount);
+  def('loadError', async (message: string) => {
+    replaceChildrenWithText(document.getElementById("wiki-error-message"), message);
+    toggleVisibleDOMSection('wiki-error');
+  })
 }

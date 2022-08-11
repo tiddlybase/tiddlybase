@@ -4,7 +4,7 @@ import {inspect} from 'util';
 
 const RE_UID = /^[a-zA-Z0-9]+$/;
 
-const getUser = async (app: admin.app.App, uidOrEmail: string): Promise<admin.auth.UserRecord> => {
+export const getUser = async (app: admin.app.App, uidOrEmail: string): Promise<admin.auth.UserRecord> => {
   let firebaseUser;
   if (uidOrEmail.match(RE_UID)) {
     firebaseUser = await app.auth().getUser(uidOrEmail);

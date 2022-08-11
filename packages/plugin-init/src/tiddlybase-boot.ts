@@ -48,7 +48,8 @@ import { loadWikiTiddlers } from "./load-tiddlers";
       user,
       storageConfig
     };
-    const tiddlers: Array<$tw.TiddlerFields> =
+    try {
+      const tiddlers: Array<$tw.TiddlerFields> =
       (await Promise.all(
         wikiNames.map(
           wikiName => loadWikiTiddlers(
@@ -60,6 +61,14 @@ import { loadWikiTiddlers } from "./load-tiddlers";
     console.log("tiddlers", tiddlers);
     $tw.preloadTiddlerArray(tiddlers);
     $tw.boot.boot();
+    } catch (e) {
+      console.dir(e);
+      if (typeof e === 'object') {
+        await topLevelClient('loadError', [(e as any)?.message]);
+      } else {
+        await topLevelClient('loadError', [String(e)]);
+      }
+    }
   });
 
 })()

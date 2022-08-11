@@ -7,7 +7,7 @@ export const getWikiURL = async (
   wikiName: string,
   isLocal: boolean = false) => {
   if (isLocal) {
-    return wikiName;
+    return "/" + wikiName;
   }
   const fullPath = joinPaths(storageConfig.wikisPath, wikiName);
   return topLevelClient!('getDownloadURL', [fullPath]);

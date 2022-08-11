@@ -11,17 +11,23 @@
   },
   "hosting": [
     {
+      "headers": [{
+          "source": "**/*.@(json)",
+          "headers": [{
+              "key": "Access-Control-Allow-Origin",
+              "value": "*"
+          }]
+      }],
       "site": "pn-wiki",
       "public": "dist",
       "rewrites": [
         {
           "source": "**",
-          "destination": "/index.html"
+          "destination": "/tiddlybase_public/index.html"
         }
       ],
       "ignore": [
         "dist/functions/**",
-        "**/wiki.html",
         "**/types/**",
         "firebase.json",
         "**/.*",

@@ -6,7 +6,7 @@
   "author": "Peter Neumark",
   "license": "Apache-2.0",
   "bin": {
-    "tiddlybase": "dist/tiddlybase.js"
+    "tiddlybase": "dist/tiddlybase"
   },
   "scripts": {
     "clean": "rm -rf dist/*",
@@ -14,6 +14,7 @@
     "build:dev": "MODE=development webpack"
   },
   "devDependencies": {
+    "@tiddlybase/shared": "workspace:*",
     "@tiddlybase/webpack-config": "workspace:*",
     "@types/node": "^17.0.23",
     "@types/yargs": "^17.0.8",
@@ -24,6 +25,7 @@
   },
   "dependencies": {
     "firebase-admin": "^10.0.2",
+    "tiddlywiki": "^5.2.3",
     "tslib": "^2.4.0",
     "yargs": "^17.3.1"
   }

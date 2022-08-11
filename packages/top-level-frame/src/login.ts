@@ -1,18 +1,8 @@
 import { getAuth, User } from '@firebase/auth'
 import * as firebaseui from 'firebaseui';
+import { toggleVisibleDOMSection } from './dom-utils';
 import { FirebaseState, StartTW5 } from './types';
 
-export const toggleVisibleDOMSection = (selectedSectionId?: string) => {
-  console.log('toggleVisibleDOMSection', selectedSectionId);
-  // rehide all sections
-  document.querySelectorAll('.section').forEach(section => {
-    (section as any).style.display = 'none';
-  });
-  // show newly selected section
-  if (selectedSectionId) {
-    (document.getElementById(selectedSectionId) as any).style.display = 'block';
-  }
-}
 
 const sleep = (ms:number) => new Promise((resolve) => {
   setTimeout(resolve, ms);
@@ -21,7 +11,7 @@ const sleep = (ms:number) => new Promise((resolve) => {
 function getUiConfig(firebaseState:FirebaseState, startTW5: StartTW5) {
   console.log('running getUiConfig');
   return {
-    ...firebaseState.tiddlybaseConfig.authentication,
+    ...firebaseState.tiddlybaseConfig.authentication.firebaseui,
     callbacks: {
       // Called when the user has been successfully signed in.
       // Note: types in node_modules/firebaseui/dist/index.d.ts

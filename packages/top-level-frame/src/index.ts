@@ -39,6 +39,10 @@ const initApp = async () => {
   console.log('got tiddlybase config', tiddlybaseConfig);
   const launchConfig: WikiLaunchConfig = getLaunchConfig(searchParams, tiddlybaseConfig);
   console.log('got launch config', launchConfig)
+  if (searchParams['signInFlow'] === 'popup') {
+    tiddlybaseConfig.authentication.firebaseui.signInFlow = 'popup';
+    console.log('overriding sign in flow to be popup');
+  }
   const app = initializeApp(tiddlybaseConfig.clientConfig);
   const auth = getAuth(app);
   const ui = new firebaseui.auth.AuthUI(auth);
@@ -52,7 +56,7 @@ const initApp = async () => {
       return;
     }
     // just in case, remove any previous wiki iframes
-    console.log('running startTW5');
+    console.log('running startTW5 for user', user);
     const iframe = await createWikiIframe(launchConfig.build);
     if (iframe) {
       const rpc = makeRPC();

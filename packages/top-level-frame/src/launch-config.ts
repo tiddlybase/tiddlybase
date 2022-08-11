@@ -4,7 +4,7 @@ import { DEFAULT_BUILD_NAME, DEFAULT_LAUNCH_CONFIG, DEFAULT_WIKI_NAMES, SEARCH_P
 import type { TiddlybaseConfig, WikiLaunchConfig } from "packages/shared/src/tiddlybase-config-schema";
 
 const parseWikiNames = (joinedWikiNames:string) => joinedWikiNames.split(",").map(s => s.trim());
-const getWikiNames = (searchParams: ParsedSearchParams, launchConfig?:WikiLaunchConfig) => {
+const getWikiNames = (searchParams: ParsedSearchParams, launchConfig?:Partial<WikiLaunchConfig>) => {
   if (searchParams[SEARCH_PARAM_WIKI]) {
     return parseWikiNames(searchParams[SEARCH_PARAM_WIKI]);
   }
@@ -18,7 +18,7 @@ export const getLaunchConfig = (searchParams:ParsedSearchParams={}, config?: Tid
   // was there a launchConfig in the URL and it refers to an existing launchConfig, use that.
   // if not (or if a value is missing), use the searchParam or default value.
   const launchConfigName = searchParams[SEARCH_PARAM_LAUNCH_CONFIG] ?? DEFAULT_LAUNCH_CONFIG;
-  const launchConfig:WikiLaunchConfig|undefined = config?.launchConfigs?.[launchConfigName];
+  const launchConfig:Partial<WikiLaunchConfig>|undefined = config?.launchConfigs?.[launchConfigName];
   const build = searchParams[SEARCH_PARAM_BUILD] ?? launchConfig?.build ?? DEFAULT_BUILD_NAME;
   const wikiNames = getWikiNames(searchParams, launchConfig);
   const settings = launchConfig?.settings ?? {}

@@ -8,6 +8,8 @@ const { PROJECT_ROOT, getExternalImportPath, getBanner, transformMetaAddTitle, g
 
 const MODULES_DIR = path.resolve(PROJECT_ROOT, 'node_modules');
 
+const TIDDLYBASE_PUBLIC = path.join(PROJECT_ROOT, 'dist', 'tiddlybase_public')
+
 const EXTERNAL_MODULES = {
   // make firebase and firebase-ui external
   // firebase: 'global firebase',
@@ -199,4 +201,4 @@ const getTW5PluginConfig = (options) => {
   return config;
 };
 
-module.exports = { getNodeConfig, getFrontendConfig, getTW5PluginConfig };
+module.exports = { getNodeConfig, getFrontendConfig, getTW5PluginConfig, TIDDLYBASE_PUBLIC };
