@@ -3,12 +3,14 @@ import * as admin from 'firebase-admin';
 import yargs from 'yargs';
 import { getCommandModules as getUsersModules } from './users';
 import { getCommandModules as getGenerateModules } from './generate';
+import { getCommandModules as getWikiBuilderModules } from './wikibuilder';
 // import { getCommandModules as getImportModules } from './import';
 
 const app = admin.initializeApp();
 
 const { getclaims, setrole, setclaimjson, getuser } = getUsersModules(app);
 const generateCommands = getGenerateModules(app);
+const {buildwikijson} = getWikiBuilderModules();
 
 const main = async (argv:string[]) => {
   const output = await yargs(argv)
@@ -24,6 +26,7 @@ const main = async (argv:string[]) => {
   .command(getuser)
   .command(generateCommands['generate:storage.rules'])
   .command(generateCommands['generate:firebase.json'])
+  .command(buildwikijson)
   //.command(importTiddlers)
   //.example('$0 setrole foo@bar.com admin', 'grant admin role to foo@bar.com on default wiki')
   //.example('$0 -w another-wiki getrole foo@bar.com', 'get role assigned to foo@bar.com on another-wiki')

@@ -3,7 +3,7 @@ import { Arguments, Argv, CommandModule } from 'yargs';
 import {inspect} from 'util';
 import {USER_ROLES} from '@tiddlybase/shared/src/user-roles'
 import { requireSingleConfig } from './config';
-import { getJWTRoleClaim } from 'packages/shared/src/tiddlybase-config-schema';
+import { getJWTRoleClaim } from '@tiddlybase/shared/src/tiddlybase-config-schema';
 
 const RE_UID = /^[a-zA-Z0-9]+$/;
 

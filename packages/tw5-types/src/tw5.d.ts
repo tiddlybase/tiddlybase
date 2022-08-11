@@ -404,7 +404,8 @@ declare namespace $tw {
   }
 
   export namespace boot {
-    export const boot: () => void;
+    export let argv: undefined | string[];
+    export const boot: (callback?: () => any) => void;
     export const wikiInfo: undefined | {
       config: Partial<WikiInfoConfig>;
     }
