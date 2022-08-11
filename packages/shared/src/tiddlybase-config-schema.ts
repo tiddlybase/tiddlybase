@@ -1,11 +1,15 @@
 import type {} from '@tiddlybase/tw5-types/src/index'
 import type * as firebaseui from 'firebaseui';
+import { joinPaths } from './join-paths';
 
 export interface WikiLaunchConfig {
   build: string,
   wikiNames: string[],
-  settings?: Partial<$tw.WikiInfoConfig>
+  settings: Partial<$tw.WikiInfoConfig>
 }
+
+const STORAGE_FILES_PATH_SUFFIX = 'files'
+const STORAGE_WIKIS_PATH_SUFFIX = 'wikis'
 
 /**
  * This interface describes the schema of the `tiddlybase-config.json` file.
@@ -13,6 +17,7 @@ export interface WikiLaunchConfig {
  * @tiddlybase/top-level-frame.
  */
 export interface TiddlybaseConfig {
+  name: string,
   clientConfig: {
       projectId: string,
       appId: string,
@@ -24,10 +29,23 @@ export interface TiddlybaseConfig {
       messagingSenderId: string,
       measurementId: string
   },
-  authentication: firebaseui.auth.Config,
-  storage: $tw.StorageConfig,
+  authentication: {
+    jwtRoleClaim?: string,
+    firebaseui: firebaseui.auth.Config
+  },
+  storage?: Partial<$tw.StorageConfig>,
   functions?: {
     location: string
   },
-  launchConfigs?: Record<string, WikiLaunchConfig>
+  hosting? : {
+    site: string
+    pathPrefix?: string
+  }
+  launchConfigs?: Record<string, Partial<WikiLaunchConfig>>
 }
+
+export const getJWTRoleClaim = (config:TiddlybaseConfig):string => config.authentication.jwtRoleClaim ?? config.name;
+export const getStorageConfig = (config:TiddlybaseConfig):$tw.StorageConfig => ({
+  wikisPath: config?.storage?.filesPath ?? joinPaths(config.name, STORAGE_WIKIS_PATH_SUFFIX),
+  filesPath: config?.storage?.filesPath ?? joinPaths(config.name, STORAGE_FILES_PATH_SUFFIX)
+});
