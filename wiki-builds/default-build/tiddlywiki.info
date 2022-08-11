@@ -1,0 +1,18 @@
+{
+    "config": {
+        "display-link-icons": true,
+        "another-prop": "almafa"
+    },
+    "plugins": [
+        "tiddlywiki/codemirror",
+        "tiddlybase/init",
+        "tiddlybase/tiddlybase-utils",
+        "tiddlybase/react",
+        "tiddlybase/embed-media",
+        "tiddlybase/mdx"
+    ],
+    "themes": [
+        "tiddlywiki/vanilla"
+    ],
+    "build": {}
+}

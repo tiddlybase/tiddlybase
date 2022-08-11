@@ -14,7 +14,7 @@ export const createWikiInfoConfig = (wikiSettings?: Partial<$tw.WikiInfoConfig>)
 });
 
 const parseTiddlerField = (key:string):any => {
-  const value = $tw?.wiki?.getTiddler(TIDDLER_TITLE_WIKI_INFO_CONFIG)?.fields[key];
+  const value = $tw?.wiki?.getTiddler(TIDDLER_TITLE_WIKI_INFO_CONFIG)?.fields?.[key];
   if (typeof value === 'string') {
     return JSON.parse(value)
   }
@@ -26,5 +26,5 @@ export const getWikiInfoConfigValue = <T extends keyof $tw.WikiInfoConfig>(key: 
   // If running in the browser as a "built" HTML wiki, then config values may be
   // read from WIKI_INFO_CONFIG_TIDDLER.
   // The hard-coded defaults are also there as a fallback.
-  return ($tw?.boot?.wikiInfo?.config[key] ?? parseTiddlerField(key) ?? DEFAULT_CONFIG[key]);
+  return ($tw?.boot?.wikiInfo?.config?.[key] ?? parseTiddlerField(key) ?? DEFAULT_CONFIG[key]);
 }
