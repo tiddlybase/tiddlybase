@@ -6,6 +6,8 @@ import { Arguments, Argv, CommandModule } from 'yargs';
 import { mkdtempSync, writeFileSync, rmSync } from 'fs';
 import { join, basename, dirname, sep, resolve, delimiter } from 'path';
 import { tmpdir } from 'os';
+import { rawReadJSON } from './config';
+import { joinPaths } from '@tiddlybase/shared/src/join-paths';
 
 type OutputType = 'html' | 'json';
 
@@ -40,6 +42,40 @@ const JSON_BUILDER_FILTER = [
   // sort them all by title
   "+[sort[title]]",
 ].join(" ");
+
+const SAVE_WIKI_INFO_TIDDLER: $tw.TiddlerFields = {
+title: "$:/tiddlybase/wikibuilder/save-wiki-json.js",
+type: "application/javascript",
+"module-type": "startup",
+text: `
+(function () {
+  /*jslint node: true, browser: true */
+  /*global $tw: false */
+  'use strict';
+
+  // Export name and synchronous status
+  exports.name = 'save-wiki-json';
+  exports.after = ['load-modules'];
+  exports.synchronous = true;
+  exports.platforms = ['node'];
+
+  const objMap = (fn, input) => Object.fromEntries(Object.entries(input).map(fn));
+
+  exports.startup = function () {
+    if ($tw?.boot?.wikiInfo?.config) {
+      $tw.wiki.addTiddler(
+        new $tw.Tiddler({
+          ...(objMap(
+              ([k, v]) => [k, JSON.stringify(v)],
+              $tw.boot.wikiInfo.config ?? {})),
+          title: '$:/config/wikiInfoConfig',
+          }),
+      );
+    }
+  };
+
+})();`
+}
 
 const SAVE_JSON_COMMAND_TIDDLER: $tw.TiddlerFields = {
 
@@ -89,11 +125,13 @@ const SAVE_JSON_COMMAND_TIDDLER: $tw.TiddlerFields = {
   `
 };
 
+const readTiddlyWikiInfo = (wikiDir:string) => rawReadJSON(joinPaths(wikiDir, FILENAME_TIDDLYWIKI_INFO));
+
 const getTiddlyWikiInfo = (inputWikiDirs: string[]): $tw.TiddlyWikiInfo => {
   return {
     "includeWikis": inputWikiDirs.map(path => ({ path: resolve(path), "read-only": true })),
-    // configs are empty. To set configs, encode in a LaunchConfig instead of baking the values in the wiki html.
-    "config": {},
+    // configs are merged from all tiddlywiki.info files
+    "config": Object.assign({}, ...(inputWikiDirs.map(d => readTiddlyWikiInfo(d)?.config ?? {}))),
     // TiddlyWiki automatically merges the plugins and themes of included
     // wikis (also, transitively included ones), no need explicitly set anything
     // in the top-level tiddlywiki.info file.
@@ -123,6 +161,7 @@ const invokeTiddlyWiki = (wikiDir: string, outputType: OutputType, outputFilenam
       basename(outputFilename),
       "text/plain",
       "--verbose"]
+    $twInstance.preloadTiddlerArray([SAVE_WIKI_INFO_TIDDLER]);
   }
 
   return new Promise((resolve) => $twInstance.boot.boot(() => resolve($twInstance)));
@@ -131,7 +170,7 @@ const invokeTiddlyWiki = (wikiDir: string, outputType: OutputType, outputFilenam
 const prepareTemporaryWikiDir = () => mkdtempSync(`${tmpdir()}${sep}tiddlybase-wikibuilder`);
 
 export const buildwiki: CommandModule = {
-  command: 'buildwiki <wikidir> [addition_wiki_dirs..]',
+  command: 'buildwiki <wikidir> [additional_wiki_dirs..]',
   describe: 'build a JSON wiki contents file',
   builder: (argv: Argv) =>
     argv
@@ -153,7 +192,7 @@ export const buildwiki: CommandModule = {
       }),
   handler: async (args: Arguments) => {
     const pluginPaths = (typeof (args['plugin-path']) === 'string' ? [args['plugin-path'] as string] : args['plugin-path'] as string[]).map(p => resolve(p))
-    const wikidirs = typeof (args.wikidir) === 'string' ? [args.wikidir as string] : args.wikidir as string[]
+    const wikidirs = [args.wikidir as string].concat(args.additional_wiki_dirs as string[]);
     const outputType = args.t as OutputType;
     const outputFilename = (args.output as string | undefined) ?? DEFAULT_OUTPUT_FILENAME[outputType];
     const temporaryWikiDir = prepareTemporaryWikiDir();
