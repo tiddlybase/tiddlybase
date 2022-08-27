@@ -130,48 +130,44 @@ const invokeTiddlyWiki = (wikiDir: string, outputType: OutputType, outputFilenam
 
 const prepareTemporaryWikiDir = () => mkdtempSync(`${tmpdir()}${sep}tiddlybase-wikibuilder`);
 
-export const getCommandModules = (): Record<string, CommandModule> => {
-  return {
-    buildwiki: {
-      command: 'buildwiki wikidir',
-      describe: 'build a JSON wiki contents file',
-      builder: (argv: Argv) =>
-        argv
-          .options({
-            o: {
-              type: 'string', alias: 'output', describe: 'filename of JSON output'
-            },
-            t: {
-              type: 'string', alias: 'type', describe: 'type of output', default: 'json', choices: ['html', 'json']
-            },
-            p: {
-              type: 'string', alias: 'plugin-path', describe: 'directory hosting plugins', default: './plugins'
-            }
-          })
-          // TODO: allow multiple wiki dirs to be passed!
-          .positional('wikidirs', {
-            describe: 'wikidirs containing tiddlers',
-            type: 'string'
-          }),
-      handler: async (args: Arguments) => {
-        const pluginPaths = (typeof (args['plugin-path']) === 'string' ? [args['plugin-path'] as string] : args['plugin-path'] as string[]).map(p => resolve(p))
-        const wikidirs = typeof (args.wikidir) === 'string' ? [args.wikidir as string] : args.wikidir as string[]
-        const outputType = args.t as OutputType;
-        const outputFilename = (args.output as string | undefined) ?? DEFAULT_OUTPUT_FILENAME[outputType];
-        const temporaryWikiDir = prepareTemporaryWikiDir();
+export const buildwiki: CommandModule = {
+  command: 'buildwiki <wikidir> [addition_wiki_dirs..]',
+  describe: 'build a JSON wiki contents file',
+  builder: (argv: Argv) =>
+    argv
+      .options({
+        o: {
+          type: 'string', alias: 'output', describe: 'filename of JSON output'
+        },
+        t: {
+          type: 'string', alias: 'type', describe: 'type of output', default: 'json', choices: ['html', 'json']
+        },
+        p: {
+          type: 'string', alias: 'plugin-path', describe: 'directory hosting plugins', default: './plugins'
+        }
+      })
+      // TODO: allow multiple wiki dirs to be passed!
+      .positional('wikidirs', {
+        describe: 'wikidirs containing tiddlers',
+        type: 'string'
+      }),
+  handler: async (args: Arguments) => {
+    const pluginPaths = (typeof (args['plugin-path']) === 'string' ? [args['plugin-path'] as string] : args['plugin-path'] as string[]).map(p => resolve(p))
+    const wikidirs = typeof (args.wikidir) === 'string' ? [args.wikidir as string] : args.wikidir as string[]
+    const outputType = args.t as OutputType;
+    const outputFilename = (args.output as string | undefined) ?? DEFAULT_OUTPUT_FILENAME[outputType];
+    const temporaryWikiDir = prepareTemporaryWikiDir();
 
-        console.log(`using temp dir ${temporaryWikiDir} writing output to ${outputFilename} in format ${outputType}`);
-        const tiddlyWikiInfo = getTiddlyWikiInfo(wikidirs);
-        // write tiddlywiki.info
-        writeFileSync(
-          join(temporaryWikiDir, FILENAME_TIDDLYWIKI_INFO),
-          JSON.stringify(tiddlyWikiInfo, null, 4),
-          { encoding: 'utf-8' });
-        // invoke tiddlywiki
-        await invokeTiddlyWiki(temporaryWikiDir, outputType, outputFilename, tiddlyWikiInfo, pluginPaths);
-        // delete temp dir
-        rmSync(temporaryWikiDir, { recursive: true, force: true })
-      },
-    }
-  };
+    console.log(`using temp dir ${temporaryWikiDir} writing output to ${outputFilename} in format ${outputType}`);
+    const tiddlyWikiInfo = getTiddlyWikiInfo(wikidirs);
+    // write tiddlywiki.info
+    writeFileSync(
+      join(temporaryWikiDir, FILENAME_TIDDLYWIKI_INFO),
+      JSON.stringify(tiddlyWikiInfo, null, 4),
+      { encoding: 'utf-8' });
+    // invoke tiddlywiki
+    await invokeTiddlyWiki(temporaryWikiDir, outputType, outputFilename, tiddlyWikiInfo, pluginPaths);
+    // delete temp dir
+    rmSync(temporaryWikiDir, { recursive: true, force: true })
+  },
 };

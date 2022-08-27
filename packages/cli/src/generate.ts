@@ -1,4 +1,3 @@
-import * as admin from 'firebase-admin';
 import { getJWTRoleClaim, getStorageConfig } from '@tiddlybase/shared/src/tiddlybase-config-schema';
 import { joinPaths } from '@tiddlybase/shared/src/join-paths';
 import { Arguments, Argv, CommandModule } from 'yargs';
@@ -26,7 +25,7 @@ const generateFirebaseJson = (
       "ignore": ["**/.runtimeconfig.json", "**/node_modules/**"]
     } : undefined,
     // list all sites with `yarn firebase hosting:sites:list`
-    "hosting": configs.map(({config}) => ({
+    "hosting": configs.map(({ config }) => ({
       // enable CORS headers so wiki tiddlers can be loaded during local
       // development
       "headers": [{
@@ -60,8 +59,7 @@ const generateFirebaseJson = (
 const generateStorageRules = (configs: ParsedConfig[]) => `rules_version = '2';
 service firebase.storage {
     match /b/{bucket}/o {
-        ${
-          configs.map(({config}) => `
+        ${configs.map(({ config }) => `
         function hasReadAccess() {
           return request.auth.token["${getJWTRoleClaim(config)}"] is number && request.auth.token["${getJWTRoleClaim(config)}"] > 0;
         }
@@ -92,43 +90,39 @@ service firebase.storage {
             allow delete: if false;
         }
           `)
-        }
+  }
 
     }
 }
 `;
 
-export const getCommandModules = (app: admin.app.App): Record<string, CommandModule> => {
-  return {
-    "generate:storage.rules": {
-      command: 'generate:storage.rules',
-      describe: 'generate Firebase Storage rules',
-      builder: (argv: Argv) => argv,
-      handler: async (args: Arguments) => {
-        const configFilePath = args['config'] as string | string[];
-        console.log(
-          generateStorageRules(
-            readConfig(configFilePath)));
-      },
-    },
-    "generate:firebase.json": {
-      command: 'generate:firebase.json',
-      describe: 'generate main firebase config',
-      builder: (argv: Argv) => argv
-        .options({
-          d: {
-            type: 'string', alias: 'config-dir',
-          }
-        }),
-      handler: async (args: Arguments) => {
-        const configFilePaths = args['config'] as string | string[];
-        const parsedConfigs = readConfig(configFilePaths);
-        const configDir = (args['config-dir'] as string | undefined) ?? dirname(parsedConfigs[0].filename);
-        console.log(
-          generateFirebaseJson(
-            configDir,
-            parsedConfigs));
-      },
-    },
-  };
+export const cmdGenerateStorageRules: CommandModule = {
+  command: 'generate:storage.rules',
+  describe: 'generate Firebase Storage rules',
+  builder: (argv: Argv) => argv,
+  handler: async (args: Arguments) => {
+    const configFilePath = args['config'] as string | string[];
+    console.log(
+      generateStorageRules(
+        readConfig(configFilePath)));
+  },
+};
+export const cmdGenerateFirebaseJson: CommandModule = {
+  command: 'generate:firebase.json',
+  describe: 'generate main firebase config',
+  builder: (argv: Argv) => argv
+    .options({
+      d: {
+        type: 'string', alias: 'config-dir',
+      }
+    }),
+  handler: async (args: Arguments) => {
+    const configFilePaths = args['config'] as string | string[];
+    const parsedConfigs = readConfig(configFilePaths);
+    const configDir = (args['config-dir'] as string | undefined) ?? dirname(parsedConfigs[0].filename);
+    console.log(
+      generateFirebaseJson(
+        configDir,
+        parsedConfigs));
+  },
 };

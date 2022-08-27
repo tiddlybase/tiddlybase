@@ -2,7 +2,9 @@ import { TiddlybaseConfig } from '@tiddlybase/shared/src/tiddlybase-config-schem
 import { readFileSync } from 'fs';
 import { Arguments } from 'yargs';
 
-export const readJSON = (filename: string): ParsedConfig => ({ filename, config: JSON.parse(readFileSync(filename, { encoding: 'utf-8' })) });
+export const rawReadJSON = (filename: string) => JSON.parse(readFileSync(filename, { encoding: 'utf-8' }))
+
+export const readJSON = (filename: string): ParsedConfig => ({ filename, config: rawReadJSON(filename) });
 
 export interface ParsedConfig {
   filename: string,

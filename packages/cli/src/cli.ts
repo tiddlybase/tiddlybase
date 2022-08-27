@@ -1,16 +1,7 @@
-// import 'source-map-support/register';
-import * as admin from 'firebase-admin';
 import yargs from 'yargs';
-import { getCommandModules as getUsersModules } from './users';
-import { getCommandModules as getGenerateModules } from './generate';
-import { getCommandModules as getWikiBuilderModules } from './wikibuilder';
-// import { getCommandModules as getImportModules } from './import';
-
-const app = admin.initializeApp();
-
-const { getclaims, setrole, setclaimjson, getuser } = getUsersModules(app);
-const generateCommands = getGenerateModules(app);
-const {buildwiki} = getWikiBuilderModules();
+import { getclaims, setrole, setclaimjson, getuser } from './users';
+import { cmdGenerateFirebaseJson, cmdGenerateStorageRules } from './generate';
+import { buildwiki } from './wikibuilder';
 
 const main = async (argv:string[]) => {
   const output = await yargs(argv)
@@ -19,24 +10,29 @@ const main = async (argv:string[]) => {
   .alias('c', 'config')
   .nargs('c', 1)
   .describe('c', 'location of tiddlybase-config.json')
-  .default('c', 'tiddlybase-config.json')
+  .default('c', 'etc/tiddlybase-config.json')
+  .alias('k', 'service-account-key')
+  .nargs('k', 1)
+  .describe('k', 'path to service account key JSON')
+  .default('k', 'etc/service-account-key.json')
   .command(getclaims)
   .command(setrole)
   .command(setclaimjson)
   .command(getuser)
-  .command(generateCommands['generate:storage.rules'])
-  .command(generateCommands['generate:firebase.json'])
+  .command(cmdGenerateFirebaseJson)
+  .command(cmdGenerateStorageRules)
   .command(buildwiki)
   //.command(importTiddlers)
-  //.example('$0 setrole foo@bar.com admin', 'grant admin role to foo@bar.com on default wiki')
+  .example('$0 setrole foo@bar.com admin', 'grant admin role to foo@bar.com on default wiki')
   //.example('$0 -w another-wiki getrole foo@bar.com', 'get role assigned to foo@bar.com on another-wiki')
   .help()
   .wrap(80)
   .alias('h', 'help')
-  .epilog('Find more help at: https://neumark.github.io/tw5-firebase/')
+  .epilog('Find more help at https://tiddlybase.com/')
   .demandCommand().argv;
-  await admin.app().delete();
   return output;
 }
 
-main(process.argv.slice(2));
+if (require.main === module) {
+  main(process.argv.slice(2));
+}
