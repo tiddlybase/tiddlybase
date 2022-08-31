@@ -2,6 +2,7 @@ import yargs from 'yargs';
 import { getclaims, setrole, setclaimjson, getuser } from './users';
 import { cmdGenerateFirebaseJson, cmdGenerateStorageRules } from './generate';
 import { buildwiki } from './wikibuilder';
+import {runTWCommand} from './run-tw-command'
 
 const main = async (argv:string[]) => {
   const output = await yargs(argv)
@@ -22,6 +23,7 @@ const main = async (argv:string[]) => {
   .command(cmdGenerateFirebaseJson)
   .command(cmdGenerateStorageRules)
   .command(buildwiki)
+  .command(runTWCommand)
   //.command(importTiddlers)
   .example('$0 setrole foo@bar.com admin', 'grant admin role to foo@bar.com on default wiki')
   //.example('$0 -w another-wiki getrole foo@bar.com', 'get role assigned to foo@bar.com on another-wiki')

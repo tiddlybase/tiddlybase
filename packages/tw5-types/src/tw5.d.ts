@@ -433,5 +433,24 @@ declare namespace $tw {
   };
   export const rootWidget: Widget;
   export const modules: TW5Modules;
+  export let config: {
+    pluginsPath: string,
+    themesPath: string,
+    languagesPath: string,
+    editionsPath: string,
+    wikiInfo: string,
+    wikiPluginsSubDir: string,
+    wikiThemesSubDir: string,
+    wikiLanguagesSubDir: string,
+    wikiTiddlersSubDir: string,
+    wikiOutputSubDir: string,
+    jsModuleHeaderRegExpString: string,
+    fileExtensionInfo: any,
+    contentTypeInfo: any,
+    pluginsEnvVar: string,
+    themesEnvVar: string,
+    languagesEnvVar: string,
+    editionsEnvVar: string
+  }
 }
 
