@@ -1,0 +1,8 @@
+created: 20170307110734575
+modified: 20191230135338759
+tags: 
+title: $:/plugins/tg/ro/sidebar-layout
+
+\define lingo-base() $:/language/ThemeTweaks/
+
+Sidebar layout: <$select tiddler="$:/themes/tiddlywiki/vanilla/options/sidebarlayout"><option value="fixed-fluid"><<lingo Options/SidebarLayout/Fixed-Fluid>></option><option value="fluid-fixed"><<lingo Options/SidebarLayout/Fluid-Fixed>></option></$select>

@@ -1,0 +1,8 @@
+{
+    "title": "$:/plugins/tg/ro",
+    "name": "ro",
+    "description": "Makes TW readonly",
+    "contributor": "TonGerner",
+    "source": "http://tongerner.tiddlyspot.com/",
+    "list": ["readme", "license", "help"]
+}

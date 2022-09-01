@@ -1,0 +1,8 @@
+created: 20200316122632179
+modified: 20200316123614203
+tags: $:/tags/Macro
+title: $:/plugins/tg/ro/macros/doc
+
+\define icn(icon)
+<button class="tc-btn-invisible"> {{$icon$}}</button>
+\end

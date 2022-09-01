@@ -1,0 +1,8 @@
+caption: {{$:/language/SideBar/Recent/Caption}}
+created: 20220901182427851
+modified: 20220901182427851
+tags: $:/tags/hide
+title: $:/core/ui/SideBar/Recent
+type: text/vnd.tiddlywiki
+
+<$macrocall $name="timeline" format={{$:/language/RecentChanges/DateFormat}}/>

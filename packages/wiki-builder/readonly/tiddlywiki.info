@@ -1,0 +1,12 @@
+{
+    "description": "for use with TiddlyDesktop",
+    "includeWikis": [
+        {"path": "../default-build", "read-only": true}
+    ],
+    "config": {},
+    "plugins": [
+        "tg/ro"
+    ],
+    "themes": ["tiddlywiki/vanilla"],
+    "build": {}
+}

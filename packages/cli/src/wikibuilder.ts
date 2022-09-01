@@ -38,7 +38,7 @@ const JSON_BUILDER_FILTER = [
 ].join(" ");
 
 const SAVE_WIKI_INFO_TIDDLER: $tw.TiddlerFields = {
-  title: "$:/tiddlybase/wikibuilder/save-wiki-json.js",
+  title: "$:/tiddlybase/wikibuilder/save-wiki-info.js",
   type: "application/javascript",
   "module-type": "startup",
   text: `
@@ -48,7 +48,7 @@ const SAVE_WIKI_INFO_TIDDLER: $tw.TiddlerFields = {
   'use strict';
 
   // Export name and synchronous status
-  exports.name = 'save-wiki-json';
+  exports.name = 'save-wiki-info';
   exports.after = ['load-modules'];
   exports.synchronous = true;
   exports.platforms = ['node'];

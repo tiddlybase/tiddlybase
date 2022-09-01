@@ -1,0 +1,12 @@
+created: 20170506162930803
+creator: TonGerner
+list-before: $:/core/ui/TopBar/menu
+modified: 20191231184447737
+modifier: TonGerner
+tags: $:/tags/publish-button $:/tags/TopRightBar
+title: $:/plugins/tg/ro/publish-button
+
+<$button class="tc-btn-invisible" tooltip="Publish read-only">
+<$action-sendmessage $message="tm-open-window" $param="$:/plugins/tg/ro/publish" height="700px" width="550px"/>
+{{$:/plugins/tg/ro/images/publish}}
+</$button>

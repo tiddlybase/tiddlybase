@@ -1,0 +1,21 @@
+created: 20140821172500339
+creator: TonGerner
+modified: 20200319200627098
+modifier: TonGerner
+title: $:/plugins/tg/ro/readme
+
+A plugin to make ~TiddlyWiki read-only.
+
+You can hide:
+
+* ''All'' toolbar buttons
+* 'Sidebar' button (to switch Sidebar) and 'Advanced search' button (next to Search)
+* All Sidebar tabs tagged with $:/tags/SideBar.
+
+Click the Publish button <<icn $:/plugins/tg/ro/images/publish>> next to the sidebar button <<icn $:/core/images/chevron-left>>/<<icn $:/core/images/chevron-right>> to start making your TW 'publish-ready'.  A new window with six tabs opens. Read the Help tab and follow the 5 steps.
+
+<<<
+''Note:''<br>@@.RED Although you can hide the 'Sidebar' button and 'Advanced Search' button, they remain 'active'!@@
+<<<
+
+There are a few ways to return from readonly to edit mode, see [[Help|$:/plugins/tg/ro/help]].

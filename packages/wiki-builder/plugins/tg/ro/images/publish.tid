@@ -1,0 +1,17 @@
+created: 20170322105731731
+modified: 20191230134946688
+tags: 
+title: $:/plugins/tg/ro/images/publish
+
+<svg class="tgc-publish-ro tc-image-button" width="22pt" height="22pt" viewBox="0 0 486 438">
+<style>
+  .ro {
+    fill:none;
+    stroke-width:40;
+    stroke:#FF00FF;
+  }
+</style>
+    <path class="ro" d="m203.2 81.6l-141.6 0 0 311.7 313.3 0 0-139.5"/>
+    <path class="ro" d="m176.4 279.6l0-60 188-188 60.5 60.5 -189.5 189.5 -59 0"/>
+    <path class="ro" d="m326.9 69l61.1 61.1"/>
+</svg>

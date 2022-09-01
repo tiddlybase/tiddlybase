@@ -1,0 +1,11 @@
+caption: 5. Save
+created: 20161108100434387
+modified: 20191230135228815
+tags: 
+title: $:/plugins/tg/ro/save
+
+! Save
+
+{{$:/core/ui/ControlPanel/Saving}}
+
+@@.BLUE ''Save''@@ {{$:/plugins/tg/ro/save-button}}

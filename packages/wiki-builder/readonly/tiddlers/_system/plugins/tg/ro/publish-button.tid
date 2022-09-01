@@ -1,0 +1,13 @@
+created: 20170506162930803
+creator: TonGerner
+list-before: $:/core/ui/TopBar/menu
+modified: 20220901182451186
+modifier: TonGerner
+tags: $:/tags/publish-button
+title: $:/plugins/tg/ro/publish-button
+type: text/vnd.tiddlywiki
+
+<$button class="tc-btn-invisible" tooltip="Publish read-only">
+<$action-sendmessage $message="tm-open-window" $param="$:/plugins/tg/ro/publish" height="700px" width="550px"/>
+{{$:/plugins/tg/ro/images/publish}}
+</$button>

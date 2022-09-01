@@ -1,0 +1,9 @@
+created: 20200317164804429
+key: ((publish))
+modified: 20200317185519894
+tags: $:/tags/KeyboardShortcut
+title: $:/plugins/tg/ro/shortcut/publish
+
+<$navigator story="$:/StoryList">
+<$action-navigate $to="$:/plugins/tg/ro/publish"/>
+</$navigator>

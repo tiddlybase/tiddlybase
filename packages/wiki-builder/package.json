@@ -6,8 +6,8 @@
   "author": "Peter Neumark",
   "license": "Apache-2.0",
   "scripts": {
-    "build": "yarn workspace @tiddlybase/root run move_sourcemaps && yarn run build:default-build",
-    "build:default-build": "yarn workspace @tiddlybase/cli run cli buildwiki -t html -p $(pwd)/../../dist/plugins -o $(pwd)/../../dist/tiddlybase_public/default-build.html $(pwd)/default-build",
+    "build": "yarn workspace @tiddlybase/root run move_sourcemaps && yarn run build:all",
+    "build:all": "./build-all.sh",
     "build:dev": "yarn run build"
   },
   "dependencies": {

@@ -1,18 +1,19 @@
 {
   "name": "@tiddlybase/cli",
   "description": "In-browser trusted code running outside the sandbox",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.0.1",
   "author": "Peter Neumark",
   "license": "Apache-2.0",
   "bin": {
     "tiddlybase": "dist/tiddlybase"
   },
+  "main": "dist/tiddlybase",
   "scripts": {
     "clean": "rm -rf dist/*",
     "build": "webpack",
     "build:dev": "MODE=development webpack",
-    "cli": "ts-node src/cli.ts"
+    "cli": "ts-node src/cli.ts",
+    "publish": "yarn npm publish --access public"
   },
   "devDependencies": {
     "@tiddlybase/shared": "workspace:*",

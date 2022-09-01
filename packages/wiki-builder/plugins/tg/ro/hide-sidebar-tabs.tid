@@ -1,0 +1,29 @@
+caption: 2. Sidebar tabs
+created: 20161108100017749
+modified: 20200319201054427
+tags: 
+title: $:/plugins/tg/ro/hide-sidebar-tabs
+
+\define check()
+<$checkbox
+tag="$:/tags/SideBar"
+checked="$:/tags/SideBar"
+unchecked="$:/tags/hide"
+default="$:/tags/SideBar"
+checkactions="""<$action-deletefield tags/><$action-setfield tags="$:/tags/SideBar"/>"""
+uncheckactions="""<$action-deletefield tags/><$action-setfield tags="$:/tags/hide"/>"""
+<$link to={{!!title}}>&emsp;
+<$transclude field="caption">
+<$view field="title"/>
+</$transclude>
+</$checkbox>
+\end
+
+!! Show/hide sidebar tabs
+Uncheck to hide the appropriate sidebar tab
+<$list filter="[all[shadows+tiddlers]tag[$:/tags/SideBar]]"><br>
+<<check>>
+</$list>
+<$list filter="[tag[$:/tags/hide]]"><br>
+<<check>>
+</$list>
