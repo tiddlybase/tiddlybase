@@ -1,0 +1,11 @@
+{
+    "description": "minimal config necessary for tiddlybase to load wiki in iframe",
+    "config": {},
+    "plugins": [
+        "tiddlybase/init"
+    ],
+    "themes": [
+        "tiddlywiki/vanilla"
+    ],
+    "build": {}
+}
