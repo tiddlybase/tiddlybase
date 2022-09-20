@@ -5,8 +5,22 @@ import { USER_ROLES } from '@tiddlybase/shared/src/user-roles'
 import { requireSingleConfig } from './config';
 import { getJWTRoleClaim } from '@tiddlybase/shared/src/tiddlybase-config-schema';
 import { CLIContext, withCLIContext } from './cli-context';
+import * as crypto from "crypto";
+import { Auth } from 'firebase-admin/lib/auth/auth';
+import { UserRecord } from 'firebase-admin/lib/auth/user-record';
 
 const RE_UID = /^[a-zA-Z0-9]+$/;
+const ROLE_CHOICES = Object.keys(USER_ROLES).map(s => s.toLowerCase());
+
+const doSetRole = async (auth: Auth, user:UserRecord, jwtRoleClaim:string, roleName:string):Promise<Record<string, any>> => {
+  const roleNumber = USER_ROLES[roleName];
+  const claims = {
+    ...user.customClaims,
+    [jwtRoleClaim]: roleNumber
+  };
+  await auth.setCustomUserClaims(user.uid, claims);
+  return claims;
+}
 
 export const getUser = async (app: admin.app.App, uidOrEmail: string): Promise<admin.auth.UserRecord> => {
   let firebaseUser;
@@ -29,7 +43,7 @@ export const setrole: CommandModule = {
       })
       .positional('role', {
         describe: 'role name',
-        type: 'string',
+        choices: ROLE_CHOICES
       }),
   handler: withCLIContext(async (cliContext:CLIContext) => {
     const user = await getUser(cliContext.app, cliContext.args.userid as string);
@@ -37,13 +51,36 @@ export const setrole: CommandModule = {
     if (!(roleName in USER_ROLES)) {
       throw new Error('Unknown role ' + cliContext.args.role);
     }
-    const roleNumber = USER_ROLES[roleName];
     const config = requireSingleConfig(cliContext.args);
-    const claims = {
-      ...user.customClaims,
-      [getJWTRoleClaim(config)]: roleNumber
-    };
-    await cliContext.app.auth().setCustomUserClaims(user.uid, claims);
+    const claims = await doSetRole(cliContext.app.auth(), user, getJWTRoleClaim(config), roleName);
+    console.log(inspect(claims));
+  }),
+};
+
+export const adduser: CommandModule = {
+  command: 'adduser email [role]',
+  describe: 'add a new user',
+  builder: (argv: Argv) =>
+    argv
+      .positional('email', {
+        describe: 'Email address of new user',
+        type: 'string',
+      })
+      .positional('role', {
+        describe: 'role name',
+        choices: ROLE_CHOICES
+      }),
+  handler: withCLIContext(async (cliContext:CLIContext) => {
+    const user = await cliContext.app.auth().createUser({
+      email: cliContext.args.email as string,
+      password: crypto.randomBytes(20).toString('hex'),
+    })
+    const roleName = (cliContext.args.role as string).toUpperCase();
+    if (!(roleName in USER_ROLES)) {
+      throw new Error('Unknown role ' + cliContext.args.role);
+    }
+    const config = requireSingleConfig(cliContext.args);
+    const claims = await doSetRole(cliContext.app.auth(), user, getJWTRoleClaim(config), roleName);
     console.log(inspect(claims));
   }),
 };
