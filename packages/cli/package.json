@@ -10,7 +10,7 @@
   "main": "dist/tiddlybase",
   "scripts": {
     "clean": "rm -rf dist/*",
-    "build": "webpack",
+    "build": "webpack && chmod +x dist/tiddlybase",
     "build:dev": "MODE=development webpack",
     "cli": "ts-node src/cli.ts",
     "publish": "yarn npm publish --access public"

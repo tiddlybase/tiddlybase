@@ -68,12 +68,19 @@ const getBaseConfig = ({
   externals: externals ?? []
 });
 
-const getNodeConfig = (baseOptions) => {
+const getNodeConfig = ({ shebang, ...baseOptions }) => {
   const nodeExternals = require('webpack-node-externals');
   const nodeConfig = getBaseConfig({
     ...baseOptions,
     mode: 'development',
   });
+  if (!!shebang) {
+    nodeConfig.plugins.push(
+      new webpack.BannerPlugin({
+        banner: '#!/usr/bin/env node',
+        raw: true,
+      }))
+  }
   Object.assign(nodeConfig, {
     target: 'node',
     externalsPresets: {
