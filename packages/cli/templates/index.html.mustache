@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>{{ config.topLevel.title }}</title>
+    {{{ config.topLevel.faviconCode }}}
+    <link
+      href="tiddlybase_public/style.css"
+      rel="stylesheet"
+      type="text/css"
+      media="screen"
+    />
+    <!-- Load firebase-ui CSS from CDN -->
+    <link
+      type="text/css"
+      rel="stylesheet"
+      href="https://www.gstatic.com/firebasejs/ui/6.0.0/firebase-ui-auth.css"
+    />
+    <script src="tiddlybase_public/top-level-frame.js"></script>
+  </head>
+
+  <body>
+    <!-- UI for login screen -->
+    <div id="loading" class="section">Loading...</div>
+    <div id="user-signed-in" class="section">
+      <div id="wiki-frame-parent"></div>
+    </div>
+    <div id="user-signed-out" class="section">
+      <h4>You are signed out.</h4>
+      <div>
+        <div id="firebaseui-spa">
+          <h5>Please choose a way to log in:</h5>
+          <div id="firebaseui-container"></div>
+        </div>
+      </div>
+    </div>
+    <div id="wiki-error" class="section">
+      <h4>Error loading wiki</h4>
+      <p id="wiki-error-message"></p>
+    </div>
+  </body>
+</html>

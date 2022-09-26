@@ -18,6 +18,11 @@ const STORAGE_WIKIS_PATH_SUFFIX = 'wikis'
  */
 export interface TiddlybaseConfig {
   name: string,
+  topLevel? : {
+    title?: string,
+    // generated with eg: https://realfavicongenerator.net/
+    faviconCode?: string
+  }
   clientConfig: {
       projectId: string,
       appId: string,

@@ -1,12 +1,20 @@
 import { getJWTRoleClaim, getStorageConfig } from '@tiddlybase/shared/src/tiddlybase-config-schema';
 import { joinPaths } from '@tiddlybase/shared/src/join-paths';
 import { Arguments, Argv, CommandModule } from 'yargs';
-import { ParsedConfig, readConfig } from './config';
-import { dirname } from 'path';
+import { ParsedConfig, readConfig, requireSingleConfig } from './config';
+import { dirname, resolve } from 'path';
+import { render } from 'mustache';
+import {readFileSync} from 'fs';
+// import { render } from 'mustache';
 
 const RULES_WILDCARD_SUFFIX = '{allPaths=**}';
 const FILENAME_STORAGE_RULES = "storage.rules";
 const DIRECTORY_PUBLIC = 'public'
+
+const renderMustacheTemplate = (templateFile: string, vars:any) => {
+  const filename = resolve(__dirname, '..', 'templates', templateFile);
+  return render(readFileSync(filename, {encoding: 'utf-8'}), vars);
+}
 
 const generateFirebaseJson = (
   configDir: string,
@@ -41,7 +49,7 @@ const generateFirebaseJson = (
       "rewrites": [
         { // SPA rewrite rule: any non-existing path is rewritten to index.html
           "source": `${config?.hosting?.pathPrefix ?? ''}**`,
-          "destination": `${config?.hosting?.pathPrefix ?? ''}/tiddlybase_public/index.html`
+          "destination": `${config?.hosting?.pathPrefix ?? ''}/index.html`
         }
       ],
       "ignore": [
@@ -126,3 +134,15 @@ export const cmdGenerateFirebaseJson: CommandModule = {
         parsedConfigs));
   },
 };
+
+export const cmdGenerateIndexHTML: CommandModule = {
+  command: 'generate:index.html',
+  describe: 'generate HTML file for single-page app top-level frame',
+  builder: (argv: Argv) => argv,
+  handler: async (args: Arguments) => {
+    const config = requireSingleConfig(args);
+    console.log(renderMustacheTemplate('index.html.mustache', {config}));
+  }
+};
+
+

@@ -91,7 +91,7 @@ const getNodeConfig = ({ shebang, ...baseOptions }) => {
       modulesDir: MODULES_DIR
     })],
     node: {
-      __dirname: true, // Webpack has to manually solve __dirname references
+      __dirname: false, // Webpack has to manually solve __dirname references
     }
   });
   Object.assign(nodeConfig.output, {

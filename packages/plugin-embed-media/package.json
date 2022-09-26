@@ -11,7 +11,7 @@
         "test": "jest"
     },
     "dependencies": {
-        "@tiddlybase/plugin-tiddlybase-utils": "^0.0.0"
+        "@tiddlybase/plugin-tiddlybase-utils": "workspace:*"
     },
     "devDependencies": {
         "@tiddlybase/rpc": "workspace:*",
