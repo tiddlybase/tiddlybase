@@ -1,13 +1,13 @@
 {
-  "name": "@tiddlybase/tw5-types",
-  "description": "In-browser trusted code running outside the sandbox",
-  "version": "0.0.0",
-  "private": true,
-  "main": "./src/index.ts",
-  "types": "./src/index.d.ts",
-  "author": "Peter Neumark",
-  "license": "Apache-2.0",
-  "dependencies": {
-    "@tiddlybase/rpc": "workspace:*"
-  }
+    "name": "@tiddlybase/tw5-types",
+    "description": "In-browser trusted code running outside the sandbox",
+    "version": "0.0.2",
+    "private": true,
+    "main": "./src/index.ts",
+    "types": "./src/index.d.ts",
+    "author": "Peter Neumark",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "@tiddlybase/rpc": "workspace:*"
+    }
 }

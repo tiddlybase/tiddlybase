@@ -1,32 +1,32 @@
 {
-  "name": "@tiddlybase/plugin-react",
-  "description": "React UMD modules packaged as a tiddlywiki plugin",
-  "version": "0.0.0",
-  "private": true,
-  "author": "Peter Neumark",
-  "license": "Apache-2.0",
-  "scripts": {
-    "build": "./build.sh",
-    "build:dev": "./build-dev.sh",
-    "browser-tests:build": "yarn workspace @tiddlybase/browser-tests run test:build $(pwd)/browser-tests $(pwd)/../../dist/tests/plugin-react/test.html",
-    "browser-tests:run": "yarn workspace @tiddlybase/browser-tests run test:run $(pwd)/../../dist/tests/plugin-react/test.html",
-    "browser-tests:open": "open $(pwd)/../../dist/tests/plugin-react/test.html",
-    "test": "yarn browser-tests:build && yarn browser-tests:run"
-  },
-  "devDependencies": {
-    "@tiddlybase/plugin-browser-test-utils": "workspace:*",
-    "@tiddlybase/plugin-tiddlybase-utils": "workspace:*",
-    "@tiddlybase/tw5-types": "workspace:*",
-    "@tiddlybase/webpack-config": "workspace:*",
-    "cross-env": "^7.0.3",
-    "jest": "^27.5.1",
-    "ts-jest": "^27.1.4",
-    "typescript": "^4.5.5",
-    "webpack": "^5.68.0",
-    "webpack-cli": "^4.9.2"
-  },
-  "dependencies": {
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0"
-  }
+    "name": "@tiddlybase/plugin-react",
+    "description": "React UMD modules packaged as a tiddlywiki plugin",
+    "version": "0.0.2",
+    "private": true,
+    "author": "Peter Neumark",
+    "license": "Apache-2.0",
+    "scripts": {
+        "build": "./build.sh",
+        "build:dev": "./build-dev.sh",
+        "browser-tests:build": "yarn workspace @tiddlybase/browser-tests run test:build $(pwd)/browser-tests $(pwd)/../../dist/tests/plugin-react/test.html",
+        "browser-tests:run": "yarn workspace @tiddlybase/browser-tests run test:run $(pwd)/../../dist/tests/plugin-react/test.html",
+        "browser-tests:open": "open $(pwd)/../../dist/tests/plugin-react/test.html",
+        "test": "yarn browser-tests:build && yarn browser-tests:run"
+    },
+    "devDependencies": {
+        "@tiddlybase/plugin-browser-test-utils": "workspace:*",
+        "@tiddlybase/plugin-tiddlybase-utils": "workspace:*",
+        "@tiddlybase/tw5-types": "workspace:*",
+        "@tiddlybase/webpack-config": "workspace:*",
+        "cross-env": "^7.0.3",
+        "jest": "^27.5.1",
+        "ts-jest": "^27.1.4",
+        "typescript": "^4.5.5",
+        "webpack": "^5.68.0",
+        "webpack-cli": "^4.9.2"
+    },
+    "dependencies": {
+        "react": "^18.0.0",
+        "react-dom": "^18.0.0"
+    }
 }

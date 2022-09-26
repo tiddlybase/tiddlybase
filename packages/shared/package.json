@@ -1,14 +1,14 @@
 {
-  "name": "@tiddlybase/shared",
-  "description": "minimal code shared by both top-level-frame and sandboxed wiki startup code",
-  "version": "0.0.0",
-  "private": true,
-  "author": "Peter Neumark",
-  "license": "Apache-2.0",
-  "devDependencies": {
-    "@tiddlybase/tw5-types": "workspace:*",
-    "firebaseui": "^6.0.0",
-    "jest": "^28.1.3",
-    "ts-jest": "^28.0.7"
-  }
+    "name": "@tiddlybase/shared",
+    "description": "minimal code shared by both top-level-frame and sandboxed wiki startup code",
+    "version": "0.0.2",
+    "private": true,
+    "author": "Peter Neumark",
+    "license": "Apache-2.0",
+    "devDependencies": {
+        "@tiddlybase/tw5-types": "workspace:*",
+        "firebaseui": "^6.0.0",
+        "jest": "^28.1.3",
+        "ts-jest": "^28.0.7"
+    }
 }

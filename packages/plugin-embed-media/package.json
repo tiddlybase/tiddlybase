@@ -1,28 +1,28 @@
 {
-  "name": "@tiddlybase/plugin-embed-media",
-  "description": "Load files from firebase storage",
-  "version": "0.0.0",
-  "private": true,
-  "author": "Peter Neumark",
-  "license": "Apache-2.0",
-  "scripts": {
-    "build": "webpack",
-    "build:dev": "MODE=development webpack",
-    "test": "jest"
-  },
-  "dependencies": {
-    "@tiddlybase/plugin-tiddlybase-utils": "^0.0.0"
-  },
-  "devDependencies": {
-    "@tiddlybase/rpc": "workspace:*",
-    "@tiddlybase/tw5-types": "workspace:*",
-    "@tiddlybase/webpack-config": "workspace:*",
-    "@types/jest": "^27.4.1",
-    "cross-env": "^7.0.3",
-    "jest": "^27.5.1",
-    "ts-jest": "^27.1.4",
-    "typescript": "^4.5.5",
-    "webpack": "^5.68.0",
-    "webpack-cli": "^4.9.2"
-  }
+    "name": "@tiddlybase/plugin-embed-media",
+    "description": "Load files from firebase storage",
+    "version": "0.0.2",
+    "private": true,
+    "author": "Peter Neumark",
+    "license": "Apache-2.0",
+    "scripts": {
+        "build": "webpack",
+        "build:dev": "MODE=development webpack",
+        "test": "jest"
+    },
+    "dependencies": {
+        "@tiddlybase/plugin-tiddlybase-utils": "^0.0.0"
+    },
+    "devDependencies": {
+        "@tiddlybase/rpc": "workspace:*",
+        "@tiddlybase/tw5-types": "workspace:*",
+        "@tiddlybase/webpack-config": "workspace:*",
+        "@types/jest": "^27.4.1",
+        "cross-env": "^7.0.3",
+        "jest": "^27.5.1",
+        "ts-jest": "^27.1.4",
+        "typescript": "^4.5.5",
+        "webpack": "^5.68.0",
+        "webpack-cli": "^4.9.2"
+    }
 }

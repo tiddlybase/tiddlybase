@@ -1,16 +1,16 @@
 {
-  "name": "@tiddlybase/browser-tests",
-  "description": "In-browser trusted code running outside the sandbox",
-  "version": "0.0.0",
-  "private": true,
-  "author": "Peter Neumark",
-  "license": "Apache-2.0",
-  "scripts": {
-    "test:build": "./build.sh",
-    "test:run": "yarn node launcher.js"
-  },
-  "devDependencies": {
-    "puppeteer": "^13.6.0",
-    "tiddlywiki": "^5.2.2"
-  }
+    "name": "@tiddlybase/browser-tests",
+    "description": "In-browser trusted code running outside the sandbox",
+    "version": "0.0.2",
+    "private": true,
+    "author": "Peter Neumark",
+    "license": "Apache-2.0",
+    "scripts": {
+        "test:build": "./build.sh",
+        "test:run": "yarn node launcher.js"
+    },
+    "devDependencies": {
+        "puppeteer": "^13.6.0",
+        "tiddlywiki": "^5.2.2"
+    }
 }

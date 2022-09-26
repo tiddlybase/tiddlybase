@@ -1,21 +1,21 @@
 {
-  "name": "@tiddlybase/wiki-builder",
-  "description": "In-browser trusted code running outside the sandbox",
-  "version": "0.0.0",
-  "private": true,
-  "author": "Peter Neumark",
-  "license": "Apache-2.0",
-  "scripts": {
-    "build": "yarn workspace @tiddlybase/root run move_sourcemaps && yarn run build:all",
-    "build:all": "./build-all.sh",
-    "build:dev": "yarn run build"
-  },
-  "dependencies": {
-    "@tiddlybase/cli": "workspace:*",
-    "@tiddlybase/plugin-embed-media": "workspace:*",
-    "@tiddlybase/plugin-init": "workspace:*",
-    "@tiddlybase/plugin-mdx": "workspace:*",
-    "@tiddlybase/plugin-react": "workspace:*",
-    "@tiddlybase/plugin-tiddlybase-utils": "workspace:*"
-  }
+    "name": "@tiddlybase/wiki-builder",
+    "description": "In-browser trusted code running outside the sandbox",
+    "version": "0.0.2",
+    "private": true,
+    "author": "Peter Neumark",
+    "license": "Apache-2.0",
+    "scripts": {
+        "build": "yarn workspace @tiddlybase/root run move_sourcemaps && yarn run build:all",
+        "build:all": "./build-all.sh",
+        "build:dev": "yarn run build"
+    },
+    "dependencies": {
+        "@tiddlybase/cli": "workspace:*",
+        "@tiddlybase/plugin-embed-media": "workspace:*",
+        "@tiddlybase/plugin-init": "workspace:*",
+        "@tiddlybase/plugin-mdx": "workspace:*",
+        "@tiddlybase/plugin-react": "workspace:*",
+        "@tiddlybase/plugin-tiddlybase-utils": "workspace:*"
+    }
 }

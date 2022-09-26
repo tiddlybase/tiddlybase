@@ -1,25 +1,25 @@
 {
-  "name": "@tiddlybase/webpack-config",
-  "description": "In-browser trusted code running outside the sandbox",
-  "version": "0.0.0",
-  "private": true,
-  "author": "Peter Neumark",
-  "license": "Apache-2.0",
-  "main": "src/webpack-common.js",
-  "scripts": {
-    "test": "yarn jasmine test/*.js"
-  },
-  "devDependencies": {
-    "copy-webpack-plugin": "^10.2.4",
-    "enhanced-resolve": "^5.9.3",
-    "glob": "^7.2.0",
-    "jasmine": "^4.1.0",
-    "terser-webpack-plugin": "^5.3.1",
-    "ts-loader": "^9.2.6",
-    "tsconfig-paths-webpack-plugin": "^3.5.2",
-    "typescript": "^4.5.5",
-    "webpack": "^5.68.0",
-    "webpack-cli": "^4.9.2",
-    "webpack-node-externals": "^3.0.0"
-  }
+    "name": "@tiddlybase/webpack-config",
+    "description": "In-browser trusted code running outside the sandbox",
+    "version": "0.0.2",
+    "private": true,
+    "author": "Peter Neumark",
+    "license": "Apache-2.0",
+    "main": "src/webpack-common.js",
+    "scripts": {
+        "test": "yarn jasmine test/*.js"
+    },
+    "devDependencies": {
+        "copy-webpack-plugin": "^10.2.4",
+        "enhanced-resolve": "^5.9.3",
+        "glob": "^7.2.0",
+        "jasmine": "^4.1.0",
+        "terser-webpack-plugin": "^5.3.1",
+        "ts-loader": "^9.2.6",
+        "tsconfig-paths-webpack-plugin": "^3.5.2",
+        "typescript": "^4.5.5",
+        "webpack": "^5.68.0",
+        "webpack-cli": "^4.9.2",
+        "webpack-node-externals": "^3.0.0"
+    }
 }
