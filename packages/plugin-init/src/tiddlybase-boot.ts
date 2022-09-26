@@ -7,6 +7,9 @@ import { loadWikiTiddlers } from "./load-tiddlers";
 
 (() => {
 
+  // from: https://stackoverflow.com/a/37178303
+  const runningIniOSChrome = () => /CriOS/i.test(navigator.userAgent) && /iphone|ipod|ipad/i.test(navigator.userAgent);
+
   /**
    * The @tiddlybase/init plugin should only be part of wikis which are loaded
    * as iframes by Tiddlybase. If the current window isn't an iframe, the plugin
@@ -20,7 +23,7 @@ import { loadWikiTiddlers } from "./load-tiddlers";
   // and other necessary variables are set.
   window.$tw = {
     boot: {
-      suppressBoot: true
+      suppressBoot: true,
     } as typeof $tw.boot,
   } as typeof $tw;
 
@@ -50,17 +53,20 @@ import { loadWikiTiddlers } from "./load-tiddlers";
     };
     try {
       const tiddlers: Array<$tw.TiddlerFields> =
-      (await Promise.all(
-        wikiNames.map(
-          wikiName => loadWikiTiddlers(
-            topLevelClient,
-            storageConfig,
-            wikiName,
-            isLocal)))).flat();
-    tiddlers.push(createWikiInfoConfig(settings))
-    console.log("tiddlers", tiddlers);
-    $tw.preloadTiddlerArray(tiddlers);
-    $tw.boot.boot();
+        (await Promise.all(
+          wikiNames.map(
+            wikiName => loadWikiTiddlers(
+              topLevelClient,
+              storageConfig,
+              wikiName,
+              isLocal)))).flat();
+      tiddlers.push(createWikiInfoConfig(settings))
+      console.log("tiddlers", tiddlers);
+      $tw.preloadTiddlerArray(tiddlers);
+      $tw.boot.boot();
+      if (runningIniOSChrome()) {
+        window.onerror = null;
+      }
     } catch (e) {
       console.dir(e);
       if (typeof e === 'object') {
