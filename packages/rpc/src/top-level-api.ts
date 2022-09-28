@@ -16,8 +16,20 @@ export interface ChildInitProps {
   parentLocation: Partial<Location>
 }
 
+export interface StorageFileMetadata {
+  contentType?: string,
+  name: string,
+  timeCreated: string,
+  timeUpdated: string,
+  size: number,
+  md5Hash?: string
+}
+
+
 export interface TopLevelAPIForSandboxedWiki extends ParentAPIBase<ChildInitProps> {
-  getDownloadURL: (filename: string) => Promise<string>;
+  getStorageFileAsBlob: (filename: string) => Promise<Blob>;
+  getStorageFileMetadata: (filename: string) => Promise<StorageFileMetadata>;
+  getStorageFileDownloadUrl: (filename: string) => Promise<string>;
   authSignOut: () => Promise<void>;
   authDeleteAccount: () => Promise<void>;
   loadError: (message: string) => Promise<void>;

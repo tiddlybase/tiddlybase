@@ -219,11 +219,13 @@ export const generateHtml = (spec: EmbedSpec): RenderedEmbed => {
       });
     }
   }
-
-  // for images and media files
+  // try to guess object type based on extension
   const extension = getExtension(spec.resolvedSrc);
-  let objectType: ObjectType =
-    (extension ? EXTENSION_TO_OBJECT_TYPE[extension] : undefined) ?? "link";
+  let objectType: ObjectType = (extension ? EXTENSION_TO_OBJECT_TYPE[extension] : undefined) ?? "link";
+  // blob's are images, override extension
+  if (spec.resolvedSrc.startsWith('blob:')) {
+    objectType = "image"
+  }
   // in sandboxed iframe, embedded objects like PDFs should open in new tab
   // because the browser will not start plugins for displaying them.
   if (spec.inSandboxedIframe && objectType === "embed") {

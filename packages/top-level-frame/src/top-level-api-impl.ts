@@ -1,8 +1,8 @@
 import MiniIframeRPC from "mini-iframe-rpc";
 import { apiDefiner } from "@tiddlybase/rpc";
-import { TopLevelAPIForSandboxedWiki } from "@tiddlybase/rpc/src/top-level-api";
+import { StorageFileMetadata, TopLevelAPIForSandboxedWiki } from "@tiddlybase/rpc/src/top-level-api";
 import type { CallableFunctionType } from "@tiddlybase/functions/src/apis";
-import { getDownloadURL as _getDownloadURL, getStorage, ref } from '@firebase/storage';
+import { getDownloadURL, getMetadata, getStorage, getBlob, ref } from '@firebase/storage';
 import { getFunctions, httpsCallable, HttpsCallable, connectFunctionsEmulator } from "@firebase/functions";
 import type { User } from '@firebase/auth'
 import { TiddlyBaseUser, USER_FIELDS } from "@tiddlybase/rpc/src/top-level-api";
@@ -11,13 +11,31 @@ import { FirebaseState } from "./types";
 import { FirebaseStorage } from '@firebase/storage';
 import { Functions } from '@firebase/functions'
 import { getStorageConfig } from "packages/shared/src/tiddlybase-config-schema";
-import { toggleVisibleDOMSection,replaceChildrenWithText } from "./dom-utils";
+import { toggleVisibleDOMSection, replaceChildrenWithText } from "./dom-utils";
 
 export const devSetup = (functions: Functions) => connectFunctionsEmulator(functions, "localhost", 5001);
 
-export const getDownloadURL = (storage: FirebaseStorage) => async (filename: string) => {
+const makeGetStorageFileDownloadUrl = (storage: FirebaseStorage) => async (filename: string):Promise<string> => {
   const fileRef = ref(storage, filename);
-  return await _getDownloadURL(fileRef);
+  return await getDownloadURL(fileRef);
+};
+
+const makeGetStorageFileAsBlob = (storage: FirebaseStorage) => async (filename: string):Promise<Blob> => {
+  const fileRef = ref(storage, filename);
+  return await getBlob(fileRef);
+};
+
+const makeGetStorageFileMetadata = (storage: FirebaseStorage) => async (filename: string):Promise<StorageFileMetadata> => {
+  const fileRef = ref(storage, filename);
+  const metadata = await getMetadata(fileRef);
+  return {
+    contentType: metadata.contentType,
+    name: metadata.name,
+    timeCreated: metadata.timeCreated,
+    timeUpdated: metadata.updated,
+    size: metadata.size,
+    md5Hash: metadata.md5Hash
+  }
 };
 
 type StubFunction<T extends CallableFunctionType> = HttpsCallable<Parameters<T>, Awaited<ReturnType<T>>>
@@ -49,6 +67,8 @@ export const createParentApi = (rpc: MiniIframeRPC, user: User, firebaseState: F
     exposeCallable('notifyAdmin');
   }
 
+  const storage = getStorage(firebaseState.app);
+
   def('childIframeReady', async () => {
     return {
       user: convertUser(user),
@@ -58,7 +78,10 @@ export const createParentApi = (rpc: MiniIframeRPC, user: User, firebaseState: F
       isLocal
     }
   });
-  def('getDownloadURL', getDownloadURL(getStorage(firebaseState.app)));
+
+  def('getStorageFileAsBlob', makeGetStorageFileAsBlob(storage));
+  def('getStorageFileMetadata', makeGetStorageFileMetadata(storage));
+  def('getStorageFileDownloadUrl', makeGetStorageFileDownloadUrl(storage));
   def('authSignOut', firebaseState.auth.signOut.bind(firebaseState.auth));
   def('authDeleteAccount', deleteAccount);
   def('loadError', async (message: string) => {
