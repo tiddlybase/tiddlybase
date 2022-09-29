@@ -28,7 +28,10 @@ export const getExtension = (url: string) => {
 const isTiddlyDesktop = () => !!$tw?.desktop;
 
 // true if currently running in the browser as a regular .html TiddlyWiki file
-const isRegularTiddlywiki = () => !$tw.desktop && !$tw.tiddlybase && location.protocol === 'file:'
+const isStandaloneHtmlTiddlyWiki = () => !$tw.desktop && !$tw.tiddlybase && $tw.browser && location.protocol === 'file:'
+
+// true if currently running in the browser served by the built-in tiddlywiki nodejs server
+const isNodeServerTiddlyWiki = () => !$tw.desktop && !$tw.tiddlybase && $tw.browser && !!location.protocol.match('https?:')
 
 const getDesktopPathPrefix = () => {
   if (isTiddlyDesktop()) {
@@ -83,7 +86,7 @@ export const resolveURL = (url: string) => {
   if (isTiddlyDesktop()) {
     return getTiddlyDesktopUrl(path);
   }
-  if (isRegularTiddlywiki()) {
+  if (isStandaloneHtmlTiddlyWiki() || isNodeServerTiddlyWiki()) {
     return localFileRelativePath(path);
   }
   // otherwise assume Tiddlybase and resolve the
