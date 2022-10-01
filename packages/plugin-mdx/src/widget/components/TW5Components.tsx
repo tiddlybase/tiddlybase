@@ -14,73 +14,6 @@ const DEFAULT_EXTERNAL_LINK_PROPS = {
   target: "_blank",
 };
 
-type InternalLink = {
-  label: string;
-  tiddlerTitle: string;
-  tiddlerExists: boolean;
-  isShadowTiddler: boolean;
-};
-
-const checkExistsAndShadow = (
-  link: Omit<InternalLink, "tiddlerExists" | "isShadowTiddler">,
-  wiki: $tw.Wiki
-): InternalLink => ({
-  ...link,
-  tiddlerExists: wiki.tiddlerExists(link.tiddlerTitle),
-  isShadowTiddler: wiki.isShadowTiddler(link.tiddlerTitle),
-});
-
-const getInternalLinkProps = (
-  props: React.AnchorHTMLAttributes<HTMLAnchorElement>,
-  parentWidget?: $tw.Widget
-): InternalLink | undefined => {
-  if (
-    props.className === "internal new" &&
-    typeof props.children === "string" &&
-    props.href
-  ) {
-    /* internal wiki link props
-      // note this is opposite of the TW5 convention, [[Displayed Link Title|Tiddler Title]]
-      // so we'll want to switch this. (See: https://tiddlywiki.com/static/Linking%2520in%2520WikiText.html )
-      [[Start|X]] -> {
-        children: "X"
-        className: "internal new"
-        href: "Start"
-      }
-
-      [[Start]] -> {
-        children: "Start"
-        className: "internal new"
-        href: "Start"
-      }
-      */
-    return checkExistsAndShadow(
-      {
-        label: props.href,
-        tiddlerTitle: props.children,
-      },
-      parentWidget?.wiki ?? $tw.wiki
-    );
-  }
-  if (props.href?.startsWith("#") && typeof props.children === "string") {
-    /*
-      [X](#Start) -> {
-        children: "X"
-        href: "#Start"
-      }
-      */
-    return checkExistsAndShadow(
-      {
-        label: props.children,
-        tiddlerTitle: props.href.substring(1),
-      },
-      parentWidget?.wiki ?? $tw.wiki
-    );
-  }
-  // not internal link
-  return undefined;
-};
-
 const makeLinkClickHandler =
   (
     targetTiddler: string,
@@ -131,38 +64,33 @@ export const makeWikiLink = (
   targetTiddler: string,
   label?: string
 ) => {
-  const internalLinkProps = getInternalLinkProps(
-    {
-      children: targetTiddler,
-      className: "internal new",
-      href: label ?? targetTiddler,
-    },
-    context?.parentWidget
-  );
+  const tiddlerExists =  context?.parentWidget.wiki.tiddlerExists(targetTiddler);
+  const isShadowTiddler =  context?.parentWidget.wiki.isShadowTiddler(targetTiddler);
+
   const classes: string[] = [];
   // from tiddlywiki/core/modules/widgets/link.js:68
   classes.push("tc-tiddlylink");
-  if (internalLinkProps!.isShadowTiddler) {
+  if (isShadowTiddler) {
     classes.push("tc-tiddlylink-shadow");
   }
   if (
-    !internalLinkProps!.tiddlerExists &&
-    !internalLinkProps!.isShadowTiddler
+    tiddlerExists &&
+    isShadowTiddler
   ) {
     classes.push("tc-tiddlylink-missing");
-  } else if (internalLinkProps!.tiddlerExists) {
+  } else if (tiddlerExists) {
     classes.push("tc-tiddlylink-resolves");
   }
   return (
     <a
       className={classes.join(" ")}
-      href={`#${encodeURIComponent(internalLinkProps!.tiddlerTitle)}`}
+      href={`#${encodeURIComponent(targetTiddler)}`}
       onClick={makeLinkClickHandler(
-        internalLinkProps!.tiddlerTitle,
+        targetTiddler,
         context?.parentWidget
       )}
     >
-      {internalLinkProps!.label}
+      {label ?? targetTiddler}
     </a>
   );
 };
@@ -172,38 +100,32 @@ export const components = {
   TranscludeTiddler,
   a(props: React.AnchorHTMLAttributes<HTMLAnchorElement>): React.ReactElement {
     const context = useContext(TW5ReactContext);
-    const internalLinkProps = getInternalLinkProps(
-      props,
-      context?.parentWidget
-    );
-    console.log("internalLinkProps", internalLinkProps);
-    if (internalLinkProps) {
-      const classes: string[] = [];
-      // from tiddlywiki/core/modules/widgets/link.js:68
-      classes.push("tc-tiddlylink");
-      if (internalLinkProps.isShadowTiddler) {
-        classes.push("tc-tiddlylink-shadow");
+    if (
+      props.className === "internal new" &&
+      typeof props.children === "string" &&
+      !!props.href
+    ) {
+      /*  Internal wiki link case with double-bracket syntax, eg:
+        [[Start|X]] -> {
+          children: "X"
+          className: "internal new"
+          href: "Start"
+        }
+        // note this is opposite of the TW5 convention, [[Displayed Link Title|Tiddler Title]]
+        // so we'll want to switch this. (See: https://tiddlywiki.com/static/Linking%2520in%2520WikiText.html )
+    */
+      return makeWikiLink(context, props.children, props.href);
+    }
+    if (props.href?.startsWith('#') && typeof props.children === 'string') {
+      /*  Internal wiki link case with hash link href
+      target tiddler: "foo bar"
+      [Start](#foo%20bar) -> {
+        children: "Start"
+        href: "#foo%20bar"
       }
-      if (
-        !internalLinkProps.tiddlerExists &&
-        !internalLinkProps.isShadowTiddler
-      ) {
-        classes.push("tc-tiddlylink-missing");
-      } else if (internalLinkProps.tiddlerExists) {
-        classes.push("tc-tiddlylink-resolves");
-      }
-      return (
-        <a
-          className={classes.join(" ")}
-          href={`#${encodeURIComponent(internalLinkProps.tiddlerTitle)}`}
-          onClick={makeLinkClickHandler(
-            internalLinkProps.tiddlerTitle,
-            context?.parentWidget
-          )}
-        >
-          {internalLinkProps.label}
-        </a>
-      );
+      */
+      const targetTiddler = decodeURIComponent(props.href.substring(1))
+      return makeWikiLink(context, targetTiddler, props.children);
     }
     // external link
     return (
