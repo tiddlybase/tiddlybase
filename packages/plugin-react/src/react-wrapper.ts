@@ -1,7 +1,7 @@
 import { monitorRemoval, RemovalHandler, unmonitorRemoval } from "@tiddlybase/plugin-react/src/tiddler-removal-detector";
 import type { Root } from 'react-dom/client';
 import { createRoot } from 'react-dom/client';
-import { JSError } from "./components/JSError";
+import { JSError, errorMsg } from "./components/JSError";
 import { withContextProvider } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
 import { ReactNode } from "react";
 import type {} from "@tiddlybase/tw5-types/src/index"
@@ -25,11 +25,6 @@ export type WrappedPropsBase = {
   parentWidget?: $tw.Widget,
   children?: ReactNode
 }
-
-const errorMsg = (message: string, title?:string) => JSError({
-  title: title ?? 'Error rendering react component',
-  error: { name: 'react-wrapper-error', message }
-});
 
 export class ReactWrapper extends (widget as typeof $tw.Widget) {
 

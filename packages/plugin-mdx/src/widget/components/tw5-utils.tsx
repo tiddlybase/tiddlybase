@@ -1,18 +1,8 @@
 import type {} from "@tiddlybase/tw5-types/src/index";
 
-import { LogContext } from "./LogContext";
-import { TranscludeTiddler } from "./TranscludeTiddler";
 import {
-  TW5ReactContext,
   TW5ReactContextType,
 } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
-import { useContext } from "react";
-
-const DEFAULT_EXTERNAL_LINK_PROPS = {
-  className: "tc-tiddlylink-external",
-  rel: "noopener noreferrer",
-  target: "_blank",
-};
 
 const makeLinkClickHandler =
   (
@@ -60,12 +50,12 @@ const makeLinkClickHandler =
   };
 
 export const makeWikiLink = (
-  context: TW5ReactContextType | null,
+  context: TW5ReactContextType,
   targetTiddler: string,
-  label?: string
+  children?: React.ReactNode
 ) => {
-  const tiddlerExists =  context?.parentWidget.wiki.tiddlerExists(targetTiddler);
-  const isShadowTiddler =  context?.parentWidget.wiki.isShadowTiddler(targetTiddler);
+  const tiddlerExists =  context.parentWidget.wiki.tiddlerExists(targetTiddler);
+  const isShadowTiddler =  context.parentWidget.wiki.isShadowTiddler(targetTiddler);
 
   const classes: string[] = [];
   // from tiddlywiki/core/modules/widgets/link.js:68
@@ -90,53 +80,7 @@ export const makeWikiLink = (
         context?.parentWidget
       )}
     >
-      {label ?? targetTiddler}
+      {children ?? targetTiddler}
     </a>
   );
-};
-
-export const components = {
-  LogContext,
-  TranscludeTiddler,
-  a(props: React.AnchorHTMLAttributes<HTMLAnchorElement>): React.ReactElement {
-    const context = useContext(TW5ReactContext);
-    if (
-      props.className === "internal new" &&
-      typeof props.children === "string" &&
-      !!props.href
-    ) {
-      /*  Internal wiki link case with double-bracket syntax, eg:
-        [[Start|X]] -> {
-          children: "X"
-          className: "internal new"
-          href: "Start"
-        }
-        // note this is opposite of the TW5 convention, [[Displayed Link Title|Tiddler Title]]
-        // so we'll want to switch this. (See: https://tiddlywiki.com/static/Linking%2520in%2520WikiText.html )
-    */
-      return makeWikiLink(context, props.children, props.href);
-    }
-    if (props.href?.startsWith('#') && typeof props.children === 'string') {
-      /*  Internal wiki link case with hash link href
-      target tiddler: "foo bar"
-      [Start](#foo%20bar) -> {
-        children: "Start"
-        href: "#foo%20bar"
-      }
-      */
-      const targetTiddler = decodeURIComponent(props.href.substring(1))
-      return makeWikiLink(context, targetTiddler, props.children);
-    }
-    // external link
-    return (
-      <a
-        {...{
-          ...DEFAULT_EXTERNAL_LINK_PROPS,
-          ...props,
-        }}
-      >
-        {props.children}
-      </a>
-    );
-  },
 };

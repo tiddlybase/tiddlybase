@@ -5,9 +5,11 @@ import {
   getExports,
 } from "@tiddlybase/plugin-mdx/src/mdx-client/mdx-client";
 import {
-  components as baseComponents,
+  components as baseComponents
+} from "./components";
+import {
   makeWikiLink,
-} from "./components/TW5Components";
+} from "./components/tw5-utils";
 import type { WrappedPropsBase } from "@tiddlybase/plugin-react/src/react-wrapper";
 import {
   TW5ReactContextType,
@@ -46,9 +48,10 @@ const getCustomComponentProps = (
 ) => ({
   context,
   parentWidget: context.parentWidget,
-  tiddler: context.parentWidget?.wiki?.getTiddler(
-    context.parentWidget?.getVariable("currentTiddler")
-  ),
+  get tiddler() {
+    return context.parentWidget?.wiki?.getTiddler(
+      context.parentWidget?.getVariable("currentTiddler"));
+  },
   /**
    * link - Render a clickable link which displays another tiddler.
    * @param targetTiddler

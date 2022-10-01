@@ -28,3 +28,7 @@ export const JSError = (props:JSErrorProps) => {
   return (<div>{props.error.message}</div>);
 }
 
+export const errorMsg = (message: string, title?:string, name?:string) => JSError({
+  title: title ?? 'Error rendering react component',
+  error: { name: name ?? 'react-wrapper-error', message }
+});
