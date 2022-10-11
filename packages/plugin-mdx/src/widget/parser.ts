@@ -25,7 +25,7 @@ class MDXParser implements $tw.Parser {
                 "type": "string",
                 "value": text
             },
-            "name": {
+            "title": {
                 "name": "title",
                 "type": "string",
                 "value": PARSER_TITLE_PLACEHOLDER

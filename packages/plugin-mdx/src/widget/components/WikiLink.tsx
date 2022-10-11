@@ -4,14 +4,14 @@ import { errorMsg } from "@tiddlybase/plugin-react/src/components/JSError";
 import { makeWikiLink } from "./tw5-utils";
 
 export interface WikiLinkProps {
-  targetTiddler: string,
+  tiddler: string,
   children?: React.ReactNode
 }
 
-export const WikiLink = ({targetTiddler, children}: WikiLinkProps) => {
+export const WikiLink = ({tiddler, children}: WikiLinkProps) => {
   const context = useContext(TW5ReactContext);
   if (context === null) {
     return errorMsg('Cannot create WikiLink component without a TW5ReactContext');
   }
-  return makeWikiLink(context, targetTiddler, children)
+  return makeWikiLink(context, tiddler, children)
 }

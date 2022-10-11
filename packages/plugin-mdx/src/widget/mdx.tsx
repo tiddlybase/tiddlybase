@@ -4,12 +4,7 @@ import {
   compile,
   getExports,
 } from "@tiddlybase/plugin-mdx/src/mdx-client/mdx-client";
-import {
-  components as baseComponents
-} from "./components";
-import {
-  makeWikiLink,
-} from "./components/tw5-utils";
+import { components as baseComponents } from "./components";
 import type { WrappedPropsBase } from "@tiddlybase/plugin-react/src/react-wrapper";
 import {
   TW5ReactContextType,
@@ -44,39 +39,39 @@ export const registerComponent = (
 };
 
 const getCustomComponentProps = (
-  context: TW5ReactContextType
+  context: TW5ReactContextType,
+  definingTiddlerName?: string
 ) => ({
   context,
   parentWidget: context.parentWidget,
-  get tiddler() {
+  get currentTiddler() {
     return context.parentWidget?.wiki?.getTiddler(
-      context.parentWidget?.getVariable("currentTiddler"));
+      context.parentWidget?.getVariable("currentTiddler")
+    );
   },
-  /**
-   * link - Render a clickable link which displays another tiddler.
-   * @param targetTiddler
-   * @param label
-   * @returns
-   */
-  link: (targetTiddler: string, label?: string) =>
-    makeWikiLink(context, targetTiddler, label),
+  get definingTiddler() {
+    return !!definingTiddlerName
+      ? context.parentWidget?.wiki?.getTiddler(definingTiddlerName)
+      : undefined;
+  },
 });
 
 /**
  * CustomComponentProps is the inteface presented to
  */
-export type CustomComponentProps = ReturnType<typeof getCustomComponentProps>
+export type CustomComponentProps = ReturnType<typeof getCustomComponentProps>;
+
 
 export const MDXFactory = async ({
   parentWidget,
   children,
   mdx,
-  title: name,
+  title,
 }: MDXFactoryProps) => {
-  const definingTiddlerName: string | undefined =
-    name === PARSER_TITLE_PLACEHOLDER
-      ? parentWidget?.getVariable("currentTiddler")
-      : name;
+  let definingTiddlerTitle = title;
+  if (definingTiddlerTitle === PARSER_TITLE_PLACEHOLDER) {
+    definingTiddlerTitle = parentWidget?.getVariable("currentTiddler");
+  }
   if (children) {
     console.log("MDX ignoring children", children);
   }
@@ -87,11 +82,15 @@ export const MDXFactory = async ({
   const mdxContext = {
     React,
     withContext,
-    render: (component: React.FunctionComponent<CustomComponentProps|null>) => {
+    render: (
+      component: React.FunctionComponent<CustomComponentProps | null>
+    ) => {
       return (ReactJSXRuntime as any).jsx(
         withContext(({ context }) => {
           try {
-            return component(context ? getCustomComponentProps(context) : null);
+            return component(
+              context ? getCustomComponentProps(context, definingTiddlerTitle) : null
+            );
           } catch (e) {
             return errorMessage(
               e as Error | MDXErrorDetails,
@@ -132,13 +131,13 @@ export const MDXFactory = async ({
       });
     }
     mdxMetadata.dependencies.push(mdxTiddlerName);
-    return $tw.modules.execute(mdxTiddlerName, definingTiddlerName);
+    return $tw.modules.execute(mdxTiddlerName, definingTiddlerTitle);
   };
   let compiledFn: any;
   let warnings: Array<MDXErrorDetails> = [];
   try {
     const compilationResult = await compile(
-      definingTiddlerName ?? `$:/mdx_generated_${invocationCounter++}`,
+      definingTiddlerTitle ?? `$:/mdx_generated_${invocationCounter++}`,
       mdx,
       contextKeys
     );
@@ -167,8 +166,8 @@ export const MDXFactory = async ({
   }
 
   mdxExports.mdxMetadata = mdxMetadata;
-  if (definingTiddlerName) {
-    $tw.modules.define(definingTiddlerName, "library", mdxExports);
+  if (definingTiddlerTitle) {
+    $tw.modules.define(definingTiddlerTitle, "library", mdxExports);
   }
   return (props: any) => {
     try {
