@@ -1,4 +1,3 @@
-
 const _runEval = (code:string):any => window["eval"](code);
 
 const getSourceMappingUrlComment = (code:string): string|undefined => {

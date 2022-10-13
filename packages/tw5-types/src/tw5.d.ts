@@ -365,9 +365,11 @@ declare namespace $tw {
   // generated with JSON.stringify(Object.keys($tw.modules.types)).replace(/,/g, "|")
   export type ModuleType = "tiddlerfield" | "tiddlerdeserializer" | "startup" | "global" | "command" | "config" | "library" | "bitmapeditoroperation" | "texteditoroperation" | "filterrunprefix" | "filteroperator" | "allfilteroperator" | "formatfilteroperator" | "isfilteroperator" | "wikimethod" | "indexer" | "info" | "macro" | "parser" | "utils" | "wikirule" | "saver" | "authenticator" | "route" | "storyview" | "tiddlermethod" | "upgrader" | "animation" | "utils-node" | "widget" | "widget-subclass";
 
+  export type ModuleExports = Record<string, any>;
+
   export type TW5Module = {
     definition: string | object,
-    exports: undefined | object
+    exports?: ModuleExports,
     moduleType: ModuleType
   }
 
@@ -376,14 +378,15 @@ declare namespace $tw {
   export interface TW5Modules {
     titles: Record<string, TW5Module>;
     types: Partial<Record<ModuleType, Record<string, TW5Module>>>
-    define: (moduleName: string, moduleType: ModuleType, definition: any) => void;
-    execute: (moduleName: string, moduleRoot?: string) => any;
+    define: (moduleName: string, moduleType: ModuleType, definition: string|ModuleExports) => void;
+    execute: (moduleName: string, moduleRoot?: string) => ModuleExports;
     applyMethods: (moduleType: ModuleType, targetObject?: any) => any;
-    createClassFromModule: (moduleExports:any,baseClass:ClassConstructor) => any;
+    createClassFromModule: (moduleExports:ModuleExports,baseClass:ClassConstructor) => any;
     createClassesFromModules: (moduleType:ModuleType,subType:string,baseClass:ClassConstructor) => any;
-    forEachModuleOfType: (moduleType:ModuleType, callback:(title:string, exports:any) => void) => any;
+    forEachModuleOfType: (moduleType:ModuleType, callback:(title:string, exports:ModuleExports) => void) => any;
     getModulesByTypeAsHashmap: (moduleType:any, nameField:any) => any;
   }
+
   export namespace utils {
     // defined in tiddlywiki/core/modules/utils/dom/http.js
     export const httpRequest: (

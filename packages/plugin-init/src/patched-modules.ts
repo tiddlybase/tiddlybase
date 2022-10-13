@@ -2,16 +2,37 @@
 import { patchedEvalGlobal } from './patched-eval-global';
 
 export class PatchedModules implements $tw.TW5Modules {
-  titles: Record<string, $tw.TW5Module>;
-  types: Partial<Record<$tw.ModuleType, Record<string, $tw.TW5Module>>>;
+  titles: Record<string, $tw.TW5Module> = {};
+  types: Partial<Record<$tw.ModuleType, Record<string, $tw.TW5Module>>> = {};
 
   constructor(titles?: Record<string, $tw.TW5Module>, types?: Partial<Record<$tw.ModuleType, Record<string, $tw.TW5Module>>>) {
-    this.titles = titles ?? {};
-    this.types = types ?? {};
+    Object.assign(this.titles, titles);
+    Object.assign(this.types, types);
     Object.preventExtensions(this);
   }
 
-  define(moduleName: string, moduleType: $tw.ModuleType, definition: object | string) {
+  normalizeModuleName(moduleName: string, moduleRoot?: string): string {
+    let name = moduleName;
+    if (moduleName.charAt(0) === ".") {
+      name = $tw.utils.resolvePath(moduleName, moduleRoot);
+    }
+    if (!this.titles[name]) {
+      if (this.titles[name + ".js"]) {
+        name = name + ".js";
+      } else if (this.titles[name + "/index.js"]) {
+        name = name + "/index.js";
+      } else if (this.titles[moduleName]) {
+        name = moduleName;
+      } else if (this.titles[moduleName + ".js"]) {
+        name = moduleName + ".js";
+      } else if (this.titles[moduleName + "/index.js"]) {
+        name = moduleName + "/index.js";
+      }
+    }
+    return name;
+  }
+
+  define(moduleName: string, moduleType: $tw.ModuleType, definition: $tw.ModuleExports | string) {
     // Create the moduleInfo
     var moduleInfo: $tw.TW5Module = {
       moduleType: moduleType,
@@ -39,42 +60,29 @@ export class PatchedModules implements $tw.TW5Modules {
     modulesOfType[moduleName] = moduleInfo;
   }
 
-  execute(moduleName: string, moduleRoot?: string): any {
-    var name = moduleName;
-    if (moduleName.charAt(0) === ".") {
-      name = $tw.utils.resolvePath(moduleName, moduleRoot);
+  execute(moduleName: string, moduleRoot?: string): $tw.ModuleExports {
+    const name = this.normalizeModuleName(moduleName, moduleRoot);
+    const moduleInfo = this.titles[name];
+    const tiddler = $tw.wiki.getTiddler(name);
+    if (!moduleInfo) {
+      // nodejs and browser require() fallback not supported
+      throw "Cannot find module named '" + moduleName + "' required by module '" + moduleRoot + "', resolved to " + name;
     }
-    if (!$tw.modules.titles[name]) {
-      if ($tw.modules.titles[name + ".js"]) {
-        name = name + ".js";
-      } else if ($tw.modules.titles[name + "/index.js"]) {
-        name = name + "/index.js";
-      } else if ($tw.modules.titles[moduleName]) {
-        name = moduleName;
-      } else if ($tw.modules.titles[moduleName + ".js"]) {
-        name = moduleName + ".js";
-      } else if ($tw.modules.titles[moduleName + "/index.js"]) {
-        name = moduleName + "/index.js";
-      }
-    }
-    var moduleInfo = $tw.modules.titles[name],
-      tiddler = $tw.wiki.getTiddler(name)!,
-      _exports = {},
-      sandbox = {
-        module: { exports: _exports },
-        //moduleInfo: moduleInfo,
-        exports: _exports,
-        console: console,
-        setInterval: setInterval,
-        clearInterval: clearInterval,
-        setTimeout: setTimeout,
-        clearTimeout: clearTimeout,
-        Buffer: $tw.browser ? undefined : Buffer,
-        $tw: $tw,
-        require: function (title: string) {
-          return $tw.modules.execute(title, name);
-        }
-      };
+
+    const _exports = {};
+    const sandbox = {
+      module: { exports: _exports },
+      //moduleInfo: moduleInfo,
+      exports: _exports,
+      console: console,
+      setInterval: setInterval,
+      clearInterval: clearInterval,
+      setTimeout: setTimeout,
+      clearTimeout: clearTimeout,
+      Buffer: $tw.browser ? undefined : Buffer,
+      $tw: $tw,
+      require: (title: string): $tw.ModuleExports | undefined => this.execute(title, name)
+    };
 
     Object.defineProperty(sandbox.module, "id", {
       value: name,
@@ -83,38 +91,19 @@ export class PatchedModules implements $tw.TW5Modules {
       configurable: false
     });
 
-    if (!$tw.browser) {
-      Object.assign(sandbox, {
-        process: process
-      });
-    } else {
-      /*
-      CommonJS optional require.main property:
-       In a browser we offer a fake main module which points back to the boot function
-       (Theoretically, this may allow TW to eventually load itself as a module in the browser)
-      */
-      Object.defineProperty(sandbox.require, "main", {
-        value: (typeof (require) !== "undefined") ? require.main : { TiddlyWiki: $tw },
-        writable: false,
-        enumerable: true,
-        configurable: false
-      });
-    }
-    if (!moduleInfo) {
-      // We could not find the module on this path
-      // Try to defer to browserify etc, or node
-      if ($tw.browser) {
-        if (window.require) {
-          try {
-            return window.require(moduleName);
-          } catch (e) { }
-        }
-        throw "Cannot find module named '" + moduleName + "' required by module '" + moduleRoot + "', resolved to " + name;
-      } else {
-        // If we don't have a module with that name, let node.js try to find it
-        return require(moduleName);
-      }
-    }
+
+    /*
+    CommonJS optional require.main property:
+     In a browser we offer a fake main module which points back to the boot function
+     (Theoretically, this may allow TW to eventually load itself as a module in the browser)
+    */
+    Object.defineProperty(sandbox.require, "main", {
+      value: (typeof (require) !== "undefined") ? require.main : { TiddlyWiki: $tw },
+      writable: false,
+      enumerable: true,
+      configurable: false
+    });
+
     // Execute the module if we haven't already done so
     if (!moduleInfo.exports) {
       try {
@@ -124,7 +113,7 @@ export class PatchedModules implements $tw.TW5Modules {
           moduleInfo.definition(moduleInfo, moduleInfo.exports, sandbox.require);
         } else if (typeof moduleInfo.definition === "string") { // String
           moduleInfo.exports = _exports;
-          patchedEvalGlobal(moduleInfo.definition, sandbox, tiddler.fields.title);
+          patchedEvalGlobal(moduleInfo.definition, sandbox, tiddler?.fields?.title ?? name);
           if (sandbox.module.exports) {
             moduleInfo.exports = sandbox.module.exports; //more codemirror workaround
           }
@@ -153,7 +142,7 @@ export class PatchedModules implements $tw.TW5Modules {
       }
     }
     // Return the exports of the module
-    return moduleInfo.exports;
+    return moduleInfo.exports!;
   }
 
   /*
@@ -161,17 +150,17 @@ export class PatchedModules implements $tw.TW5Modules {
       moduleType: type of modules to enumerate
       callback: function called as callback(title,moduleExports) for each module
   */
-  forEachModuleOfType(moduleType: $tw.ModuleType, callback: (title: string, exports: any) => void): any {
+  forEachModuleOfType(moduleType: $tw.ModuleType, callback: (title: string, exports: $tw.ModuleExports) => void): any {
     Object.keys(this.types[moduleType] ?? {}).forEach(title => callback(title, this.execute(title)));
   }
 
   /*
   Get all the modules of a particular type in a hashmap by their `name` field
   */
-  getModulesByTypeAsHashmap(moduleType: $tw.ModuleType, nameField?: string): Record<string, any> {
+  getModulesByTypeAsHashmap(moduleType: $tw.ModuleType, nameField?: string): Record<string, $tw.ModuleExports> {
     const name = nameField || "name";
     var results = Object.create(null);
-    this.forEachModuleOfType(moduleType, function (title, module) {
+    this.forEachModuleOfType(moduleType, function (_title, module) {
       results[module[name]] = module;
     });
     return results;
@@ -193,7 +182,7 @@ export class PatchedModules implements $tw.TW5Modules {
   /*
   Return a class created from a modules. The module should export the properties to be added to those of the optional base class
   */
-  createClassFromModule(moduleExports: any, baseClass: $tw.ClassConstructor) {
+  createClassFromModule(moduleExports: $tw.ModuleExports, baseClass: $tw.ClassConstructor) {
     var newClass = function () { };
     if (baseClass) {
       newClass.prototype = new baseClass();
