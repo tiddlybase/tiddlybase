@@ -4,6 +4,7 @@ import type { TopLevelAPIForSandboxedWiki } from "@tiddlybase/rpc/src/top-level-
 import type { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
 import { createWikiInfoConfig } from "@tiddlybase/shared/src/wiki-info";
 import { loadWikiTiddlers } from "./load-tiddlers";
+import { PatchedModules } from "./patched-modules";
 
 (() => {
 
@@ -63,6 +64,7 @@ import { loadWikiTiddlers } from "./load-tiddlers";
       tiddlers.push(createWikiInfoConfig(settings))
       console.log("tiddlers", tiddlers);
       $tw.preloadTiddlerArray(tiddlers);
+      $tw.modules = new PatchedModules($tw.modules.titles, $tw.modules.types);
       $tw.boot.boot();
       if (runningIniOSChrome()) {
         window.onerror = null;

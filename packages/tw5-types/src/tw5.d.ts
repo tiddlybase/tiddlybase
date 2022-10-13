@@ -371,15 +371,18 @@ declare namespace $tw {
     moduleType: ModuleType
   }
 
+  export type ClassConstructor = (new () => any);
+
   export interface TW5Modules {
-    // applyMethods: ƒ (moduleType,targetObject)
-    // createClassFromModule: ƒ (moduleExports,baseClass)
-    // createClassesFromModules: ƒ (moduleType,subType,baseClass)
+    titles: Record<string, TW5Module>;
+    types: Partial<Record<ModuleType, Record<string, TW5Module>>>
     define: (moduleName: string, moduleType: ModuleType, definition: any) => void;
     execute: (moduleName: string, moduleRoot?: string) => any;
-    // forEachModuleOfType: ƒ (moduleType,callback)
-    // getModulesByTypeAsHashmap: ƒ (moduleType,nameField)
-    titles: Record<string, TW5Module>;
+    applyMethods: (moduleType: ModuleType, targetObject?: any) => any;
+    createClassFromModule: (moduleExports:any,baseClass:ClassConstructor) => any;
+    createClassesFromModules: (moduleType:ModuleType,subType:string,baseClass:ClassConstructor) => any;
+    forEachModuleOfType: (moduleType:ModuleType, callback:(title:string, exports:any) => void) => any;
+    getModulesByTypeAsHashmap: (moduleType:any, nameField:any) => any;
   }
   export namespace utils {
     // defined in tiddlywiki/core/modules/utils/dom/http.js
@@ -401,6 +404,7 @@ declare namespace $tw {
     export const domMaker: (tag: string, options: DomMakerOptions) => HTMLElement;
     export const formatDateString: (date: Date, format: string) => string;
     export let getLocationPath: () => string;
+    export const resolvePath: (sourcepath:string, rootpath?: string) => string;
   }
 
   export namespace boot {
@@ -432,7 +436,7 @@ declare namespace $tw {
     utils: unknown;
   };
   export const rootWidget: Widget;
-  export const modules: TW5Modules;
+  export let modules: TW5Modules;
   export let config: {
     pluginsPath: string,
     themesPath: string,
