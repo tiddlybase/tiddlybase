@@ -127,7 +127,8 @@ export const MDXFactory = async ({
     // registered the generated module with TiddlyWiki. For MDX dependencies,
     // compile them now so they can be required if necessary
     if (
-      $tw.wiki.getTiddler(requiredModuleName)?.fields?.type === "text/x-markdown"
+      $tw.wiki.getTiddler(requiredModuleName)?.fields?.type ===
+      "text/x-markdown"
     ) {
       // called so the module is registered
       await MDXFactory({
@@ -172,25 +173,23 @@ export const MDXFactory = async ({
       "Error executing compiled MDX"
     );
   }
+  let allDependencies: Set<string> = requires;
   if (definingTiddlerTitle !== undefined) {
     $tw.modules.define(definingTiddlerTitle, "library", mdxExports);
     $tw.modules.titles[definingTiddlerTitle].requires = requires;
-  }
-  let allDependencies:Set<string> = requires;
-  // only listen to changes to transitive dependencies is PatchedModules is
-  // installed
-  // if ('getAllModulesRequiredBy' in ($tw.modules as any)) {
-  //  allDependencies = ($tw.modules as any)['getAllModulesRequiredBy'](definingTiddlerTitle);
-  //}
-  (parentWidget as ReactWrapper).setChangedTiddlerHook(
-    (changedTiddlers: $tw.ChangedTiddlers): boolean => {
-      const refreshNeeded = Object.keys(changedTiddlers).some(
-        (title) => title === definingTiddlerTitle || allDependencies.has(title)
+    // only listen to changes to transitive dependencies is PatchedModules is
+    // installed
+    if (($tw.modules as any).getAllModulesRequiredBy !== undefined) {
+      allDependencies = ($tw.modules as any).getAllModulesRequiredBy(
+        definingTiddlerTitle
       );
-      // Note: this might not be enough for refreshing on transitive dependency updates.
-      // console.log("changedTiddlerHook called with", changedTiddlers, "refresh of ", definingTiddlerTitle, "needed", refreshNeeded);
-      return refreshNeeded;
     }
+  }
+  (parentWidget as ReactWrapper).setChangedTiddlerHook(
+    (changedTiddlers: $tw.ChangedTiddlers): boolean =>
+      Object.keys(changedTiddlers).some(
+        (title) => title === definingTiddlerTitle || allDependencies.has(title)
+      )
   );
   return (props: any) => {
     try {

@@ -1,6 +1,31 @@
 /// <reference types="@tiddlybase/tw5-types/src/tw5" />
 import { patchedEvalGlobal } from './patched-eval-global';
 
+const breadthFirstSearch = <T>(previousLevel: Set<T>, getParents:(node:T)=>Set<T>): Set<T> => {
+  if (previousLevel.size === 0) {
+    return previousLevel;
+  }
+  const nextLevel = new Set<T>([]);
+  for (let node of previousLevel) {
+    getParents(node).forEach(n => {
+      if (!previousLevel.has(n)) {
+        nextLevel.add(n)
+      }
+    });
+  }
+  return new Set<T>([...previousLevel, ...nextLevel, ...(breadthFirstSearch(nextLevel, getParents))]);
+};
+
+const depthFirstSearch = <T>(currentNode: T, visited: Set<T>, getParents:(node:T)=>Set<T>) => {
+  visited.add(currentNode);
+  for (let parent of getParents(currentNode)) {
+    if (!visited.has(parent)) {
+      depthFirstSearch(parent, visited, getParents);
+    }
+  }
+  return visited;
+};
+
 export class PatchedModules implements $tw.TW5Modules {
   titles: Record<string, $tw.TW5Module> = {};
   types: Partial<Record<$tw.ModuleType, Record<string, $tw.TW5Module>>> = {};
@@ -27,23 +52,18 @@ export class PatchedModules implements $tw.TW5Modules {
     }, new Set<string>([]));
   }
 
-  _getModulesTransitivelyRequiring(previousLevelDependencies: Set<string>): Set<string> {
-    if (previousLevelDependencies.size === 0) {
-      return previousLevelDependencies;
-    }
-    const nextLevelDependencies = new Set<string>([]);
-    for (let module of previousLevelDependencies) {
-      this.getModulesRequiring(module).forEach(m => {
-        if (!previousLevelDependencies.has(m)) {
-          nextLevelDependencies.add(m)
-        }
-      });
-    }
-    return new Set<string>([...previousLevelDependencies, ...nextLevelDependencies, ...(this._getModulesTransitivelyRequiring(nextLevelDependencies))]);
+  getModulesRequiredBy(moduleName: string): Set<string> {
+    return this.titles[moduleName]?.requires ?? new Set<string>([]);
   }
 
   getAllModulesRequiring(moduleName:string): Set<string> {
-    const moduleSet = this._getModulesTransitivelyRequiring(new Set<string>([moduleName]));
+    const moduleSet = breadthFirstSearch(new Set<string>([moduleName]), this.getModulesRequiring.bind(this));
+    moduleSet.delete(moduleName);
+    return moduleSet;
+  }
+
+  getAllModulesRequiredBy(moduleName:string): Set<string> {
+    const moduleSet = depthFirstSearch(moduleName, new Set<string>([]), this.getModulesRequiredBy.bind(this));
     moduleSet.delete(moduleName);
     return moduleSet;
   }
