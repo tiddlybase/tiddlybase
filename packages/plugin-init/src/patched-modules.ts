@@ -37,7 +37,8 @@ export class PatchedModules implements $tw.TW5Modules {
     var moduleInfo: $tw.TW5Module = {
       moduleType: moduleType,
       definition: definition,
-      exports: undefined
+      exports: undefined,
+      requires: new Set<string>([])
     };
     // If the definition is already an object we can use it as the exports
     if (typeof definition === "object") {
@@ -81,7 +82,13 @@ export class PatchedModules implements $tw.TW5Modules {
       clearTimeout: clearTimeout,
       Buffer: $tw.browser ? undefined : Buffer,
       $tw: $tw,
-      require: (title: string): $tw.ModuleExports | undefined => this.execute(title, name)
+      require: (title: string): $tw.ModuleExports | undefined => {
+        // name refers to the name of the parent module,
+        // title is the name of the module it requires
+        const normalizedName = this.normalizeModuleName(title, name);
+        moduleInfo.requires?.add(normalizedName);
+        return this.execute(normalizedName, name);
+      }
     };
 
     Object.defineProperty(sandbox.module, "id", {

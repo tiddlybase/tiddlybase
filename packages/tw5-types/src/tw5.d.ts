@@ -370,7 +370,11 @@ declare namespace $tw {
   export type TW5Module = {
     definition: string | object,
     exports?: ModuleExports,
-    moduleType: ModuleType
+    moduleType: ModuleType,
+    // tiddlybase extensions used by PatchedModules
+    // modules define()'d before PatchModules is installed
+    // will not have a requires field, so it's type is optional.
+    requires?: Set<string>
   }
 
   export type ClassConstructor = (new () => any);
