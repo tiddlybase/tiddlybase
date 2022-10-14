@@ -141,7 +141,7 @@ declare namespace $tw {
 
   export type TiddlerChangeType = 'deleted' | 'modified';
 
-  export type WikiChange = Record<string, Record<TiddlerChangeType, boolean> & { changeCount: number }>;
+  export type WikiChange = Record<string, Record<TiddlerChangeType, boolean> & { changeCount?: number }>;
 
   export type WikiAddEventListenerArgs =
     | ['change', (wikiChange: WikiChange) => void]

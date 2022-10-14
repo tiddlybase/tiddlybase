@@ -5,7 +5,10 @@ import {
   getExports,
 } from "@tiddlybase/plugin-mdx/src/mdx-client/mdx-client";
 import { components as baseComponents } from "./components";
-import type { WrappedPropsBase } from "@tiddlybase/plugin-react/src/react-wrapper";
+import type {
+  WrappedPropsBase,
+  ReactWrapper,
+} from "@tiddlybase/plugin-react/src/react-wrapper";
 import {
   TW5ReactContextType,
   withContext,
@@ -40,8 +43,10 @@ export const registerComponent = (
 
 const getCustomComponentProps = (
   context: TW5ReactContextType,
-  definingTiddlerName?: string
+  definingTiddlerName?: string,
+  components?: any
 ) => ({
+  components,
   context,
   parentWidget: context.parentWidget,
   get currentTiddler() {
@@ -61,7 +66,6 @@ const getCustomComponentProps = (
  */
 export type CustomComponentProps = ReturnType<typeof getCustomComponentProps>;
 
-
 export const MDXFactory = async ({
   parentWidget,
   children,
@@ -79,7 +83,9 @@ export const MDXFactory = async ({
     isMDXErrorDetails(e)
       ? MDXError({ title, mdx, details: e, fatal: true })
       : JSError({ title, error: e });
+  const components = { ...baseComponents, ...customComponents };
   const mdxContext = {
+    components,
     React,
     withContext,
     render: (
@@ -89,7 +95,13 @@ export const MDXFactory = async ({
         withContext(({ context }) => {
           try {
             return component(
-              context ? getCustomComponentProps(context, definingTiddlerTitle) : null
+              context
+                ? getCustomComponentProps(
+                    context,
+                    definingTiddlerTitle,
+                    components
+                  )
+                : null
             );
           } catch (e) {
             return errorMessage(
@@ -108,30 +120,26 @@ export const MDXFactory = async ({
     acc.push((mdxContext as any)[key]);
     return acc;
   }, [] as any[]);
-  const mdxMetadata: MDXMetadata = {
-    dependencies: [],
-  };
-  const components = { ...baseComponents, ...customComponents };
-  const importFn = async (mdxTiddlerName: string) => {
+  const requires = new Set<string>([]);
+  const importFn = async (requiredModuleName: string) => {
     // To require() a module, it must have been registered with TiddlyWiki
     // either at boot time (js modules) or because MDX has already compiled and
     // registered the generated module with TiddlyWiki. For MDX dependencies,
     // compile them now so they can be required if necessary
     if (
-      mdxTiddlerName &&
-      !(mdxTiddlerName in $tw.modules.titles) &&
-      $tw.wiki.getTiddler(mdxTiddlerName)?.fields?.type === "text/x-markdown"
+      $tw.wiki.getTiddler(requiredModuleName)?.fields?.type === "text/x-markdown"
     ) {
       // called so the module is registered
       await MDXFactory({
         parentWidget,
         children: null,
-        mdx: $tw.wiki.getTiddler(mdxTiddlerName)?.fields.text ?? "",
-        title: mdxTiddlerName,
+        mdx: $tw.wiki.getTiddler(requiredModuleName)?.fields.text ?? "",
+        title: requiredModuleName,
       });
     }
-    mdxMetadata.dependencies.push(mdxTiddlerName);
-    return $tw.modules.execute(mdxTiddlerName, definingTiddlerTitle);
+    // add require() dependency if requires field exists
+    requires.add(requiredModuleName);
+    return $tw.modules.execute(requiredModuleName, definingTiddlerTitle);
   };
   let compiledFn: any;
   let warnings: Array<MDXErrorDetails> = [];
@@ -164,16 +172,31 @@ export const MDXFactory = async ({
       "Error executing compiled MDX"
     );
   }
-
-  mdxExports.mdxMetadata = mdxMetadata;
-  if (definingTiddlerTitle) {
+  if (definingTiddlerTitle !== undefined) {
     $tw.modules.define(definingTiddlerTitle, "library", mdxExports);
+    $tw.modules.titles[definingTiddlerTitle].requires = requires;
   }
+  let allDependencies:Set<string> = requires;
+  // only listen to changes to transitive dependencies is PatchedModules is
+  // installed
+  // if ('getAllModulesRequiredBy' in ($tw.modules as any)) {
+  //  allDependencies = ($tw.modules as any)['getAllModulesRequiredBy'](definingTiddlerTitle);
+  //}
+  (parentWidget as ReactWrapper).setChangedTiddlerHook(
+    (changedTiddlers: $tw.ChangedTiddlers): boolean => {
+      const refreshNeeded = Object.keys(changedTiddlers).some(
+        (title) => title === definingTiddlerTitle || allDependencies.has(title)
+      );
+      // Note: this might not be enough for refreshing on transitive dependency updates.
+      // console.log("changedTiddlerHook called with", changedTiddlers, "refresh of ", definingTiddlerTitle, "needed", refreshNeeded);
+      return refreshNeeded;
+    }
+  );
   return (props: any) => {
     try {
       return [
         ...warnings.map((details) => MDXError({ mdx, details })),
-        mdxExports.default({ ...props, components }),
+        mdxExports.default({ ...props, components: mdxContext.components }),
       ];
     } catch (e) {
       return JSError({

@@ -66,6 +66,24 @@ import { PatchedModules } from "./patched-modules";
       $tw.preloadTiddlerArray(tiddlers);
       $tw.modules = new PatchedModules($tw.modules.titles, $tw.modules.types);
       $tw.boot.boot();
+      // use unshift() instead of addEventListener beecause the invalidation
+      // needs to happen before rerendering of the tiddlers which is initiated
+      // by another "change" event listener registered earlier in the boot
+      // process
+      ($tw.wiki as any).eventListeners["change"].unshift(
+        (wikiChange: $tw.WikiChange) => {
+          // for each changed tiddler, invalidate module exports
+          const toInvalidate = new Set<string>();
+          for (let tiddler of Object.keys(wikiChange)) {
+            toInvalidate.add(tiddler);
+            for (let moduleName of ($tw.modules as PatchedModules).getAllModulesRequiring(tiddler)) {
+              toInvalidate.add(moduleName);
+            }
+          }
+          for (let m of toInvalidate) {
+            ($tw.modules as PatchedModules).invalidateModuleExports(m);
+          }
+        });
       if (runningIniOSChrome()) {
         window.onerror = null;
       }

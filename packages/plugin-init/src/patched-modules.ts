@@ -8,7 +8,44 @@ export class PatchedModules implements $tw.TW5Modules {
   constructor(titles?: Record<string, $tw.TW5Module>, types?: Partial<Record<$tw.ModuleType, Record<string, $tw.TW5Module>>>) {
     Object.assign(this.titles, titles);
     Object.assign(this.types, types);
+    // preventExtensions prevents boot/boot.js from overriding class methods with its own version.
     Object.preventExtensions(this);
+  }
+
+  invalidateModuleExports(moduleName: string): void {
+    if (this.titles[moduleName]) {
+      this.titles[moduleName].exports = undefined;
+    }
+  }
+
+  getModulesRequiring(moduleName: string): Set<string> {
+    return Object.entries(this.titles[moduleName] ? this.titles : {}).reduce((consumerSet, [title, moduleInfo]) => {
+      if (moduleInfo?.requires?.has(moduleName)) {
+        consumerSet.add(title);
+      }
+      return consumerSet;
+    }, new Set<string>([]));
+  }
+
+  _getModulesTransitivelyRequiring(previousLevelDependencies: Set<string>): Set<string> {
+    if (previousLevelDependencies.size === 0) {
+      return previousLevelDependencies;
+    }
+    const nextLevelDependencies = new Set<string>([]);
+    for (let module of previousLevelDependencies) {
+      this.getModulesRequiring(module).forEach(m => {
+        if (!previousLevelDependencies.has(m)) {
+          nextLevelDependencies.add(m)
+        }
+      });
+    }
+    return new Set<string>([...previousLevelDependencies, ...nextLevelDependencies, ...(this._getModulesTransitivelyRequiring(nextLevelDependencies))]);
+  }
+
+  getAllModulesRequiring(moduleName:string): Set<string> {
+    const moduleSet = this._getModulesTransitivelyRequiring(new Set<string>([moduleName]));
+    moduleSet.delete(moduleName);
+    return moduleSet;
   }
 
   normalizeModuleName(moduleName: string, moduleRoot?: string): string {
@@ -68,6 +105,9 @@ export class PatchedModules implements $tw.TW5Modules {
     if (!moduleInfo) {
       // nodejs and browser require() fallback not supported
       throw "Cannot find module named '" + moduleName + "' required by module '" + moduleRoot + "', resolved to " + name;
+    }
+    if (moduleInfo.exports) {
+      return moduleInfo.exports;
     }
 
     const _exports = {};

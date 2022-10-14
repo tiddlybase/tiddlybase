@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { JSError, errorMsg } from "./components/JSError";
 import { withContextProvider } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
 import { ReactNode } from "react";
-import type {} from "@tiddlybase/tw5-types/src/index"
+import type { } from "@tiddlybase/tw5-types/src/index"
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { widget } = require('$:/core/modules/widgets/widget.js');
@@ -26,11 +26,14 @@ export type WrappedPropsBase = {
   children?: ReactNode
 }
 
+export type ChangedTiddlerHook = (changedTiddlers: $tw.ChangedTiddlers) => boolean;
+
 export class ReactWrapper extends (widget as typeof $tw.Widget) {
 
   root?: Root;
   renderable?: Promise<ReactNode>;
-  onRemovalHandler:RemovalHandler|undefined = undefined;
+  onRemovalHandler: RemovalHandler | undefined = undefined;
+  changedTiddlerHook: ChangedTiddlerHook | undefined = undefined;
 
   async getRenderable() {
     // initialize react component
@@ -66,14 +69,14 @@ export class ReactWrapper extends (widget as typeof $tw.Widget) {
       isFactory = true;
     }
     try {
-      const Component = isFactory ? await exportValue({parentWidget: this, ...props}) : exportValue;
+      const Component = isFactory ? await exportValue({ parentWidget: this, ...props }) : exportValue;
       return withContextProvider({
-        context: {parentWidget: this},
+        context: { parentWidget: this },
         Component,
         props
       })
     } catch (e) {
-      return JSError({error: e as Error});
+      return JSError({ error: e as Error });
     }
   }
 
@@ -94,8 +97,8 @@ export class ReactWrapper extends (widget as typeof $tw.Widget) {
 
   }
 
-  getContainingTiddlerTitle():string|null {
-    let element:HTMLElement|null = this.parentDomNode;
+  getContainingTiddlerTitle(): string | null {
+    let element: HTMLElement | null = this.parentDomNode;
     while (element) {
       const tiddlerTitleAttribute = element.getAttribute('data-tiddler-title');
       if (tiddlerTitleAttribute) {
@@ -138,7 +141,7 @@ export class ReactWrapper extends (widget as typeof $tw.Widget) {
     if (!this.onRemovalHandler) {
       const tiddlerTitle = this.getContainingTiddlerTitle();
       if (tiddlerTitle) {
-        this.onRemovalHandler = (event:$tw.Widget.WidgetEvent) => {
+        this.onRemovalHandler = (event: $tw.Widget.WidgetEvent) => {
           console.log("widget removed, unmounting");
           this.destroy();
           return true;
@@ -148,10 +151,17 @@ export class ReactWrapper extends (widget as typeof $tw.Widget) {
     }
   }
 
+  setChangedTiddlerHook(hook: ChangedTiddlerHook): void {
+    this.changedTiddlerHook = hook;
+  }
+
   refresh(changedTiddlers: $tw.ChangedTiddlers): boolean {
     var changedAttributes = this.computeAttributes();
     let selfRefreshed = false;
-    if (Object.keys(changedAttributes).length > 0) {
+    if (
+      (Object.keys(changedAttributes).length > 0) ||
+      ((this.changedTiddlerHook !== undefined) && this.changedTiddlerHook(changedTiddlers))
+    ) {
       console.log("attributes changed, rerendering component")
 
       // force rerender
