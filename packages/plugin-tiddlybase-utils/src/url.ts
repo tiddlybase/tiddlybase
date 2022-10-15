@@ -89,7 +89,11 @@ export const resolveURL = (url: string) => {
   if (isStandaloneHtmlTiddlyWiki() || isNodeServerTiddlyWiki()) {
     return localFileRelativePath(path);
   }
-  // otherwise assume Tiddlybase and resolve the
-  // path as a GCP Storage bucket path
+  // Assume Tiddlybase.
+  // if isLocal is true, make path absolute by prepending '/'
+  if (!!$tw.tiddlybase?.isLocal) {
+    return `/${localFileRelativePath(path)}`;
+  }
+  // otherwise resolve path as a GCP Storage bucket path
   return resolveStorageBucketPath(path);
 }

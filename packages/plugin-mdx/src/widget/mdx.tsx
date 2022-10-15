@@ -185,7 +185,7 @@ export const MDXFactory = async ({
       );
     }
   }
-  (parentWidget as ReactWrapper).setChangedTiddlerHook(
+  (parentWidget as ReactWrapper).addChangedTiddlerHook(
     (changedTiddlers: $tw.ChangedTiddlers): boolean =>
       Object.keys(changedTiddlers).some(
         (title) => title === definingTiddlerTitle || allDependencies.has(title)

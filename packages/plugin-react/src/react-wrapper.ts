@@ -33,9 +33,10 @@ export class ReactWrapper extends (widget as typeof $tw.Widget) {
   root?: Root;
   renderable?: Promise<ReactNode>;
   onRemovalHandler: RemovalHandler | undefined = undefined;
-  changedTiddlerHook: ChangedTiddlerHook | undefined = undefined;
+  changedTiddlerHooks: ChangedTiddlerHook[] = [];
 
   async getRenderable() {
+    this.changedTiddlerHooks = [];
     // initialize react component
     const { module: moduleName, export: exportName = 'default', ...props } = this.attributes as ReactWrapperProps;
     if (!moduleName) {
@@ -118,6 +119,7 @@ export class ReactWrapper extends (widget as typeof $tw.Widget) {
       this.root.unmount();
     }
     this.root = undefined;
+    this.changedTiddlerHooks = [];
   }
 
   removeChildDomNodes() {
@@ -151,8 +153,12 @@ export class ReactWrapper extends (widget as typeof $tw.Widget) {
     }
   }
 
-  setChangedTiddlerHook(hook: ChangedTiddlerHook): void {
-    this.changedTiddlerHook = hook;
+  addChangedTiddlerHook(hook: ChangedTiddlerHook): void {
+    this.changedTiddlerHooks.push(hook);
+  }
+
+  removeChangedTiddlerHook(hook: ChangedTiddlerHook): void {
+    this.changedTiddlerHooks = this.changedTiddlerHooks.filter(h => h !== hook);
   }
 
   refresh(changedTiddlers: $tw.ChangedTiddlers): boolean {
@@ -160,7 +166,7 @@ export class ReactWrapper extends (widget as typeof $tw.Widget) {
     let selfRefreshed = false;
     if (
       (Object.keys(changedAttributes).length > 0) ||
-      ((this.changedTiddlerHook !== undefined) && this.changedTiddlerHook(changedTiddlers))
+      this.changedTiddlerHooks.reduce( (hasChanged, hook) => hasChanged || hook(changedTiddlers), false)
     ) {
       console.log("attributes changed, rerendering component")
 
