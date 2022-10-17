@@ -15,13 +15,17 @@ export type CompilationResult = {error: MDXErrorDetails|Error} | {warnings: Arra
 // replace async import expression with call to sync importFn()
 const fixImports = (body: string) => body.replace(/= await import\(/mg, "= await importFn(");
 
-const wrap = (name: string, body: string, contextVars: string[]) => `
-(async function _mdx_generated(${['jsxFns', 'importFn'].concat(contextVars).join(', ')}) {
-${fixImports(body)}
-});
+// based on: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncFunction
+const AsyncFunction = (async function () {}).constructor;
 
+const makeFunction = (code:string, contextNames: string[]):Function => AsyncFunction(...[
+  ...['jsxFns', 'importFn'].concat(contextNames),
+  code]);
+
+const wrap = (name: string, body: string) => `
+${fixImports(body)}
 //# sourceURL=${name}.js
-`
+`;
 
 export const getExports = async (compiledJSX: any, importFn: any, contextValues: any[] = []) => {
   return await compiledJSX(ReactJSXRuntime, importFn, ...contextValues);
@@ -52,9 +56,10 @@ export const compile = async (name: string, mdx: string, contextKeys: string[] =
       jsxRuntime: 'automatic',
       jsxImportSource: 'react'
     });
-    const jsSource = wrap(name, String(compilerOutput.value), contextKeys);
+    const jsSource = wrap(name, String(compilerOutput.value));
     console.log("compilerOutput", compilerOutput);
-    return {compiledFn: eval(jsSource), warnings: compilerOutput.messages as MDXErrorDetails[]};
+    const compiledFn = makeFunction(jsSource, contextKeys);
+    return {compiledFn, warnings: compilerOutput.messages as MDXErrorDetails[]};
   } catch (e) {
     return {error: Object.assign({}, e as Error)};
   }
