@@ -72,6 +72,13 @@ const resolveStorageBucketPath = async (path: string): Promise<string> => {
   }
 }
 
+export const cleanupURL = (url:string) => {
+  if (url.startsWith('blob:')) {
+    const urlCreator = window.URL || window.webkitURL;
+    urlCreator.revokeObjectURL(url);
+  }
+}
+
 export const resolveURL = (url: string) => {
   // regular absolute URLs resolve to themselves, as do
   // relative URLs which do not start with FILES_URL_PREFIX

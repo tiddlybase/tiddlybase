@@ -10,6 +10,7 @@ import {
 import {
   resolveURL,
   getExtension,
+  cleanupURL,
 } from "@tiddlybase/plugin-tiddlybase-utils/src/url";
 import { getWikiInfoConfigValue } from "@tiddlybase/plugin-tiddlybase-utils/src/wiki-info-config";
 import { EXTENSION_TO_OBJECT_TYPE } from "./constants";
@@ -279,7 +280,14 @@ export const MediaNode = (props: EmbedMediaProps) => {
   const [resolvedSrc, setResolvedSrc] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.resolve(resolveURL(src)).then(setResolvedSrc);
+    let realUrl = src;
+    Promise.resolve(resolveURL(src)).then(s => {
+      realUrl = s;
+      setResolvedSrc(s);
+    });
+    return () => {
+      cleanupURL(realUrl);
+    }
   }, [src]);
 
   const createElement = () => {
