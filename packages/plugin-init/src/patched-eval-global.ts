@@ -7,13 +7,7 @@ const getSourceMappingUrlComment = (code:string): string|undefined => {
   return match?.[0];
 }
 
-const regularTW5CodeWrap = (code:string, sourceMapComment?:string) =>  `
-(function(){
-  ${code};
-})();
-return exports;
-${sourceMapComment ?? ''}
-`;
+const regularTW5CodeWrap = (code:string, sourceMapComment?:string) =>  `${code}\n${sourceMapComment ?? ''}`;
 
 const wrapCode = (code:string, filename:string) => {
   const sourceMappingURLComment = getSourceMappingUrlComment(code);
@@ -36,5 +30,7 @@ export const patchedEvalGlobal = (code:string, context: Record<string, any>, fil
   // Compile the code into a function
   const fn:any = makeFunction(wrappedCode, contextNames);
   // Call the function and return the exports
-  return fn.apply(null,contextValues);
+  // TODO: maybe catch exceptions?
+  fn.apply(null,contextValues);
+  return context['exports'];
 };
