@@ -35,8 +35,16 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
         });
         var wrapper = window.document.createElement("div");
         widgetNode.render(wrapper, null);
-        // this sleep(0) forces async execution
-        await sleep(0);
+        if (parserConstructor === mdxParser) {
+            // mdx is rendered async
+            // try 5 times to get render output
+            for (let i = 0; i < 5; i++) {
+                await sleep(0);
+                if (wrapper?.firstChild?.firstChild) {
+                    break;
+                }
+            }
+        }
         return wrapper.firstChild;
     }
 
@@ -49,7 +57,7 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
     }
 
     const renderToHTML = async (text, parserConstructor, wiki = new $tw.Wiki()) => {
-        return getElement(await (renderToDOM(text, parserConstructor, wiki)), parserConstructor).parentElement.innerHTML;
+        return getElement(await (renderToDOM(text, parserConstructor, wiki)), parserConstructor).outerHTML;
     }
 
     const renderToJSON = async (text, parserConstructor, wiki = new $tw.Wiki()) => {
@@ -58,24 +66,35 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
 
     const stripNewlines = str => str.replace(/(\r\n|\n|\r)/gm, "")
 
+    const assertRendersTo = async (parser, input, expectedOutput) => expect(
+        stripNewlines(
+            await renderToHTML(input, parser))).toEqual(stripNewlines(expectedOutput));
+
+    const assertRenderTree = async (wiki, parser, input, expectedOutput) => {
+        const actualOutput = await renderToJSON(input, parser, wiki);
+        console.log("assertRenderTree", actualOutput, expectedOutput);
+        expect(actualOutput).toEqual(expectedOutput);
+        // nodeType: 3, nodeName: '#text', nodeValue: ' ', childNodes: [  ]
+    }
+
     describe("Parsing markdown", function () {
 
         it("should render headers as expected", async function () {
-            expect(await renderToHTML("# foo\n", markdownParser)).toEqual("<h1>foo</h1>");
-            expect(await renderToHTML("# foo\n", mdxParser)).toEqual("<h1>foo</h1>");
-            expect(await renderToHTML("! foo\n", wikitextParser)).toEqual('<h1 class="">foo</h1>');
+            await assertRendersTo(markdownParser, "# foo\n", "<h1>foo</h1>");
+            await assertRendersTo(mdxParser, "# foo\n", "<h1>foo</h1>");
+            await assertRendersTo(wikitextParser, "! foo\n", '<h1 class="">foo</h1>');
         });
 
         it("should render bold as expected", async function () {
-            expect(await renderToHTML("**foo**\n", markdownParser)).toEqual("<p><strong>foo</strong></p>");
-            expect(await renderToHTML("**foo**\n", mdxParser)).toEqual("<p><strong>foo</strong></p>");
-            expect(await renderToHTML("''foo''\n", wikitextParser)).toEqual('<p><strong>foo</strong></p>');
+            await assertRendersTo(markdownParser, "**foo**\n", "<p><strong>foo</strong></p>");
+            await assertRendersTo(mdxParser, "**foo**\n", "<p><strong>foo</strong></p>");
+            await assertRendersTo(wikitextParser, "''foo''\n", '<p><strong>foo</strong></p>');
         });
 
         it("should render italic as expected", async function () {
-            expect(await renderToHTML("_foo_\n", markdownParser)).toEqual("<p><em>foo</em></p>");
-            expect(await renderToHTML("_foo_\n", mdxParser)).toEqual("<p><em>foo</em></p>");
-            expect(await renderToHTML("//foo//\n", wikitextParser)).toEqual('<p><em>foo</em></p>');
+            await assertRendersTo(markdownParser, "_foo_\n", "<p><em>foo</em></p>");
+            await assertRendersTo(mdxParser, "_foo_\n", "<p><em>foo</em></p>");
+            await assertRendersTo(wikitextParser, "//foo//\n", '<p><em>foo</em></p>');
         });
 
         it("should render non-nested lists as expected", async function () {
@@ -99,22 +118,22 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
 </ul>
 `
             for (let list of lists) {
-                expect(await renderToHTML(list, markdownParser)).toEqual(stripNewlines(expected));
-                expect(await renderToHTML(list, mdxParser)).toEqual(expected);
+                await assertRendersTo(markdownParser, list, expected);
+                await assertRendersTo(mdxParser, list, expected);
             }
         });
 
         it("should render nested lists as expected", async function () {
             const list = `
 - item1
-    - 1a
-    - 1b
-    - 1c
-        - 1c1
+  - 1a
+  - 1b
+  - 1c
+    - 1c1
 - item2
-    - 2a
+  - 2a
 - item3`.trim() + '\n';
-            const expectation = `<ul>
+            const expected = `<ul>
 <li>item1
 <ul>
 <li>1a</li>
@@ -134,8 +153,8 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
 <li>item3</li>
 </ul>
 `;
-            expect(await renderToHTML(list, markdownParser)).toEqual(stripNewlines(expectation));
-            expect(await renderToHTML(list, mdxParser)).toEqual(expectation);
+            await assertRendersTo(markdownParser, list, expected);
+            await assertRendersTo(mdxParser, list, expected);
         });
 
         it("should render external links identically", async function () {
@@ -200,9 +219,9 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
                 title: "MyTiddler",
                 text: "asdf"
             })
-
-            expect(await renderToJSON("[[Displayed Link Title|MyTiddler]]\n",wikitextParser, wiki)).toEqual(expected);
-            expect(await renderToJSON("[[Displayed Link Title|MyTiddler]]\n",mdxParser, wiki)).toEqual(expected);
+            const input = "[[Displayed Link Title|MyTiddler]]";
+            await assertRenderTree(wiki, wikitextParser, input, expected);
+            await assertRenderTree(wiki, mdxParser, input, expected);
         });
 
         it("should render internal link to existing tiddlers with space in title correctly", async function () {
@@ -233,10 +252,10 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
             wiki.addTiddler({
                 title: "My Tiddler",
                 text: "asdf"
-            })
-
-            expect(await renderToJSON("[[Displayed Link Title|My Tiddler]]\n",wikitextParser, wiki)).toEqual(expected);
-            expect(await renderToJSON("[[Displayed Link Title|My Tiddler]]\n",mdxParser, wiki)).toEqual(expected);
+            });
+            const input = "[[Displayed Link Title|My Tiddler]]";
+            await assertRenderTree(wiki, wikitextParser, input, expected);
+            await assertRenderTree(wiki, mdxParser, input, expected);
         });
 
     });
