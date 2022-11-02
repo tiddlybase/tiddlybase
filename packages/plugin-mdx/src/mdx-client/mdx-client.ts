@@ -3,6 +3,7 @@
 import { compile as compileMDX } from '@mdx-js/mdx'
 import remarkGfm from 'remark-gfm' // Tables, footnotes, strikethrough, task lists, literal URLs.
 import wikiLinkPlugin from 'remark-wiki-link';
+import remarkToc from 'remark-toc';
 import * as ReactJSXRuntime from 'react/jsx-runtime';
 import remarkPresetLintConsistent from 'remark-preset-lint-consistent'
 import remarkPresetLintRecommended from 'remark-preset-lint-recommended'
@@ -48,7 +49,9 @@ export const compile = async (name: string, mdx: string, contextKeys: string[] =
           pageResolver: (x: string) => [x],
           hrefTemplate: (x: string) => x,
           aliasDivider: '|'
-        }]],
+        }],
+        [remarkToc, {tight: true, ordered: true, prefix: 'toc-anchor-link-'}]
+      ],
       useDynamicImport: true,
       jsx: false,
       outputFormat: 'function-body',
