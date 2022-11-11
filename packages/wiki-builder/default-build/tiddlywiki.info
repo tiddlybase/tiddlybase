@@ -9,6 +9,7 @@
         "tiddlybase/react",
         "tiddlybase/embed-media",
         "tiddlybase/mdx",
+        "tiddlybase/calendar",
         "tiddlywiki/codemirror"
     ],
     "themes": [

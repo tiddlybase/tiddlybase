@@ -173,14 +173,14 @@ export const MDXFactory = async ({
       "Error executing compiled MDX"
     );
   }
-  let allDependencies: Set<string> = requires;
+  let dependencies: Set<string> = requires;
   if (definingTiddlerTitle !== undefined) {
     $tw.modules.define(definingTiddlerTitle, "library", mdxExports);
     $tw.modules.titles[definingTiddlerTitle].requires = requires;
     // only listen to changes to transitive dependencies is PatchedModules is
     // installed
     if (($tw.modules as any).getAllModulesRequiredBy !== undefined) {
-      allDependencies = ($tw.modules as any).getAllModulesRequiredBy(
+      dependencies = ($tw.modules as any).getAllModulesRequiredBy(
         definingTiddlerTitle
       );
     }
@@ -188,7 +188,7 @@ export const MDXFactory = async ({
   (parentWidget as ReactWrapper).addChangedTiddlerHook(
     (changedTiddlers: $tw.ChangedTiddlers): boolean =>
       Object.keys(changedTiddlers).some(
-        (title) => title === definingTiddlerTitle || allDependencies.has(title)
+        (title) => dependencies.has(title)
       )
   );
   return (props: any) => {

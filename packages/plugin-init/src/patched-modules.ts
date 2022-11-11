@@ -102,9 +102,11 @@ export class PatchedModules implements $tw.TW5Modules {
       moduleInfo.exports = definition;
     }
     // Store the module in the titles hashmap
+    /*
     if (moduleName in this.titles) {
       console.log("Warning: Redefined module - " + moduleName);
     }
+    */
     this.titles[moduleName] = moduleInfo;
     // Store the module in the types hashmap
     let modulesOfType: Record<string, $tw.TW5Module> | undefined = this.types[moduleType];
@@ -112,9 +114,11 @@ export class PatchedModules implements $tw.TW5Modules {
     if (!modulesOfType) {
       this.types[moduleType] = modulesOfType = {};
     }
+    /*
     if (moduleName in modulesOfType) {
       console.log("Warning: Redefined module - " + moduleName);
     }
+    */
     modulesOfType[moduleName] = moduleInfo;
   }
 

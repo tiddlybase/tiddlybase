@@ -60,7 +60,6 @@ export const compile = async (name: string, mdx: string, contextKeys: string[] =
       jsxImportSource: 'react'
     });
     const jsSource = wrap(name, String(compilerOutput.value));
-    console.log("compilerOutput", compilerOutput);
     const compiledFn = makeFunction(jsSource, contextKeys);
     return {compiledFn, warnings: compilerOutput.messages as MDXErrorDetails[]};
   } catch (e) {
