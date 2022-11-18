@@ -10,6 +10,9 @@ import remarkPresetLintRecommended from 'remark-preset-lint-recommended'
 import remarkLintListItemIndent from 'remark-lint-list-item-indent'
 import remarkLintFinalNewline from 'remark-lint-final-newline'
 import { MDXErrorDetails } from './mdx-error-details';
+import type {Handler} from 'mdast-util-to-hast';
+import type {Properties} from 'hast';
+import normalize from 'mdurl/encode.js'
 
 export type CompilationResult = {error: MDXErrorDetails|Error} | {warnings: Array<MDXErrorDetails>, compiledFn: any}
 
@@ -32,10 +35,27 @@ export const getExports = async (compiledJSX: any, importFn: any, contextValues:
   return await compiledJSX(ReactJSXRuntime, importFn, ...contextValues);
 }
 
+// based on: https://github.com/syntax-tree/mdast-util-to-hast/blob/main/lib/handlers/image.js
+const mdastImageHandler:Handler = (h, node, parent) => {
+  const props:Properties = {src: normalize(node.url), alt: node.alt}
+
+  if (node.title !== null && node.title !== undefined) {
+    props.title = node.title
+  }
+  props["data-from-md"] = "true";
+
+  return h(node, 'img', props);
+}
+
 export const compile = async (name: string, mdx: string, contextKeys: string[] = []):Promise<CompilationResult> => {
   try {
     // trimStart() is needed because mdx doesn't tolerate leading newlines
     const compilerOutput = await compileMDX(mdx.trimStart(), {
+      remarkRehypeOptions: {
+        handlers: {
+          image: mdastImageHandler
+        }
+      },
       remarkPlugins: [
         remarkPresetLintConsistent,
         remarkPresetLintRecommended,

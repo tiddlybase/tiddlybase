@@ -10,9 +10,14 @@ export const startup = () =>
   registerComponent(
     "img",
     (props: React.ImgHTMLAttributes<HTMLImageElement>) => {
-      const { alt, src, title } = props;
-      return src ? (
-        <EmbedMedia src={src} description={alt} attributes={title} />
-      ) : null;
+      // don't override images components when coming from markdown
+      if ((props as any)['data-from-md'] === 'true') {
+        const { alt, src, title } = props;
+        return src ? (
+          <EmbedMedia src={src} description={alt} attributes={title} />
+        ) : null;
+      }
+      // otherwise use the regular 'img' component
+      return (<img {...props} />);
     }
   );
