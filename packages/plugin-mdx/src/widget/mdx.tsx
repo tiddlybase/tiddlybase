@@ -80,11 +80,17 @@ export const getRequireAsync =
     if (onRequire) {
       onRequire(requiredModuleName);
     }
+    // This is a little tricky:
+    // we don't pass requiredModules since each module just keeps track
+    // of immediate require()s, not transitive dependencies.
+    // We do pass onRequire, since it's likely that a transitive dependency
+    // changes our dep tree, in which case we want onRequire to fire.
     const maybeExports = await getModuleExports({
       definingTiddlerTitle: requiredModuleName,
       moduleRoot: definingTiddlerTitle,
       wiki,
       modules,
+      onRequire
     });
 
     if ("error" in maybeExports) {
@@ -188,17 +194,28 @@ export const getModuleExports = async ({
 }): Promise<GetModuleOutput> => {
   // There are 3 possible scenarios:
   // 1. The module has already been execute()-ed and $tw.modules.title[$TITLE].exports exists.
-  // 2. The module has been defined ($tw.modules.title[$TITLE] exists), but has not been run yet and thus it's exports aren't available yet
-  // 3. The module has not been defined. For MDX modules, we can do that here.
+  // 2. The module has been defined ($tw.modules.title[$TITLE] exists) *is regular JS*, but has not been run yet and thus it's exports aren't available yet.
+  // 3. The module has been defined ($tw.modules.title[$TITLE] exists) *is MDX*, but has not been run yet and thus it's exports aren't available yet.
+  // 4. The module has not been defined. For MDX modules, we can do that here.
   console.log(`REQUIRE getModuleExports('${definingTiddlerTitle}') called by ${moduleRoot}`);
   const requestedModule: $tw.TW5Module | undefined =
     modules.titles[definingTiddlerTitle];
-  if (requestedModule) {
-    // Case 1: module exports already exist
-    if (requestedModule.exports) {
-      return { moduleExports: requestedModule.exports };
-    }
-    // Case 2: module needs execution
+  // Case 1 or 2: module exports already exist
+  if (requestedModule?.exports) {
+    return { moduleExports: requestedModule.exports };
+  }
+
+  // Cases 2-4: module needs execution
+  // How we proceed depends on whether or not module is MDX.
+  // modules.execute() isn't MDX specific or async aware. It will just do
+  // moduleInfo.exports = moduleInfo.definition if moduleInfo.definition is an object.
+  // So we avoid calling it and set the module exports after getting exports ourselves for MDX.
+
+
+  const tiddlerType = wiki.getTiddler(definingTiddlerTitle)?.fields?.type;
+
+  // Case 2: non-MDX tiddler for which exports must be computed.
+  if (requestedModule && tiddlerType !== MD_MIME_TYPE) {
     try {
       return { moduleExports: modules.execute(definingTiddlerTitle, moduleRoot) };
     } catch (e) {
@@ -209,7 +226,10 @@ export const getModuleExports = async ({
     }
   }
 
-  // Case 3: module is an MDX module which needs to be compiled
+
+
+  // Case 3 & 4: module is an MDX module which needs to be compiled
+  // It doesn't matter if it has already been defined previously or not.
   const tiddler = wiki.getTiddler(definingTiddlerTitle);
   if (!tiddler) {
     return {
@@ -350,29 +370,31 @@ export const MDXFactory = async ({
     console.log("MDX ignoring children", children);
   }
   const reportError = makeErrorReporter(mdx);
-  let allDependencies:Set<string> = new Set<string>([]);
-  const calculateAllDependencies = () => {
-    console.log("calculateAllDependencies", definingTiddlerTitle);
-    allDependencies = getModuleDependencies($tw.modules, definingTiddlerTitle);
-  }
+  // stores transitive dependencies
+  let dependencyCache:Set<string>|undefined;
   const maybeModuleExports = await getModuleExports({
     definingTiddlerTitle,
     wiki: $tw.wiki,
     modules: $tw.modules,
     onRequire: (moduleName:string) => {
-      // a new requireAsync() call was made, so dependencies must be recalculated.
-      calculateAllDependencies();
+      // a new requireAsync() call was made, so invalidate dependency cache
+      dependencyCache = undefined;
     }
   });
   if ("error" in maybeModuleExports) {
     return reportError(maybeModuleExports.error, maybeModuleExports.errorTitle);
   }
-  calculateAllDependencies();
   if (parentWidget) {
     addTiddlerChangeHook(
       parentWidget as ReactWrapper,
       definingTiddlerTitle,
-      () => allDependencies
+      () => {
+        if (dependencyCache === undefined) {
+          console.log("calculateAllDependencies", definingTiddlerTitle);
+          dependencyCache = getModuleDependencies($tw.modules, definingTiddlerTitle);
+        }
+        return dependencyCache;
+      }
     );
   }
 
