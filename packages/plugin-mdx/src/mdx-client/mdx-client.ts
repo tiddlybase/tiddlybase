@@ -14,7 +14,7 @@ import type {Handler} from 'mdast-util-to-hast';
 import type {Properties} from 'hast';
 import normalize from 'mdurl/encode.js'
 
-export type CompilationResult = {error: MDXErrorDetails|Error} | {warnings: Array<MDXErrorDetails>, compiledFn: any}
+export type CompilationResult = {error: MDXErrorDetails|Error} | {warnings: Array<MDXErrorDetails>, compiledFn: any};
 
 // replace async import expression with call to sync importFn()
 const fixImports = (body: string) => body.replace(/= await import\(/mg, "= await importFn(");

@@ -13,15 +13,8 @@ import { PatchedModules } from "./patched-modules";
 
   const tiddlerChangeHandler = (wikiChange: $tw.WikiChange) => {
     // for each changed tiddler, invalidate module exports
-    const toInvalidate = new Set<string>();
-    for (let tiddler of Object.keys(wikiChange)) {
-      toInvalidate.add(tiddler);
-      for (let moduleName of ($tw.modules as PatchedModules).getAllModulesRequiring(tiddler)) {
-        toInvalidate.add(moduleName);
-      }
-    }
-    for (let m of toInvalidate) {
-      ($tw.modules as PatchedModules).invalidateModuleExports(m);
+    for (let m of Object.keys(wikiChange)) {
+      ($tw.modules as PatchedModules).clearExports(m);
     }
   };
 

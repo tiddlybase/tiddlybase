@@ -1,32 +1,18 @@
 /// <reference types="@tiddlybase/tw5-types/src/tw5" />
 import { patchedEvalGlobal } from './patched-eval-global';
 
-const breadthFirstSearch = <T>(previousLevel: Set<T>, getParents:(node:T)=>Set<T>): Set<T> => {
-  if (previousLevel.size === 0) {
-    return previousLevel;
-  }
-  const nextLevel = new Set<T>([]);
-  for (let node of previousLevel) {
-    getParents(node).forEach(n => {
-      if (!previousLevel.has(n)) {
-        nextLevel.add(n)
-      }
-    });
-  }
-  return new Set<T>([...previousLevel, ...nextLevel, ...(breadthFirstSearch(nextLevel, getParents))]);
-};
-
-const depthFirstSearch = <T>(currentNode: T, visited: Set<T>, getParents:(node:T)=>Set<T>) => {
+export const depthFirstSearch = <T>(getChildren:(node:T)=>Set<T>, currentNode: T, visited: Set<T>=new Set<T>([])) => {
   visited.add(currentNode);
-  for (let parent of getParents(currentNode)) {
-    if (!visited.has(parent)) {
-      depthFirstSearch(parent, visited, getParents);
+  for (let child of getChildren(currentNode)) {
+    if (!visited.has(child)) {
+      depthFirstSearch(getChildren, child, visited);
     }
   }
   return visited;
 };
 
 export class PatchedModules implements $tw.TW5Modules {
+  isPatched = true;
   titles: Record<string, $tw.TW5Module> = {};
   types: Partial<Record<$tw.ModuleType, Record<string, $tw.TW5Module>>> = {};
 
@@ -37,10 +23,8 @@ export class PatchedModules implements $tw.TW5Modules {
     Object.preventExtensions(this);
   }
 
-  invalidateModuleExports(moduleName: string): void {
-    if (this.titles[moduleName]) {
-      this.titles[moduleName].exports = undefined;
-    }
+  moduleExists(moduleName:string):boolean {
+    return moduleName in this.titles;
   }
 
   getModulesRequiring(moduleName: string): Set<string> {
@@ -57,13 +41,13 @@ export class PatchedModules implements $tw.TW5Modules {
   }
 
   getAllModulesRequiring(moduleName:string): Set<string> {
-    const moduleSet = breadthFirstSearch(new Set<string>([moduleName]), this.getModulesRequiring.bind(this));
+    const moduleSet = depthFirstSearch(this.getModulesRequiring.bind(this), moduleName);
     moduleSet.delete(moduleName);
     return moduleSet;
   }
 
   getAllModulesRequiredBy(moduleName:string): Set<string> {
-    const moduleSet = depthFirstSearch(moduleName, new Set<string>([]), this.getModulesRequiredBy.bind(this));
+    const moduleSet = depthFirstSearch(this.getModulesRequiredBy.bind(this), moduleName);
     moduleSet.delete(moduleName);
     return moduleSet;
   }
@@ -89,6 +73,27 @@ export class PatchedModules implements $tw.TW5Modules {
     return name;
   }
 
+  clearExports(moduleName: string) {
+    const moduleInfo = this.titles[moduleName];
+    if (!moduleInfo?.exports) {
+      // Nothing to do for nonexisting modules or those without exports.
+      return;
+    }
+    const drop = moduleInfo?.exports?.__drop__;
+    if (typeof drop === 'function') {
+      console.log("Calling __drop__ for previous version of module " + moduleName);
+      drop(moduleInfo);
+    }
+    // get module dependencies
+    const modulesRequiring = this.getAllModulesRequiring(moduleName);
+    // clear cached exports
+    moduleInfo.exports = undefined;
+    // NOTE: don't clear requires because then widget updates wont be detectable.
+    console.log(`clearExports('${moduleName}') cleared module exports`);
+    // recursively clear all dependencies
+    modulesRequiring.forEach(this.clearExports.bind(this));
+  }
+
   define(moduleName: string, moduleType: $tw.ModuleType, definition: $tw.ModuleExports | string) {
     // Create the moduleInfo
     var moduleInfo: $tw.TW5Module = {
@@ -97,28 +102,27 @@ export class PatchedModules implements $tw.TW5Modules {
       exports: undefined,
       requires: new Set<string>([])
     };
+
     // If the definition is already an object we can use it as the exports
     if (typeof definition === "object") {
       moduleInfo.exports = definition;
     }
-    // Store the module in the titles hashmap
-    /*
+    // If module already exists, remove old version
     if (moduleName in this.titles) {
-      console.log("Warning: Redefined module - " + moduleName);
+      // If module already exists in the types of module map, remove it, because
+      // new version of module might have a different type
+      delete this.types[this.titles[moduleName].moduleType]?.[moduleName];
+      this.clearExports(moduleName);
     }
-    */
+
+    // Store the module in the titles hashmap
     this.titles[moduleName] = moduleInfo;
     // Store the module in the types hashmap
     let modulesOfType: Record<string, $tw.TW5Module> | undefined = this.types[moduleType];
-
     if (!modulesOfType) {
       this.types[moduleType] = modulesOfType = {};
     }
-    /*
-    if (moduleName in modulesOfType) {
-      console.log("Warning: Redefined module - " + moduleName);
-    }
-    */
+
     modulesOfType[moduleName] = moduleInfo;
   }
 
@@ -251,7 +255,7 @@ export class PatchedModules implements $tw.TW5Modules {
   }
 
   /*
-  Return a class created from a modules. The module should export the properties to be added to those of the optional base class
+  Return a class created from a module. The module should export the properties to be added to those of the optional base class
   */
   createClassFromModule(moduleExports: $tw.ModuleExports, baseClass: $tw.ClassConstructor) {
     var newClass = function () { };
