@@ -328,22 +328,27 @@ const compileExecuteDefine = async (
       errorTitle: "Error compiling MDX source",
     };
   }
-  let moduleExports: $tw.ModuleExports;
   try {
     // evaluate compiled javascript
-    moduleExports = await getExports(
+    const {default: jsxCompiledDefault, ...moduleExports} = await getExports(
       compilationResult.compiledFn,
       requireAsync,
       getContextValues(mdxContext)
     );
-  } catch (e) {
-    return { error: e as Error, errorTitle: "Error executing compiled MDX" };
-  }
-  defineModule(definingTiddlerTitle, moduleExports, requiredModules, modules);
+    // make default recevieve the components prop by default
+    moduleExports.default = (props:any) => jsxCompiledDefault({
+      ...props,
+      components: props?.components ?? components,
+    });
+    // define module
+    defineModule(definingTiddlerTitle, moduleExports, requiredModules, modules);
   return {
     ...compilationResult,
     moduleExports,
   };
+  } catch (e) {
+    return { error: e as Error, errorTitle: "Error executing compiled MDX" };
+  }
 };
 
 /**
