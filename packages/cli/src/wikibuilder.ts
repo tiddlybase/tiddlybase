@@ -11,8 +11,8 @@ const DEFAULT_OUTPUT_FILENAME: Record<OutputType, string> = {
   'html': './wiki.html'
 }
 
-const JSON_BUILDER_FILTER = [
-  // Export tiddlers
+const DEFAULT_JSON_BUILDER_FILTER = [
+  // Export non-shadow tiddlers
   "[is[tiddler]]",
   // Except those with the following prefixes
   "-[prefix[$:/state/popup/]]",
@@ -94,11 +94,15 @@ const SAVE_JSON_COMMAND_TIDDLER: $tw.TiddlerFields = {
     this.callback = callback;
   };
 
-  const filter = "${JSON_BUILDER_FILTER}";
+  let filter = "${DEFAULT_JSON_BUILDER_FILTER}";
 
   Command.prototype.execute = function() {
     if(this.params.length < 1) {
       return "Missing output filename";
+    }
+    if (this.params[1]) {
+      console.log("using filter expression from tiddler " + this.params[1]);
+      filter = this.commander.wiki.getTiddler(this.params[1]).fields.text;
     }
     var self = this,
       fs = require("fs"),
@@ -120,7 +124,7 @@ const SAVE_JSON_COMMAND_TIDDLER: $tw.TiddlerFields = {
 };
 
 export const buildwiki: CommandModule = {
-  command: 'buildwiki <wikidir>',
+  command: 'buildwiki <wikidir> [exportfilter]',
   describe: 'build a JSON wiki contents file',
   builder: (argv: Argv) =>
     argv
@@ -145,7 +149,7 @@ export const buildwiki: CommandModule = {
       pluginPaths,
       outputType === 'json' ? [
         "--output", dirname(outputFilename),
-        "--savejson", basename(outputFilename)
+        "--savejson", basename(outputFilename), (args.exportfilter as string | undefined) ?? ""
       ] : [
         "--output", dirname(outputFilename),
         "--rendertiddler", "$:/core/save/all",
