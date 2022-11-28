@@ -1,7 +1,7 @@
 {
     "name": "@tiddlybase/plugin-embed-media",
     "description": "Load files from firebase storage",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "private": true,
     "author": "Peter Neumark",
     "license": "Apache-2.0",
