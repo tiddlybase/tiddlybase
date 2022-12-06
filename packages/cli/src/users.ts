@@ -12,7 +12,7 @@ import { UserRecord } from 'firebase-admin/lib/auth/user-record';
 const RE_UID = /^[a-zA-Z0-9]+$/;
 const ROLE_CHOICES = Object.keys(USER_ROLES).map(s => s.toLowerCase());
 
-const doSetRole = async (auth: Auth, user:UserRecord, jwtRoleClaim:string, roleName:string):Promise<Record<string, any>> => {
+const doSetRole = async (auth: Auth, user: UserRecord, jwtRoleClaim: string, roleName: string): Promise<Record<string, any>> => {
   const roleNumber = USER_ROLES[roleName];
   const claims = {
     ...user.customClaims,
@@ -32,6 +32,16 @@ export const getUser = async (app: admin.app.App, uidOrEmail: string): Promise<a
   return firebaseUser;
 };
 
+export const userRecordToJSON = (userRecord: admin.auth.UserRecord): any => {
+  const result = userRecord.toJSON() as any;
+  result.metadata = {
+    "lastSignInTime": new Date(userRecord.metadata.lastSignInTime).toISOString(),
+    "creationTime": new Date(userRecord.metadata.creationTime).toISOString(),
+    "lastRefreshTime": userRecord.metadata.lastRefreshTime ? new Date(userRecord.metadata.lastRefreshTime).toISOString() : undefined
+  }
+  return result;
+}
+
 export const setrole: CommandModule = {
   command: 'setrole <userid|email> role',
   describe: 'set a custom claim on a user',
@@ -45,7 +55,7 @@ export const setrole: CommandModule = {
         describe: 'role name',
         choices: ROLE_CHOICES
       }),
-  handler: withCLIContext(async (cliContext:CLIContext) => {
+  handler: withCLIContext(async (cliContext: CLIContext) => {
     const user = await getUser(cliContext.app, cliContext.args.userid as string);
     const roleName = (cliContext.args.role as string).toUpperCase();
     if (!(roleName in USER_ROLES)) {
@@ -70,7 +80,7 @@ export const adduser: CommandModule = {
         describe: 'role name',
         choices: ROLE_CHOICES
       }),
-  handler: withCLIContext(async (cliContext:CLIContext) => {
+  handler: withCLIContext(async (cliContext: CLIContext) => {
     const user = await cliContext.app.auth().createUser({
       email: cliContext.args.email as string,
       password: crypto.randomBytes(20).toString('hex'),
@@ -98,7 +108,7 @@ export const setclaimjson: CommandModule = {
         describe: 'Claim key',
         type: 'string',
       }),
-  handler: withCLIContext(async (cliContext:CLIContext) => {
+  handler: withCLIContext(async (cliContext: CLIContext) => {
     const user = await getUser(cliContext.app, cliContext.args.userid as string);
     const claims = JSON.parse(cliContext.args.json as string);
     await cliContext.app.auth().setCustomUserClaims(user.uid, claims);
@@ -115,10 +125,28 @@ export const getuser: CommandModule = {
       type: 'string',
     });
   },
-  handler: withCLIContext(async (cliContext:CLIContext) => {
-    console.log(inspect(await getUser(cliContext.app, cliContext.args.userid as string)));
+  handler: withCLIContext(async (cliContext: CLIContext) => {
+    console.log(
+      JSON.stringify(
+        userRecordToJSON(
+          await getUser(cliContext.app, cliContext.args.userid as string)),
+        null,
+        4));
   })
 };
+export const listusers: CommandModule = {
+  command: 'listusers',
+  describe: 'list all users of the system',
+  builder: (argv: Argv) => argv,
+  handler: withCLIContext(async (cliContext: CLIContext) => {
+    console.log(
+      JSON.stringify(
+          (await cliContext.app.auth().listUsers()).users.map(userRecordToJSON),
+          null,
+          4));
+  })
+};
+
 export const getclaims: CommandModule = {
   command: 'getclaims <userid|email>',
   describe: 'gets the assigned role for a user',
@@ -128,7 +156,7 @@ export const getclaims: CommandModule = {
       type: 'string',
     });
   },
-  handler: withCLIContext(async (cliContext:CLIContext) => {
+  handler: withCLIContext(async (cliContext: CLIContext) => {
     const user = await getUser(cliContext.app, cliContext.args.userid as string);
     console.log(inspect(user.customClaims));
   }),
