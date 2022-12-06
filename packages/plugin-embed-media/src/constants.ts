@@ -6,6 +6,7 @@ export const EXTENSION_TO_OBJECT_TYPE: Record<string, ObjectType> = {
   'jpeg': 'image',
   'jpg': 'image',
   'm4a': 'audio',
+  'mp3': 'audio',
   'mkv': 'video',
   'mov': 'video',
   'mp4': 'video',
