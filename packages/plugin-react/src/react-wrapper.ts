@@ -70,7 +70,7 @@ export class ReactWrapper extends (widget as typeof $tw.Widget) {
       isFactory = true;
     }
     try {
-      const Component = isFactory ? await exportValue({ parentWidget: this, ...props }) : exportValue;
+      const Component = isFactory ? await exportValue({ wiki: this.wiki, parentWidget: this, ...props }) : exportValue;
       return withContextProvider({
         context: { parentWidget: this },
         Component,
