@@ -8,6 +8,7 @@
     "plugins": [
         "tiddlywiki/internals",
         "tiddlywiki/markdown",
+        "tiddlybase/init",
         "tiddlybase/tiddlybase-utils",
         "tiddlybase/browser-test-utils",
         "tiddlybase/react",
