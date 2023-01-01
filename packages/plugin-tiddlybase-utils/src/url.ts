@@ -1,4 +1,5 @@
 // use full package path so the import is externalized
+import type {} from '@tiddlybase/tw5-types/src/index'
 import { getWikiInfoConfigValue } from "./wiki-info-config";
 import { joinPaths } from '@tiddlybase/shared/src/join-paths'
 import type { StorageFileMetadata } from "packages/rpc/src/top-level-api";
@@ -25,13 +26,13 @@ export const getExtension = (url: string) => {
 }
 
 // true if currently running in TiddlyDesktop
-const isTiddlyDesktop = () => !!$tw?.desktop;
+const isTiddlyDesktop = (tw:typeof $tw=globalThis.$tw) => !!tw?.desktop;
 
 // true if currently running in the browser as a regular .html TiddlyWiki file
-const isStandaloneHtmlTiddlyWiki = () => !$tw.desktop && !$tw.tiddlybase && $tw.browser && location.protocol === 'file:'
+const isStandaloneHtmlTiddlyWiki = (tw:typeof $tw=globalThis.$tw, loc=location) => !tw.desktop && !tw.tiddlybase && tw.browser && loc.protocol === 'file:'
 
 // true if currently running in the browser served by the built-in tiddlywiki nodejs server
-const isNodeServerTiddlyWiki = () => !$tw.desktop && !$tw.tiddlybase && $tw.browser && !!location.protocol.match('https?:')
+const isNodeServerTiddlyWiki = (tw:typeof $tw=globalThis.$tw, loc=location) => !tw.desktop && !tw.tiddlybase && tw.browser && !!loc.protocol.match('https?:')
 
 const getDesktopPathPrefix = () => {
   if (isTiddlyDesktop()) {
@@ -49,26 +50,26 @@ const desktopPrefix = getDesktopPathPrefix();
 // Simply return relative path, but add the local file prefix
 const localFileRelativePath = (path: string) => joinPaths(LOCAL_FILE_PREFIX, path);
 
-const getFullStoragePath = (relativePath: string) => joinPaths($tw?.tiddlybase?.storageConfig?.filesPath ?? '', relativePath)
+const getFullStoragePath = (relativePath: string, tw:typeof $tw=globalThis.$tw) => joinPaths(tw?.tiddlybase?.storageConfig?.filesPath ?? '', relativePath)
 
 const getTiddlyDesktopUrl = (path: string): string => `file:///${joinPaths(desktopPrefix, path)}`;
 
 const shouldCache = (metadata: StorageFileMetadata) => !!metadata.contentType?.startsWith('image/')
 
-const resolveStorageBucketPath = async (path: string): Promise<string> => {
+const resolveStorageBucketPath = async (path: string, tw:typeof $tw=globalThis.$tw): Promise<string> => {
   const fullStoragePath = getFullStoragePath(path);
-  const metadata = await $tw.tiddlybase!.topLevelClient!('getStorageFileMetadata', [fullStoragePath]);
+  const metadata = await tw.tiddlybase!.topLevelClient!('getStorageFileMetadata', [fullStoragePath]);
   // caching isn't possible within sandboxed iframes without `allow-same-origin`, as the origin is
   // a unique origin which isn't equal even to itself, so the browser cache will never be consulted
   // when a file needs to be retrieved.
   // as a result, the fetch() should happen in the parent iframe for assets which need to be cached.
   if (shouldCache(metadata)) {
-    const blob = await $tw.tiddlybase!.topLevelClient!('getStorageFileAsBlob', [fullStoragePath]);
+    const blob = await tw.tiddlybase!.topLevelClient!('getStorageFileAsBlob', [fullStoragePath]);
     var urlCreator = window.URL || window.webkitURL;
     return urlCreator.createObjectURL(blob);
   } else {
     // no cachign required
-    return await $tw.tiddlybase!.topLevelClient!('getStorageFileDownloadUrl', [fullStoragePath]);
+    return await tw.tiddlybase!.topLevelClient!('getStorageFileDownloadUrl', [fullStoragePath]);
   }
 }
 
@@ -79,7 +80,7 @@ export const cleanupURL = (url:string) => {
   }
 }
 
-export const resolveURL = (url: string) => {
+export const resolveURL = (url: string, tw:typeof $tw=globalThis.$tw) => {
   // regular absolute URLs resolve to themselves, as do
   // relative URLs which do not start with FILES_URL_PREFIX
   if (isAbsoluteUrl(url) || !url.startsWith(FILES_URL_PREFIX)) {
@@ -98,7 +99,7 @@ export const resolveURL = (url: string) => {
   }
   // Assume Tiddlybase.
   // if isLocal is true, make path absolute by prepending '/'
-  if (!!$tw.tiddlybase?.isLocal) {
+  if (!!tw.tiddlybase?.isLocal) {
     return `/${localFileRelativePath(path)}`;
   }
   // otherwise resolve path as a GCP Storage bucket path

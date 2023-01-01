@@ -1,3 +1,4 @@
+/// <reference types="@tiddlybase/tw5-types/src/index" />
 import * as url from '../src/url'
 
 describe('helper tests', function () {

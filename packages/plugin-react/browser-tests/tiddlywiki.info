@@ -6,6 +6,7 @@
     "config": {
     },
     "plugins": [
+        "tiddlybase/init",
         "tiddlybase/tiddlybase-utils",
         "tiddlybase/browser-test-utils",
         "tiddlybase/react"

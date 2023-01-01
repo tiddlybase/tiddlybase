@@ -13,18 +13,18 @@ export const createWikiInfoConfig = (wikiSettings?: Partial<$tw.WikiInfoConfig>)
   title: TIDDLER_TITLE_WIKI_INFO_CONFIG,
 });
 
-const parseTiddlerField = (key:string):any => {
-  const value = $tw?.wiki?.getTiddler(TIDDLER_TITLE_WIKI_INFO_CONFIG)?.fields?.[key];
+const parseTiddlerField = (key:string, tw:typeof $tw=globalThis.$tw):any => {
+  const value = tw?.wiki?.getTiddler(TIDDLER_TITLE_WIKI_INFO_CONFIG)?.fields?.[key];
   if (typeof value === 'string') {
     return JSON.parse(value)
   }
   return undefined;
 }
 
-export const getWikiInfoConfigValue = <T extends keyof $tw.WikiInfoConfig>(key: T):$tw.WikiInfoConfig[T] => {
+export const getWikiInfoConfigValue = <T extends keyof $tw.WikiInfoConfig>(key: T, tw:typeof $tw=globalThis.$tw):$tw.WikiInfoConfig[T] => {
   // If running under node or as TiddlyDesktop, $tw.boot.wikiInfo is available.
   // If running in the browser as a "built" HTML wiki, then config values may be
   // read from WIKI_INFO_CONFIG_TIDDLER.
   // The hard-coded defaults are also there as a fallback.
-  return ($tw?.boot?.wikiInfo?.config?.[key] ?? parseTiddlerField(key) ?? DEFAULT_CONFIG[key]);
+  return (tw?.boot?.wikiInfo?.config?.[key] ?? parseTiddlerField(key, tw) ?? DEFAULT_CONFIG[key]);
 }
