@@ -178,7 +178,7 @@ declare namespace $tw {
     // enqueueTiddlerEvent: (title,isDeleted)  => void;
     // extractLinks: (parseTreeRoot)  => void;
     // extractTiddlerDataItem: (titleOrTiddler,index,defaultText)  => void;
-    // filterTiddlers: (filterString,widget,source)  => void;
+    filterTiddlers: (filterString:string, widget?:$tw.Widget, source?:string[]|Record<string, any>)  => string[];
     // findDraft: (targetTitle)  => void;
     // findListingsOfTiddler: (targetTitle,fieldName)  => void;
     // forEachTiddler: (/* [options,]callback */)  => void;
@@ -240,7 +240,7 @@ declare namespace $tw {
     // readPluginInfo: (titles)  => void;
     // registerPluginTiddlers: (pluginType,titles)  => void;
     // relinkTiddler:  relinkTiddler(fromTitle, toTitle, options)  => void;
-    // removeEventListener: (type,listener)  => void;
+    removeEventListener: (...args: WikiAddEventListenerArgs)  => void;
     // renameTiddler:  renameTiddler(fromTitle,toTitle,options)  => void;
     // renderText: (outputType,textType,text,options)  => void;
     // renderTiddler: (outputType,title,options)  => void;

@@ -1,0 +1,26 @@
+{
+    "description": "Test runner",
+    "includeWikis": [
+		{"path": "../../browser-tests", "read-only": true}
+	],
+    "config": {
+    },
+    "plugins": [
+        "tiddlybase/init",
+        "tiddlybase/tiddlybase-utils",
+        "tiddlybase/browser-test-utils",
+        "tiddlybase/react",
+        "tiddlybase/mdx",
+        "tiddlybase/plugin-calendar"
+    ],
+    "themes": [
+    ],
+    "build": {
+        "wiki": [
+            "--rendertiddler",
+            "$:/core/save/all",
+            "wiki.html",
+            "text/plain"
+        ]
+    }
+}

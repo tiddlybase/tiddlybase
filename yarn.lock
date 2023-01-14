@@ -2136,6 +2136,7 @@ __metadata:
     date-fns: ^2.29.3
     jest: ^28.1.3
     react-big-calendar: ^1.5.2
+    rrule: ^2.7.1
     style-loader: ^3.3.1
     ts-jest: ^28.0.7
     tslib: ^2.3.1
@@ -13211,6 +13212,15 @@ __metadata:
     setprototypeof: 1.2.0
     utils-merge: 1.0.1
   checksum: ae595e4d1e875f26934a012d39bfdc232135e1ee956f68b1b808fab166ac48d4a5025b30cb793bcf4ad8978884c1a7a65acf17a9cdd84e0340862bf0c12a6a47
+  languageName: node
+  linkType: hard
+
+"rrule@npm:^2.7.1":
+  version: 2.7.1
+  resolution: "rrule@npm:2.7.1"
+  dependencies:
+    tslib: ^2.4.0
+  checksum: 80b81c5b1c1d12539a2af6de6fc8ebff8d763d8006cd9a418a1de7adbd634ae84ea853f1590d73ea72737422b8775cd53ca64c59e7c4625eda09a2746596f1d9
   languageName: node
   linkType: hard
 

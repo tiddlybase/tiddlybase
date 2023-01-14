@@ -29,10 +29,10 @@ export const getExtension = (url: string) => {
 const isTiddlyDesktop = (tw:typeof $tw=globalThis.$tw) => !!tw?.desktop;
 
 // true if currently running in the browser as a regular .html TiddlyWiki file
-const isStandaloneHtmlTiddlyWiki = (tw:typeof $tw=globalThis.$tw, loc=location) => !tw.desktop && !tw.tiddlybase && tw.browser && loc.protocol === 'file:'
+const isStandaloneHtmlTiddlyWiki = (tw:typeof $tw=globalThis.$tw, loc=location) => !isTiddlyDesktop(tw) && !tw.tiddlybase && tw.browser && loc.protocol === 'file:'
 
 // true if currently running in the browser served by the built-in tiddlywiki nodejs server
-const isNodeServerTiddlyWiki = (tw:typeof $tw=globalThis.$tw, loc=location) => !tw.desktop && !tw.tiddlybase && tw.browser && !!loc.protocol.match('https?:')
+const isNodeServerTiddlyWiki = (tw:typeof $tw=globalThis.$tw, loc=location) => !isTiddlyDesktop(tw) && !tw.tiddlybase && tw.browser && !!loc.protocol.match('https?:')
 
 const getDesktopPathPrefix = () => {
   if (isTiddlyDesktop()) {
@@ -68,7 +68,7 @@ const resolveStorageBucketPath = async (path: string, tw:typeof $tw=globalThis.$
     var urlCreator = window.URL || window.webkitURL;
     return urlCreator.createObjectURL(blob);
   } else {
-    // no cachign required
+    // no caching required
     return await tw.tiddlybase!.topLevelClient!('getStorageFileDownloadUrl', [fullStoragePath]);
   }
 }
@@ -91,10 +91,10 @@ export const resolveURL = (url: string, tw:typeof $tw=globalThis.$tw) => {
   // paths to the local filesystem or google storage and
   // must be resolved
   const path = url.substring(FILES_URL_PREFIX.length);
-  if (isTiddlyDesktop()) {
+  if (isTiddlyDesktop(tw)) {
     return getTiddlyDesktopUrl(path);
   }
-  if (isStandaloneHtmlTiddlyWiki() || isNodeServerTiddlyWiki()) {
+  if (isStandaloneHtmlTiddlyWiki(tw) || isNodeServerTiddlyWiki(tw)) {
     return localFileRelativePath(path);
   }
   // Assume Tiddlybase.
@@ -103,5 +103,5 @@ export const resolveURL = (url: string, tw:typeof $tw=globalThis.$tw) => {
     return `/${localFileRelativePath(path)}`;
   }
   // otherwise resolve path as a GCP Storage bucket path
-  return resolveStorageBucketPath(path);
+  return resolveStorageBucketPath(path, tw);
 }
