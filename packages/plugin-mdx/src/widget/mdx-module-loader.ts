@@ -8,7 +8,7 @@ import {
 } from "@tiddlybase/plugin-mdx/src/mdx-client/mdx-client";
 import { MDXErrorDetails } from "../mdx-client/mdx-error-details";
 
-export interface ModuleLoaderContext<T> {
+export interface ModuleLoaderContext<T extends object> {
   // stack of module names requiring each other leading to current module
   requireStack: string[];
   // direct requirements of currently loaded module (popuplated as imports are executed during load).
@@ -22,17 +22,17 @@ export interface ModuleLoaderContext<T> {
   modules: $tw.TW5Modules,
 }
 
-export type ModuleLoadError<T> = {
+export type ModuleLoadError<T extends object> = {
   error: MDXErrorDetails | Error;
   errorTitle: string;
   loadContext: ModuleLoaderContext<T>
 };
 
-export type CompileAndDefineOuput<T> =
+export type CompileAndDefineOuput<T extends object> =
   | ModuleLoadError<T>
-  | { warnings: Array<MDXErrorDetails>; compiledFn: any; moduleExports?: any; definedModule?: boolean };
+  | { warnings: Array<MDXErrorDetails>; compiledFn: any; moduleExports: $tw.ModuleExports; definedModule?: boolean};
 
-export type GetModuleOutput<T> =
+export type GetModuleOutput<T extends object> =
   | { moduleExports: $tw.ModuleExports }
   | CompileAndDefineOuput<T>;
 
@@ -43,21 +43,29 @@ export type MDXContext = Record<string, any> & {
 
 type OnRequire = (moduleName: string) => void;
 
+export class RequireAsyncError<T extends object> extends Error {
+  props: ModuleLoadError<T>;
+  constructor(props:ModuleLoadError<T>) {
+    super(props.errorTitle);
+    this.props = props;
+  }
+}
+
 const MD_MIME_TYPE = "text/x-markdown";
 
 let anonymousGeneratedFunctionCounter = 0;
 
-const getContextKeys = (mdxContext: Record<string, any>): string[] =>
+const getContextKeys = (mdxContext: MDXContext): string[] =>
   Object.keys(mdxContext).sort();
 
-const getContextValues = (mdxContext: Record<string, any>): any[] =>
+const getContextValues = (mdxContext: MDXContext): any[] =>
   getContextKeys(mdxContext).reduce((acc, key) => {
     acc.push((mdxContext as any)[key]);
     return acc;
   }, [] as any[]);
 
 export const getRequireAsync =
-  <T>(
+  <T extends object>(
     loadContext: ModuleLoaderContext<T>,
   ) =>
     async (requiredModuleName: string) => {
@@ -75,23 +83,29 @@ export const getRequireAsync =
       });
 
       if ("error" in maybeExports) {
-        throw maybeExports.error;
+        throw new RequireAsyncError<T>({
+          error: maybeExports.error,
+          errorTitle: maybeExports.errorTitle,
+          loadContext: maybeExports.loadContext
+        });
       }
       loadContext.requiredModules.add(requiredModuleName);
       return maybeExports.moduleExports;
     };
 
-const compileMDX = async (
+const compileMDX = async <T extends object>(
   tiddler: string | undefined,
   mdx: string,
-  mdxContext: Record<string, any>
+  mdxContext: T
 ): Promise<CompilationResult> => {
   let fnName = tiddler;
   if (!fnName) {
     fnName = `mdx_generated_${anonymousGeneratedFunctionCounter++}`;
   }
   try {
-    return await compile(fnName, mdx, getContextKeys(mdxContext));
+    // TODO: getting the context keys should be generic, but
+    // assuming T === MDXContext for now
+    return await compile(fnName, mdx, getContextKeys(mdxContext as MDXContext));
   } catch (e) {
     return { error: e as Error };
   }
@@ -107,7 +121,7 @@ const defineModule = (
   modules.titles[tiddler].requires = requiredModules;
 };
 
-const compileExecuteDefine = async <T>({
+const compileExecuteDefine = async <T extends object>({
   loadContext,
   mdx,
   tiddler,
@@ -120,7 +134,7 @@ const compileExecuteDefine = async <T>({
   const requireAsync = getRequireAsync(
     loadContext,
   );
-  const mdxContext = { ...loadContext.moduleContext, tiddler };
+  const mdxContext = { ...loadContext.moduleContext };
   const compilationResult = await compileMDX(
     tiddler,
     mdx,
@@ -138,7 +152,7 @@ const compileExecuteDefine = async <T>({
     const { default: jsxCompiledDefault, ...moduleExports } = await getExports(
       compilationResult.compiledFn,
       requireAsync,
-      getContextValues(mdxContext)
+      getContextValues(mdxContext as MDXContext)
     );
     // make default() receive the components prop by default if
     // 'components' exists in the context to pass in overridden
@@ -147,8 +161,10 @@ const compileExecuteDefine = async <T>({
       moduleExports.default = (props: any) =>
         jsxCompiledDefault({
           ...props,
-          components: props?.components ?? mdxContext.components,
+          components: {...(props?.components ?? {}), ...(mdxContext.components as Record<string, any>)},
         });
+    } else {
+      moduleExports.default = jsxCompiledDefault;
     }
     // define module if tiddler title is available
     if (tiddler) {
@@ -165,6 +181,9 @@ const compileExecuteDefine = async <T>({
       moduleExports,
     };
   } catch (e) {
+    if (e instanceof RequireAsyncError) {
+      return e.props;
+    }
     return { error: e as Error, errorTitle: "Error executing compiled MDX", loadContext };
   }
 };
@@ -175,14 +194,12 @@ const compileExecuteDefine = async <T>({
 // registered the generated module with TiddlyWiki. For MDX dependencies,
 // compile them now so they can be required if necessary
 
-export const getModuleExports = async <T>({
+export const getModuleExports = async <T extends object>({
   loadContext: prevLoadContext,
   tiddler,
-  requiredModules,
 }: {
   loadContext: ModuleLoaderContext<T>;
   tiddler: string;
-  requiredModules?: Set<string>;
 }): Promise<GetModuleOutput<T>> => {
   // There are 3 possible scenarios:
   // 1. The module has already been execute()-ed and $tw.modules.title[$TITLE].exports exists.
@@ -199,11 +216,15 @@ export const getModuleExports = async <T>({
   // Cases 2-4: module needs execution
   // The module has not been evaluated yet, it must be executed now.
   // created a new loadContext with an empty requiredModules set.
+  // Theoretically, the context could be anything (generic type T), but
+  // in practice, it's an MDXContext, which happens to have a 'definingTiddlerTitle'
+  // which needs to be updated.
   const loadContext = makeModuleLoaderContext<T>({
     tiddler,
-    moduleContext: {...prevLoadContext.moduleContext, definingTidderTitle: tiddler},
+    moduleContext: {...prevLoadContext.moduleContext, definingTiddlerTitle: tiddler},
     prevLoadContext
   })
+  loadContext.requireStack.push(tiddler);
 
   // How we proceed depends on whether or not module is MDX.
   // modules.execute() isn't MDX specific or async aware. It will just do
@@ -256,7 +277,7 @@ export const getModuleExports = async <T>({
   });
 };
 
-export const makeModuleLoaderContext = <T>({
+export const makeModuleLoaderContext = <T extends object>({
   moduleContext: _moduleContext,
   tiddler,
   prevLoadContext,
@@ -269,11 +290,8 @@ export const makeModuleLoaderContext = <T>({
   wiki?: $tw.Wiki,
   modules?: $tw.TW5Modules,
 }) => {
-  const requireStack = prevLoadContext?.requireStack ?? [];
-  if (tiddler) {
-    requireStack.push(tiddler)
-  }
-  const moduleContext = prevLoadContext?.moduleContext ?? _moduleContext
+  const requireStack = (prevLoadContext?.requireStack ?? []).slice();
+  const moduleContext = _moduleContext ?? prevLoadContext?.moduleContext
   if (moduleContext === undefined) {
     throw new Error("moduleContext cannot be undefined");
   }
