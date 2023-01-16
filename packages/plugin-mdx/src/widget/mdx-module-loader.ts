@@ -59,8 +59,6 @@ const getContextValues = (mdxContext: Record<string, any>): any[] =>
 export const getRequireAsync =
   <T>(
     loadContext: ModuleLoaderContext<T>,
-    tiddler: string | undefined,
-    requiredModules: Set<string>
   ) =>
     async (requiredModuleName: string) => {
       if (loadContext.onRequire) {
@@ -79,7 +77,7 @@ export const getRequireAsync =
       if ("error" in maybeExports) {
         throw maybeExports.error;
       }
-      requiredModules.add(requiredModuleName);
+      loadContext.requiredModules.add(requiredModuleName);
       return maybeExports.moduleExports;
     };
 
@@ -121,8 +119,6 @@ const compileExecuteDefine = async <T>({
 }): Promise<CompileAndDefineOuput<T>> => {
   const requireAsync = getRequireAsync(
     loadContext,
-    tiddler,
-    loadContext.requiredModules,
   );
   const mdxContext = { ...loadContext.moduleContext, tiddler };
   const compilationResult = await compileMDX(
