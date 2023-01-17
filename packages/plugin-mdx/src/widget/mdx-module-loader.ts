@@ -72,11 +72,7 @@ export const getRequireAsync =
       if (loadContext.onRequire) {
         loadContext.onRequire(requiredModuleName);
       }
-      // This is a little tricky:
-      // we don't pass requiredModules since each module just keeps track
-      // of immediate require()s, not transitive dependencies.
-      // We do pass onRequire, since it's likely that a transitive dependency
-      // changes our dep tree, in which case we want onRequire to fire.
+
       const maybeExports = await getModuleExports({
         loadContext,
         tiddler: requiredModuleName,
@@ -154,6 +150,7 @@ const compileExecuteDefine = async <T extends object>({
       requireAsync,
       getContextValues(mdxContext as MDXContext)
     );
+
     // make default() receive the components prop by default if
     // 'components' exists in the context to pass in overridden
     // and implicitly available react components.
@@ -232,6 +229,13 @@ export const getModuleExports = async <T extends object>({
   // So we avoid calling it and set the module exports after getting exports ourselves for MDX.
 
   const tiddlerObj = loadContext.wiki.getTiddler(tiddler);
+  if (!tiddlerObj) {
+    return {
+      error: new Error(`Tiddler '${tiddler}' not found in wiki.`),
+      errorTitle: "Tiddler not found",
+      loadContext
+    };
+  }
   const tiddlerType = tiddlerObj?.fields?.type;
 
   // Case 2: non-MDX tiddler for which exports must be computed.
@@ -251,14 +255,6 @@ export const getModuleExports = async <T extends object>({
 
   // Case 3 & 4: module is an MDX module which needs to be compiled
   // It doesn't matter if it has already been defined previously or not.
-
-  if (!tiddlerObj) {
-    return {
-      error: new Error(`Tiddler '${tiddler}' not found in wiki.`),
-      errorTitle: "Tiddler not found",
-      loadContext
-    };
-  }
   if (tiddlerObj.fields.type !== MD_MIME_TYPE) {
     return {
       error: new Error(

@@ -33,7 +33,9 @@ const makeMockModules = () => {
 }
 
 const makeMockWiki = (tiddlers: Record<string, string>): $tw.Wiki => {
-  const getTiddler = jest.fn<(s: string) => $tw.Tiddler | undefined>((title: string) => makeMDXTiddler(title, tiddlers[title]));
+  const getTiddler = jest.fn<(s: string) => $tw.Tiddler | undefined>((title: string) => {
+    return title in tiddlers ? makeMDXTiddler(title, tiddlers[title]) : undefined;
+  });
   return {
     getTiddler
   } as any as $tw.Wiki;
@@ -180,6 +182,46 @@ asdf
       expect(() => renderToAST(result.moduleExports.default())).toThrowError("BANG!");
     }
     expect(Object.keys(modules.titles).sort()).toEqual(['tiddler1', 'tiddler2', 'tiddler3']);
+  });
+
+  it('load mdx with missing dependency dependency', async function () {
+    const wiki = makeMockWiki({
+      tiddler2: `
+      import {bang} from "tiddler1";
+
+      {bang()}
+
+      bar
+      `,
+      tiddler3: `
+      import {default as d} from "tiddler2";
+
+      {d()}
+
+      foo
+      `
+    });
+    const { modules, loadContext } = setup(wiki, 'tiddler3');
+    const result = await loadMDXModule({
+      tiddler: 'tiddler3',
+      loadContext
+    });
+    expect(Object.keys(result).sort()).toEqual(["error", "errorTitle", "loadContext"]);
+    if ('errorTitle' in result) {
+      expect(result.errorTitle).toEqual('Tiddler not found');
+    }
+    if ('error' in result) {
+      expect(result.error.message).toEqual("Tiddler 'tiddler1' not found in wiki.");
+    }
+    if ('loadContext' in result) {
+      expect(result.loadContext.requireStack).toEqual(
+        ['tiddler3', 'tiddler2', 'tiddler1']
+      );
+      expect(result.loadContext.moduleContext.definingTiddlerTitle).toEqual(
+        'tiddler1'
+      );
+    }
+    expect(Object.keys(modules.titles)).toEqual([]);
   });
 
 })
