@@ -1,4 +1,4 @@
-import { makeModuleLoaderContext, loadMDXModule } from '../src/widget/mdx-module-loader'
+import { MDXModuleLoader } from '../src/widget/mdx-module-loader'
 import type { } from "@tiddlybase/tw5-types/src/index";
 import { jest } from '@jest/globals'
 import TestRenderer from 'react-test-renderer';
@@ -41,29 +41,20 @@ const makeMockWiki = (tiddlers: Record<string, string>): $tw.Wiki => {
   } as any as $tw.Wiki;
 }
 
-const setup = (wiki: $tw.Wiki, definingTiddlerTitle = 'tiddler1') => {
+const setup = (tiddlers: Record<string, string>) => {
+  const wiki = makeMockWiki(tiddlers);
   const modules = makeMockModules();
-  const loadContext = makeModuleLoaderContext({
-    tiddler: definingTiddlerTitle,
-    mdxContext: {
-      definingTiddlerTitle,
-      components: {}
-    },
-    wiki,
-    modules
-  });
-  return { modules, loadContext }
+  const loader = new MDXModuleLoader({wiki, modules});
+  return { modules, wiki, loader };
 }
 
 describe('load MDX module by tiddler title', () => {
 
 
   it('load mdx without dependencies', async function () {
-    const wiki = makeMockWiki({ tiddler1: '# hi!' });
-    const { modules, loadContext } = setup(wiki);
-    const result = await loadMDXModule({
+    const { modules, loader } = setup({ tiddler1: '# hi!' });
+    const result = await loader.loadModule({
       tiddler: 'tiddler1',
-      loadContext
     });
     expect(Object.keys(result)).toContain('moduleExports');
     if ('moduleExports' in result) {
@@ -78,7 +69,7 @@ describe('load MDX module by tiddler title', () => {
   })
 
   it('load mdx with dependency', async function () {
-    const wiki = makeMockWiki({
+    const { modules, loader } = setup({
       tiddler1: '# hi!',
       tiddler2: `
       import {default as d} from "tiddler1";
@@ -88,10 +79,8 @@ describe('load MDX module by tiddler title', () => {
       asdf
       `
     });
-    const { modules, loadContext } = setup(wiki, 'tiddler2');
-    const result = await loadMDXModule({
+    const result = await loader.loadModule({
       tiddler: 'tiddler2',
-      loadContext
     });
     expect(Object.keys(result)).toContain('moduleExports');
     if ('moduleExports' in result) {
@@ -111,7 +100,7 @@ describe('load MDX module by tiddler title', () => {
   })
 
   it('load mdx with syntax error in dependency', async function () {
-    const wiki = makeMockWiki({
+    const { modules, loader } = setup({
       tiddler1: `# hi!
       {js_compile_error = }
       `,
@@ -130,10 +119,8 @@ describe('load MDX module by tiddler title', () => {
       foo
       `
     });
-    const { modules, loadContext } = setup(wiki, 'tiddler3');
-    const result = await loadMDXModule({
-      tiddler: 'tiddler3',
-      loadContext
+    const result = await loader.loadModule({
+      tiddler: 'tiddler3'
     });
     expect(Object.keys(result).sort()).toEqual(["error", "errorTitle", "loadContext"]);
     if ('error' in result) {
@@ -151,7 +138,7 @@ describe('load MDX module by tiddler title', () => {
   });
 
   it('load mdx with runtime error in dependency', async function () {
-    const wiki = makeMockWiki({
+    const { modules, loader } = setup({
       tiddler1: `# hi!
 
 export const bang = () => {throw new Error("BANG!");}
@@ -173,10 +160,8 @@ asdf
       foo
       `
     });
-    const { modules, loadContext } = setup(wiki, 'tiddler3');
-    const result = await loadMDXModule({
-      tiddler: 'tiddler3',
-      loadContext
+    const result = await loader.loadModule({
+      tiddler: 'tiddler3'
     });
     if ('moduleExports' in result) {
       expect(() => renderToAST(result.moduleExports.default())).toThrowError("BANG!");
@@ -185,7 +170,7 @@ asdf
   });
 
   it('load mdx with missing dependency', async function () {
-    const wiki = makeMockWiki({
+    const { modules, loader } = setup({
       tiddler2: `
       import {bang} from "tiddler1";
 
@@ -201,10 +186,8 @@ asdf
       foo
       `
     });
-    const { modules, loadContext } = setup(wiki, 'tiddler3');
-    const result = await loadMDXModule({
-      tiddler: 'tiddler3',
-      loadContext
+    const result = await loader.loadModule({
+      tiddler: 'tiddler3'
     });
     expect(Object.keys(result).sort()).toEqual(["error", "errorTitle", "loadContext"]);
     if ('errorTitle' in result) {
@@ -225,7 +208,7 @@ asdf
   });
 
   it('Throw error if circular dependency detected', async function () {
-    const wiki = makeMockWiki({
+    const { modules, loader } = setup({
       tiddler1: `
       import {default as d} from "tiddler3";
 
@@ -248,10 +231,8 @@ asdf
       foo
       `
     });
-    const { modules, loadContext } = setup(wiki, 'tiddler3');
-    const result = await loadMDXModule({
-      tiddler: 'tiddler3',
-      loadContext
+    const result = await loader.loadModule({
+      tiddler: 'tiddler3'
     });
     expect(Object.keys(result).sort()).toEqual(["error", "errorTitle", "loadContext"]);
     if ('errorTitle' in result) {
