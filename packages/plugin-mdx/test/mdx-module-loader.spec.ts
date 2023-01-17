@@ -1,4 +1,4 @@
-import { makeModuleLoaderContext, loadMDXModule, MDXContext } from '../src/widget/mdx-module-loader'
+import { makeModuleLoaderContext, loadMDXModule } from '../src/widget/mdx-module-loader'
 import type { } from "@tiddlybase/tw5-types/src/index";
 import { jest } from '@jest/globals'
 import TestRenderer from 'react-test-renderer';
@@ -43,9 +43,9 @@ const makeMockWiki = (tiddlers: Record<string, string>): $tw.Wiki => {
 
 const setup = (wiki: $tw.Wiki, definingTiddlerTitle = 'tiddler1') => {
   const modules = makeMockModules();
-  const loadContext = makeModuleLoaderContext<MDXContext>({
+  const loadContext = makeModuleLoaderContext({
     tiddler: definingTiddlerTitle,
-    moduleContext: {
+    mdxContext: {
       definingTiddlerTitle,
       components: {}
     },
@@ -143,7 +143,7 @@ describe('load MDX module by tiddler title', () => {
       expect(result.loadContext.requireStack).toEqual(
         ['tiddler3', 'tiddler2', 'tiddler1']
       );
-      expect(result.loadContext.moduleContext.definingTiddlerTitle).toEqual(
+      expect(result.loadContext.mdxContext.definingTiddlerTitle).toEqual(
         'tiddler1'
       );
     }
@@ -184,7 +184,7 @@ asdf
     expect(Object.keys(modules.titles).sort()).toEqual(['tiddler1', 'tiddler2', 'tiddler3']);
   });
 
-  it('load mdx with missing dependency dependency', async function () {
+  it('load mdx with missing dependency', async function () {
     const wiki = makeMockWiki({
       tiddler2: `
       import {bang} from "tiddler1";
@@ -217,8 +217,55 @@ asdf
       expect(result.loadContext.requireStack).toEqual(
         ['tiddler3', 'tiddler2', 'tiddler1']
       );
-      expect(result.loadContext.moduleContext.definingTiddlerTitle).toEqual(
+      expect(result.loadContext.mdxContext.definingTiddlerTitle).toEqual(
         'tiddler1'
+      );
+    }
+    expect(Object.keys(modules.titles)).toEqual([]);
+  });
+
+  it('Throw error if circular dependency detected', async function () {
+    const wiki = makeMockWiki({
+      tiddler1: `
+      import {default as d} from "tiddler3";
+
+      {d()}
+
+      baz
+      `,
+      tiddler2: `
+      import {bang} from "tiddler1";
+
+      {bang()}
+
+      bar
+      `,
+      tiddler3: `
+      import {default as d} from "tiddler2";
+
+      {d()}
+
+      foo
+      `
+    });
+    const { modules, loadContext } = setup(wiki, 'tiddler3');
+    const result = await loadMDXModule({
+      tiddler: 'tiddler3',
+      loadContext
+    });
+    expect(Object.keys(result).sort()).toEqual(["error", "errorTitle", "loadContext"]);
+    if ('errorTitle' in result) {
+      expect(result.errorTitle).toEqual('Circular dependency detected');
+    }
+    if ('error' in result) {
+      expect(result.error.message).toEqual("Importing 'tiddler3' causes circular dependencies. Full chain: tiddler3→tiddler2→tiddler1→tiddler3");
+    }
+    if ('loadContext' in result) {
+      expect(result.loadContext.requireStack).toEqual(
+        ['tiddler3', 'tiddler2', 'tiddler1', 'tiddler3']
+      );
+      expect(result.loadContext.mdxContext.definingTiddlerTitle).toEqual(
+        'tiddler3'
       );
     }
     expect(Object.keys(modules.titles)).toEqual([]);
