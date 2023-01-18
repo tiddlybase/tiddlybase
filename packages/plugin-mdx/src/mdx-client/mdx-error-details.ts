@@ -5,6 +5,9 @@ export interface Position {
 }
 
 export interface MDXErrorDetails {
+  line?: number;
+  column?: number;
+  fatal?: boolean;
   name: string;
   message: string;
   position: {

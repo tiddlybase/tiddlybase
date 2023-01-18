@@ -129,7 +129,7 @@ export class PatchedModules implements $tw.TW5Modules {
   execute(moduleName: string, moduleRoot?: string): $tw.ModuleExports {
     const name = this.normalizeModuleName(moduleName, moduleRoot);
     const moduleInfo = this.titles[name];
-    const tiddler = $tw.wiki.getTiddler(name);
+
     if (!moduleInfo) {
       // nodejs and browser require() fallback not supported
       throw "Cannot find module named '" + moduleName + "' required by module '" + moduleRoot + "', resolved to " + name;
@@ -137,7 +137,7 @@ export class PatchedModules implements $tw.TW5Modules {
     if (moduleInfo.exports) {
       return moduleInfo.exports;
     }
-
+    const tiddler = $tw.wiki.getTiddler(name);
     const _exports = {};
     const sandbox = {
       module: { exports: _exports },
