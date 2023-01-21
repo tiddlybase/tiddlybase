@@ -1,38 +1,30 @@
-import type {} from "@tiddlybase/tw5-types/src/index";
+import type { } from "@tiddlybase/tw5-types/src/index";
 
 import {
-  CompilationResult,
-  compile,
-  getExports,
-} from "@tiddlybase/plugin-mdx/src/mdx-client/mdx-client";
-import { components as baseComponents } from "./components";
-import type {
-  WrappedPropsBase,
-  ReactWrapper,
-} from "@tiddlybase/plugin-react/src/react-wrapper";
-import {
   TW5ReactContextType,
-  withContext,
+  withContext
 } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
-import React from "react";
-import * as ReactJSXRuntime from "react/jsx-runtime";
-import { isMDXErrorDetails, MDXError } from "./components/MDXError";
+import type {
+  ReactWrapper, WrappedPropsBase
+} from "@tiddlybase/plugin-react/src/react-wrapper";
 import { JSError } from "packages/plugin-react/src/components/JSError";
+import React, { ReactNode } from "react";
+import * as ReactJSXRuntime from "react/jsx-runtime";
 import type { MDXErrorDetails } from "../mdx-client/mdx-error-details";
+import { components as baseComponents } from "./components";
+import { MDXError } from "./components/MDXError";
+import { CompilationResult, MDXModuleLoader } from "./mdx-module-loader";
 import { getModuleDependencies } from "./module-utils";
 
 export type MDXFactoryProps = WrappedPropsBase & {
   mdx: string;
   title?: string;
-  modules?: $tw.TW5Modules;
-  wiki?: $tw.Wiki;
+  loader?: MDXModuleLoader;
 };
 
 export type MDXMetadata = {
   dependencies: string[];
 };
-
-const MD_MIME_TYPE = "text/x-markdown";
 
 export const PARSER_TITLE_PLACEHOLDER = "__parser_didnt_know__";
 
@@ -67,52 +59,17 @@ const getCustomComponentProps = (
   },
 });
 
-export const getRequireAsync =
-  (
-    definingTiddlerTitle: string | undefined,
-    requiredModules: Set<string>,
-    wiki: $tw.Wiki,
-    modules: $tw.TW5Modules,
-    onRequire?: OnRequire
-  ) =>
-  async (requiredModuleName: string) => {
-    if (onRequire) {
-      onRequire(requiredModuleName);
-    }
-    // This is a little tricky:
-    // we don't pass requiredModules since each module just keeps track
-    // of immediate require()s, not transitive dependencies.
-    // We do pass onRequire, since it's likely that a transitive dependency
-    // changes our dep tree, in which case we want onRequire to fire.
-    const maybeExports = await getModuleExports({
-      definingTiddlerTitle: requiredModuleName,
-      moduleRoot: definingTiddlerTitle,
-      wiki,
-      modules,
-      onRequire,
-    });
+export const reportCompileError = (error: MDXErrorDetails, mdx?: string, title?: string) => MDXError({ title, mdx, details: error, fatal: true });
 
-    if ("error" in maybeExports) {
-      throw maybeExports.error;
-    }
-    requiredModules.add(requiredModuleName);
-    return maybeExports.moduleExports;
-  };
+// TODO
+export const reportRuntimeError = (error: Error, title?: string) => JSError({title, error});
 
-export const makeErrorReporter =
-  (mdx: string) => (e: Error | MDXErrorDetails, title?: string) => () =>
-    isMDXErrorDetails(e)
-      ? MDXError({ title, mdx, details: e, fatal: true })
-      : JSError({ title, error: e });
-
-type ErrorReporter = ReturnType<typeof makeErrorReporter>;
+export const mdxModuleLoader: MDXModuleLoader = new MDXModuleLoader();
 
 const makeMDXContext = (
-  definingTiddlerTitle: string | undefined,
-  reportError: ErrorReporter,
-  components: Record<string, any> = {},
-  context: Record<string, any> = {}
+  definingTiddlerTitle?: string,
 ) => {
+  const components = getBuiltinComponents();
   const mdxContext = {
     definingTiddlerTitle,
     components,
@@ -132,148 +89,14 @@ const makeMDXContext = (
                 : null
             );
           } catch (e) {
-            return reportError(
-              e as Error | MDXErrorDetails,
-              "Error rendering component passed to render() helper function"
-            )();
+            return reportRuntimeError(e as Error, "Error in dynamic component passed to render().");
           }
         }),
         {} // no props passed
       );
     },
-    ...context,
   };
   return mdxContext;
-};
-
-const getContextKeys = (mdxContext: Record<string, any>): string[] =>
-  Object.keys(mdxContext).sort();
-
-const getContextValues = (mdxContext: Record<string, any>): any[] =>
-  getContextKeys(mdxContext).reduce((acc, key) => {
-    acc.push((mdxContext as any)[key]);
-    return acc;
-  }, [] as any[]);
-
-let anonymousGeneratedFunctionCounter = 0;
-
-const compileMDX = async (
-  definingTiddlerTitle: string | undefined,
-  mdx: string,
-  mdxContext: Record<string, any>
-): Promise<CompilationResult> => {
-  let fnName = definingTiddlerTitle;
-  if (!fnName) {
-    fnName = `mdx_generated_${anonymousGeneratedFunctionCounter++}`;
-  }
-  try {
-    return await compile(fnName, mdx, getContextKeys(mdxContext));
-  } catch (e) {
-    return { error: e as Error };
-  }
-};
-
-type OnRequire = (moduleName: string) => void;
-
-export type GetModuleOutput =
-  | { moduleExports: $tw.ModuleExports }
-  | CompileAndDefineOuput;
-
-// To require() a module, it must have been registered with TiddlyWiki
-// either at boot time (js modules) or because MDX has already compiled and
-// registered the generated module with TiddlyWiki. For MDX dependencies,
-// compile them now so they can be required if necessary
-
-export const getModuleExports = async ({
-  definingTiddlerTitle,
-  moduleRoot,
-  requiredModules,
-  wiki,
-  modules,
-  onRequire,
-}: {
-  definingTiddlerTitle: string;
-  moduleRoot?: string;
-  requiredModules?: Set<string>;
-  wiki: $tw.Wiki;
-  modules: $tw.TW5Modules;
-  onRequire?: OnRequire;
-}): Promise<GetModuleOutput> => {
-  // There are 3 possible scenarios:
-  // 1. The module has already been execute()-ed and $tw.modules.title[$TITLE].exports exists.
-  // 2. The module has been defined ($tw.modules.title[$TITLE] exists) *is regular JS*, but has not been run yet and thus it's exports aren't available yet.
-  // 3. The module has been defined ($tw.modules.title[$TITLE] exists) *is MDX*, but has not been run yet and thus it's exports aren't available yet.
-  // 4. The module has not been defined. For MDX modules, we can do that here.
-  console.log(
-    `REQUIRE getModuleExports('${definingTiddlerTitle}') called by ${moduleRoot}`
-  );
-  const requestedModule: $tw.TW5Module | undefined =
-    modules.titles[definingTiddlerTitle];
-  // Case 1 or 2: module exports already exist
-  if (requestedModule?.exports) {
-    return { moduleExports: requestedModule.exports };
-  }
-
-  // Cases 2-4: module needs execution
-  // How we proceed depends on whether or not module is MDX.
-  // modules.execute() isn't MDX specific or async aware. It will just do
-  // moduleInfo.exports = moduleInfo.definition if moduleInfo.definition is an object.
-  // So we avoid calling it and set the module exports after getting exports ourselves for MDX.
-
-  const tiddlerType = wiki.getTiddler(definingTiddlerTitle)?.fields?.type;
-
-  // Case 2: non-MDX tiddler for which exports must be computed.
-  if (requestedModule && tiddlerType !== MD_MIME_TYPE) {
-    try {
-      return {
-        moduleExports: modules.execute(definingTiddlerTitle, moduleRoot),
-      };
-    } catch (e) {
-      return {
-        error: e as Error,
-        errorTitle: `Error executing module ${definingTiddlerTitle}`,
-      };
-    }
-  }
-
-  // Case 3 & 4: module is an MDX module which needs to be compiled
-  // It doesn't matter if it has already been defined previously or not.
-  const tiddler = wiki.getTiddler(definingTiddlerTitle);
-  if (!tiddler) {
-    return {
-      error: new Error(`Tiddler '${definingTiddlerTitle}' not found in wiki.`),
-      errorTitle: "Tiddler not found",
-    };
-  }
-  if (tiddler.fields.type !== MD_MIME_TYPE) {
-    return {
-      error: new Error(
-        `Tiddler '${definingTiddlerTitle}' has type ${tiddler.fields.type}; MDX tiddlers must have type ${MD_MIME_TYPE}`
-      ),
-      errorTitle: "Wrong MIME type",
-    };
-  }
-  const mdx = tiddler.fields.text ?? "";
-  // compile and evaluate, and define MDX module
-  return await compileExecuteDefine({
-    definingTiddlerTitle,
-    mdx,
-    requiredModules,
-    wiki,
-    modules,
-    onRequire,
-  });
-};
-
-const defineModule = (
-  definingTiddlerTitle: string,
-  exports: any,
-  requiredModules: Set<string>,
-  modules: $tw.TW5Modules
-) => {
-  console.log(`DEFINE ${definingTiddlerTitle}`);
-  modules.define(definingTiddlerTitle, "library", exports);
-  modules.titles[definingTiddlerTitle].requires = requiredModules;
 };
 
 const addTiddlerChangeHook = (
@@ -295,87 +118,6 @@ const addTiddlerChangeHook = (
   );
 };
 
-export type CompileAndDefineOuput =
-  | { error: MDXErrorDetails | Error; errorTitle: string }
-  | { warnings: Array<MDXErrorDetails>; compiledFn: any; moduleExports?: any };
-
-const compileExecuteDefine = async ({
-  mdx,
-  definingTiddlerTitle,
-  requiredModules = new Set<string>([]),
-  wiki = $tw.wiki,
-  modules = $tw.modules,
-  onRequire,
-}: {
-  mdx: string;
-  definingTiddlerTitle?: string;
-  requiredModules?: Set<string>;
-  wiki?: $tw.Wiki;
-  modules?: $tw.TW5Modules;
-  onRequire?: OnRequire;
-}): Promise<CompileAndDefineOuput> => {
-  const reportError = makeErrorReporter(mdx);
-  const components = getBuiltinComponents();
-  const requireAsync = getRequireAsync(
-    definingTiddlerTitle,
-    requiredModules,
-    wiki,
-    modules,
-    onRequire
-  );
-  const mdxContext = makeMDXContext(
-    definingTiddlerTitle,
-    reportError,
-    components,
-    {
-      React,
-      withContext,
-      wiki,
-      requireAsync,
-    }
-  );
-  const compilationResult = await compileMDX(
-    definingTiddlerTitle,
-    mdx,
-    mdxContext
-  );
-  if ("error" in compilationResult) {
-    return {
-      error: compilationResult.error,
-      errorTitle: "Error compiling MDX source",
-    };
-  }
-  try {
-    // evaluate compiled javascript
-    const { default: jsxCompiledDefault, ...moduleExports } = await getExports(
-      compilationResult.compiledFn,
-      requireAsync,
-      getContextValues(mdxContext)
-    );
-    // make default recevieve the components prop by default
-    moduleExports.default = (props: any) =>
-      jsxCompiledDefault({
-        ...props,
-        components: props?.components ?? components,
-      });
-    // define module if mdx is contained within a tiddler
-    if (definingTiddlerTitle) {
-      defineModule(
-        definingTiddlerTitle,
-        moduleExports,
-        requiredModules,
-        modules
-      );
-    }
-    return {
-      ...compilationResult,
-      moduleExports,
-    };
-  } catch (e) {
-    return { error: e as Error, errorTitle: "Error executing compiled MDX" };
-  }
-};
-
 /**
  * CustomComponentProps is the inteface presented to
  */
@@ -386,8 +128,7 @@ export const MDXFactory = async ({
   children,
   mdx,
   title,
-  wiki = $tw.wiki,
-  modules = $tw.modules,
+  loader = mdxModuleLoader,
 }: MDXFactoryProps) => {
   let definingTiddlerTitle = title;
   if (definingTiddlerTitle === PARSER_TITLE_PLACEHOLDER) {
@@ -401,7 +142,6 @@ export const MDXFactory = async ({
   if (children) {
     console.log("MDX ignoring children", children);
   }
-  const reportError = makeErrorReporter(mdx);
   // stores transitive dependencies
   let dependencyCache: Set<string> | undefined;
   const onRequire = (moduleName: string) => {
@@ -411,23 +151,25 @@ export const MDXFactory = async ({
   // If the currently rendered tiddler has a valid title, the contents of the
   // mdx argument (if specified) are ignored, and the content of the tiddler
   // is read from the wiki. Otherwise, the mdx field is used.
-  const maybeModuleExports = definingTiddlerTitle
-    ? await getModuleExports({
-        definingTiddlerTitle,
-        wiki,
-        modules,
-        onRequire,
-      })
-    : await compileExecuteDefine({
-        definingTiddlerTitle,
-        mdx,
-        wiki,
-        modules,
-        onRequire,
-      });
-  if ("error" in maybeModuleExports) {
-    return reportError(maybeModuleExports.error, maybeModuleExports.errorTitle);
+  let compilationResult: CompilationResult | undefined = undefined;
+  if (definingTiddlerTitle) {
+    // load the module if not yet loaded
+    await loader.loadModule({
+      tiddler: definingTiddlerTitle,
+      context: makeMDXContext(definingTiddlerTitle),
+      onRequire,
+    });
+    // getCompilationResult is guaranteed to return an actual value due to the
+    // previous loadModule() call.
+    compilationResult = await loader.getCompilationResult(definingTiddlerTitle);
+  } else {
+    compilationResult = await loader.evaluateMDX({
+      mdx,
+      context: makeMDXContext(undefined),
+      onRequire,
+    });
   }
+
   if (parentWidget && definingTiddlerTitle) {
     addTiddlerChangeHook(
       parentWidget as ReactWrapper,
@@ -448,22 +190,29 @@ export const MDXFactory = async ({
   return (props: any) => {
     try {
       console.log("RENDERING", definingTiddlerTitle);
-      return [
-        ...// this strange way of getting 'warnings' keeps tsc happy
-        ("warnings" in maybeModuleExports
-          ? maybeModuleExports["warnings"]
-          : []
-        ).map((details) => MDXError({ mdx, details })),
-        maybeModuleExports.moduleExports.default({
-          ...props,
-          components: getBuiltinComponents(),
-        }),
-      ];
+      if (!compilationResult) {
+        throw new Error("comilationResult should not be falsy!");
+      }
+      const warnings = ("warnings" in compilationResult) ? compilationResult["warnings"] : [];
+      let body:ReactNode = undefined;
+      if (compilationResult) {
+        if ("moduleExports" in compilationResult) {
+          body = compilationResult?.moduleExports?.default({
+            ...props,
+            components: getBuiltinComponents(),
+          });
+        } else {
+          body = (compilationResult.error instanceof Error) ? reportRuntimeError(compilationResult.error, compilationResult.errorTitle): reportCompileError(
+            compilationResult.error,
+            compilationResult.loadContext.mdx,
+            compilationResult.errorTitle
+          );
+        }
+      }
+
+      return [...warnings.map((details) => MDXError({ mdx, details })), body];
     } catch (e) {
-      return JSError({
-        title: "Error rendering default MDX component",
-        error: e as Error,
-      });
+      return reportRuntimeError(e as Error, "Error rendering default MDX component");
     }
   };
 };

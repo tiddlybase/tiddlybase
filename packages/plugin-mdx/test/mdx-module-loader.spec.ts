@@ -29,6 +29,15 @@ const makeMockModules = () => {
       }
     }
   );
+  modules.execute = jest.fn<$tw.TW5Modules["execute"]>(
+    (moduleName: string, _: string | undefined): $tw.ModuleExports => {
+      const def = modules.titles[moduleName].definition;
+      if (typeof def === 'string') {
+        return eval(def);
+      }
+      return {};
+    }
+  );
   return modules;
 }
 
@@ -318,6 +327,43 @@ asdf
     }
     expect(Object.keys(modules.titles)).toEqual([]);
   });
+
+  it('load mdx with import error in dependency', async function () {
+    const { modules, loader } = setup({
+      tiddler1: `
+      import {default as d} from "dep";
+
+      {d()}
+
+      asdf
+      `
+    });
+    modules.titles['dep'] = {
+      moduleType: 'library',
+      definition: "throw new Error('bang');",
+    }
+    const result = await loader.loadModule({
+      tiddler: 'tiddler1',
+    });
+    expect(Object.keys(result)).toContain('error');
+    expect(await loader.getCompilationResult('tiddler1')).toEqual({
+      "error": new Error('bang'),
+      "errorTitle": "Error executing module dep",
+      "loadContext": {
+        "mdxContext": {
+          "components": {},
+          "definingTiddlerTitle": "dep",
+        },
+        "onRequire": undefined,
+        "requireStack": [
+          "tiddler1",
+          "dep",
+        ],
+        "requiredModules": new Set<string>([]),
+      },
+    }
+    );
+  })
 
   it('Throw error if circular dependency detected', async function () {
     const { modules, loader } = setup({
