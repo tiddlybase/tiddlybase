@@ -1,16 +1,33 @@
-import type {PatchedModules} from '@tiddlybase/plugin-init/src/patched-modules';
+import type { MDXModuleLoader } from './mdx-module-loader';
 
-export const getPatchedModules = (modules:$tw.TW5Modules=$tw.modules):PatchedModules|undefined => {
-  if ('isPatched' in modules) {
-    return (modules as PatchedModules);
+export const depthFirstSearch = <T>(getChildren:(node:T)=>Set<T>, currentNode: T, visited: Set<T>=new Set<T>([])) => {
+  visited.add(currentNode);
+  for (let child of getChildren(currentNode)) {
+    if (!visited.has(child)) {
+      depthFirstSearch(getChildren, child, visited);
+    }
   }
-  return undefined;
-}
+  return visited;
+};
 
-export const getModuleDependencies = (modules:$tw.TW5Modules=$tw.modules, moduleName:string):Set<string> => {
-  const maybeModuleInfo = modules.titles[moduleName];
-  if (maybeModuleInfo) {
-    return getPatchedModules(modules)?.getAllModulesRequiredBy(moduleName) ?? maybeModuleInfo.requires ?? new Set<string>([]);
+// NOTE: includes the module itself in the set of consumers
+export const getTransitiveMDXModuleConsumers = (moduleName:string, loader:MDXModuleLoader, visited: Set<string>=new Set<string>([])): Set<string> => {
+    if (loader.hasModule(moduleName)) {
+      return depthFirstSearch(
+        (moduleName:string) => loader.getConsumers(moduleName),
+        moduleName,
+        visited);
+    }
+    return visited;
   }
-  return new Set<string>([]);
+
+// NOTE: includes the module itself in the set of consumers
+export const getTransitiveMDXModuleDependencies = (moduleName:string, loader:MDXModuleLoader, visited: Set<string>=new Set<string>([])): Set<string> => {
+  if (loader.hasModule(moduleName)) {
+    return depthFirstSearch(
+      (moduleName:string) => loader.getDependencies(moduleName) ?? new Set<string>([]),
+      moduleName,
+      visited);
+  }
+  return visited;
 }

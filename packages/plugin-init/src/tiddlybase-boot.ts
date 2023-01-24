@@ -11,22 +11,10 @@ import { PatchedModules } from "./patched-modules";
   // from: https://stackoverflow.com/a/37178303
   const runningIniOSChrome = () => /CriOS/i.test(navigator.userAgent) && /iphone|ipod|ipad/i.test(navigator.userAgent);
 
-  const tiddlerChangeHandler = (wikiChange: $tw.WikiChange) => {
-    // for each changed tiddler, invalidate module exports
-    for (let m of Object.keys(wikiChange)) {
-      ($tw.modules as PatchedModules).clearExports(m);
-    }
-  };
-
   const bootTiddlyWiki = () => {
 
     $tw.modules = new PatchedModules($tw.modules.titles, $tw.modules.types);
     $tw.boot.boot();
-    // use unshift() instead of addEventListener beecause the invalidation
-    // needs to happen before rerendering of the tiddlers which is initiated
-    // by another "change" event listener registered earlier in the boot
-    // process
-    ($tw.wiki as any).eventListeners["change"].unshift(tiddlerChangeHandler);
     if (runningIniOSChrome()) {
       window.onerror = null;
     }

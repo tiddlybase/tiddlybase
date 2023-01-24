@@ -14,6 +14,14 @@ const makeMDXTiddler = (title: string, text: string): $tw.Tiddler => ({
   }
 }) as any as $tw.Tiddler;
 
+const assertRegisteredModules = (loader:MDXModuleLoader, moduleNames:Array<string>):void => {
+  expect(loader.knownModules).toEqual(new Set(moduleNames));
+}
+
+const assertDependencies = (loader:MDXModuleLoader, module:string, dependsOn:Array<string>):void => {
+  expect(loader.getDependencies(module)).toEqual(new Set(dependsOn));
+}
+
 
 const makeMockModules = () => {
   const modules = {
@@ -61,24 +69,26 @@ describe('load MDX module by tiddler title', () => {
 
 
   it('load mdx module without dependencies', async function () {
-    const { modules, loader } = setup({ tiddler1: '# hi!' });
+    const { loader } = setup({ tiddler1: '# hi!' });
     const result = await loader.loadModule({
       tiddler: 'tiddler1',
     });
     expect(Object.keys(result)).toContain('moduleExports');
     if ('moduleExports' in result) {
-      expect(modules.titles.tiddler1).toEqual({
-        definition: result.moduleExports!,
-        exports: result.moduleExports!,
-        moduleType: 'library',
-        requires: new Set<string>()
-      });
+      const savedCompilationResult = await loader.getCompilationResult('tiddler1');
+      expect(savedCompilationResult).not.toBeFalsy();
+      expect(Object.keys(savedCompilationResult ?? {}).sort()).toEqual(["compiledFn", "moduleExports", "warnings"]);
+      if ('moduleExports' in savedCompilationResult!) {
+        expect(savedCompilationResult!.moduleExports).toEqual(
+          result.moduleExports
+        );
+      }
       expect(renderToAST(result.moduleExports.default())).toEqual({ type: 'h1', props: {}, children: ['hi!'] });
     }
   })
 
   it('load mdx module with compilation warning', async function () {
-    const { modules, loader } = setup({
+    const { loader } = setup({
       tiddler1: `# hi!
 - one
  *  two
@@ -88,12 +98,6 @@ describe('load MDX module by tiddler title', () => {
     });
     expect(Object.keys(result)).toContain('moduleExports');
     if ('moduleExports' in result) {
-      expect(modules.titles.tiddler1).toEqual({
-        definition: result.moduleExports!,
-        exports: result.moduleExports!,
-        moduleType: 'library',
-        requires: new Set<string>()
-      });
 
       expect(renderToAST(result.moduleExports.default())).toEqual([
         {
@@ -190,7 +194,7 @@ describe('load MDX module by tiddler title', () => {
   })
 
   it('load mdx with dependency', async function () {
-    const { modules, loader } = setup({
+    const { loader } = setup({
       tiddler1: '# hi!',
       tiddler2: `
       import {default as d} from "tiddler1";
@@ -205,23 +209,18 @@ describe('load MDX module by tiddler title', () => {
     });
     expect(Object.keys(result)).toContain('moduleExports');
     if ('moduleExports' in result) {
-      expect(modules.titles.tiddler2).toEqual({
-        definition: result.moduleExports!,
-        exports: result.moduleExports!,
-        moduleType: 'library',
-        requires: new Set<string>(['tiddler1'])
-      });
+      assertDependencies(loader, 'tiddler2', ['tiddler1'])
       expect(renderToAST(result.moduleExports.default())).toEqual([
         { type: 'h1', props: {}, children: ['hi!'] }
         , "\n" as any,
         { type: 'p', props: {}, children: ['asdf'] }
       ])
     }
-    expect(Object.keys(modules.titles)).toEqual(['tiddler1', 'tiddler2']);
+    assertRegisteredModules(loader, ['tiddler1', 'tiddler2']);
   })
 
   it('load mdx with syntax error in dependency', async function () {
-    const { modules, loader } = setup({
+    const { loader } = setup({
       tiddler1: `# hi!
       {js_compile_error = }
       `,
@@ -255,11 +254,11 @@ describe('load MDX module by tiddler title', () => {
         'tiddler1'
       );
     }
-    expect(Object.keys(modules.titles)).toEqual([]);
+    assertRegisteredModules(loader, []);
   });
 
   it('load mdx with runtime error in dependency', async function () {
-    const { modules, loader } = setup({
+    const { loader } = setup({
       tiddler1: `# hi!
 
 export const bang = () => {throw new Error("BANG!");}
@@ -287,11 +286,11 @@ asdf
     if ('moduleExports' in result) {
       expect(() => renderToAST(result.moduleExports.default())).toThrowError("BANG!");
     }
-    expect(Object.keys(modules.titles).sort()).toEqual(['tiddler1', 'tiddler2', 'tiddler3']);
+    assertRegisteredModules(loader, ['tiddler1', 'tiddler2', 'tiddler3']);
   });
 
   it('load mdx with missing dependency', async function () {
-    const { modules, loader } = setup({
+    const { loader } = setup({
       tiddler2: `
       import {bang} from "tiddler1";
 
@@ -325,7 +324,7 @@ asdf
         'tiddler1'
       );
     }
-    expect(Object.keys(modules.titles)).toEqual([]);
+    assertRegisteredModules(loader, []);
   });
 
   it('load mdx with import error in dependency', async function () {
@@ -354,19 +353,18 @@ asdf
           "components": {},
           "definingTiddlerTitle": "dep",
         },
-        "onRequire": undefined,
         "requireStack": [
           "tiddler1",
           "dep",
         ],
-        "requiredModules": new Set<string>([]),
+        "dependencies": new Set<string>([]),
       },
     }
     );
   })
 
   it('Throw error if circular dependency detected', async function () {
-    const { modules, loader } = setup({
+    const { loader } = setup({
       tiddler1: `
       import {default as d} from "tiddler3";
 
@@ -407,7 +405,7 @@ asdf
         'tiddler3'
       );
     }
-    expect(Object.keys(modules.titles)).toEqual([]);
+    assertRegisteredModules(loader, []);
   });
 
 })

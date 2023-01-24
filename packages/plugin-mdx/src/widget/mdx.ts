@@ -14,7 +14,8 @@ import type { MDXErrorDetails } from "../mdx-client/mdx-error-details";
 import { components as baseComponents } from "./components";
 import { MDXError } from "./components/MDXError";
 import { CompilationResult, MDXModuleLoader } from "./mdx-module-loader";
-import { getModuleDependencies } from "./module-utils";
+import { mdxModuleLoader } from "./global";
+import { getTransitiveMDXModuleDependencies } from "./module-utils";
 
 export type MDXFactoryProps = WrappedPropsBase & {
   mdx: string;
@@ -22,12 +23,10 @@ export type MDXFactoryProps = WrappedPropsBase & {
   loader?: MDXModuleLoader;
 };
 
-export type MDXMetadata = {
-  dependencies: string[];
-};
-
 export const PARSER_TITLE_PLACEHOLDER = "__parser_didnt_know__";
 
+// holds a set of custom components which other plugins can hook into using
+// registerComponent()
 const customComponents: Record<string, React.FunctionComponent> = {};
 
 export const registerComponent = (
@@ -39,7 +38,7 @@ export const registerComponent = (
 
 const getBuiltinComponents = () => ({ ...baseComponents, ...customComponents });
 
-const getCustomComponentProps = (
+const getRenderProps = (
   context: TW5ReactContextType,
   definingTiddlerName?: string,
   components?: any
@@ -61,10 +60,7 @@ const getCustomComponentProps = (
 
 export const reportCompileError = (error: MDXErrorDetails, mdx?: string, title?: string) => MDXError({ title, mdx, details: error, fatal: true });
 
-// TODO
-export const reportRuntimeError = (error: Error, title?: string) => JSError({title, error});
-
-export const mdxModuleLoader: MDXModuleLoader = new MDXModuleLoader();
+export const reportRuntimeError = (error: Error, title?: string) => JSError({ title, error });
 
 const makeMDXContext = (
   definingTiddlerTitle?: string,
@@ -74,20 +70,18 @@ const makeMDXContext = (
     definingTiddlerTitle,
     components,
     render: (
-      component: React.FunctionComponent<CustomComponentProps | null>
+      component: React.FunctionComponent<ReturnType<typeof getRenderProps>>
     ) => {
       return (ReactJSXRuntime as any).jsx(
         withContext(({ context }) => {
+          if (!context) {
+            return reportRuntimeError(new Error("No react context available to render()."));
+          }
           try {
-            return component(
-              context
-                ? getCustomComponentProps(
-                    context,
-                    definingTiddlerTitle,
-                    components
-                  )
-                : null
-            );
+            return component(getRenderProps(
+              context,
+              definingTiddlerTitle,
+              components));
           } catch (e) {
             return reportRuntimeError(e as Error, "Error in dynamic component passed to render().");
           }
@@ -102,26 +96,17 @@ const makeMDXContext = (
 const addTiddlerChangeHook = (
   parentWidget: ReactWrapper,
   definingTiddlerTitle: string,
-  getDependencies: () => Set<string>
+  loader: MDXModuleLoader
 ) => {
-  // this function is run once when the MDX widget is rendered, so
-  // there's no need to remove the hook registered by addChangedTiddlerHook
+  // This is merely a heuristic, a good enough indicator of transitive dependencies
+  // changing - and rerendering being necessary as a result.
+  // Through requireAsync, and module could add additional dependencies after
+  // this mdx module is rendered. Changes to such dependencies will go unnoticed.
+  const transitiveDependencies: Set<string> = getTransitiveMDXModuleDependencies(definingTiddlerTitle, loader)
   parentWidget.addChangedTiddlerHook(
-    (changedTiddlers: $tw.ChangedTiddlers): boolean => {
-      console.log(`ChangedTiddlerHook ${definingTiddlerTitle}`);
-      const dependencies = getDependencies();
-      const changeDetected = Object.keys(changedTiddlers).some((title) =>
-        dependencies.has(title)
-      );
-      return changeDetected;
-    }
-  );
+    (changedTiddlers: $tw.ChangedTiddlers): boolean => Object.keys(changedTiddlers).some(
+      (title) => transitiveDependencies.has(title)));
 };
-
-/**
- * CustomComponentProps is the inteface presented to
- */
-export type CustomComponentProps = ReturnType<typeof getCustomComponentProps>;
 
 export const MDXFactory = async ({
   parentWidget,
@@ -140,14 +125,9 @@ export const MDXFactory = async ({
     definingTiddlerTitle = parentWidget.getVariable("currentTiddler");
   }
   if (children) {
-    console.log("MDX ignoring children", children);
+    console.warn("MDX widget ignoring children", children);
   }
-  // stores transitive dependencies
-  let dependencyCache: Set<string> | undefined;
-  const onRequire = (moduleName: string) => {
-    // a new requireAsync() call was made, so invalidate dependency cache
-    dependencyCache = undefined;
-  };
+
   // If the currently rendered tiddler has a valid title, the contents of the
   // mdx argument (if specified) are ignored, and the content of the tiddler
   // is read from the wiki. Otherwise, the mdx field is used.
@@ -157,44 +137,33 @@ export const MDXFactory = async ({
     await loader.loadModule({
       tiddler: definingTiddlerTitle,
       context: makeMDXContext(definingTiddlerTitle),
-      onRequire,
     });
     // getCompilationResult is guaranteed to return an actual value due to the
     // previous loadModule() call.
     compilationResult = await loader.getCompilationResult(definingTiddlerTitle);
+    // add a callback for ReactWrapper to check if rerendering is necessary
+    // due to changes in dependencies
+    if (parentWidget) {
+      addTiddlerChangeHook(
+        parentWidget as ReactWrapper,
+        definingTiddlerTitle,
+        loader
+      );
+    }
   } else {
     compilationResult = await loader.evaluateMDX({
       mdx,
       context: makeMDXContext(undefined),
-      onRequire,
     });
-  }
-
-  if (parentWidget && definingTiddlerTitle) {
-    addTiddlerChangeHook(
-      parentWidget as ReactWrapper,
-      definingTiddlerTitle,
-      () => {
-        if (dependencyCache === undefined) {
-          console.log("calculateAllDependencies", definingTiddlerTitle);
-          dependencyCache = getModuleDependencies(
-            $tw.modules,
-            definingTiddlerTitle!
-          );
-        }
-        return dependencyCache;
-      }
-    );
   }
 
   return (props: any) => {
     try {
-      console.log("RENDERING", definingTiddlerTitle);
       if (!compilationResult) {
-        throw new Error("comilationResult should not be falsy!");
+        throw new Error("Internal error: compilationResult should not be falsy!");
       }
       const warnings = ("warnings" in compilationResult) ? compilationResult["warnings"] : [];
-      let body:ReactNode = undefined;
+      let body: ReactNode = undefined;
       if (compilationResult) {
         if ("moduleExports" in compilationResult) {
           body = compilationResult?.moduleExports?.default({
@@ -202,7 +171,7 @@ export const MDXFactory = async ({
             components: getBuiltinComponents(),
           });
         } else {
-          body = (compilationResult.error instanceof Error) ? reportRuntimeError(compilationResult.error, compilationResult.errorTitle): reportCompileError(
+          body = (compilationResult.error instanceof Error) ? reportRuntimeError(compilationResult.error, compilationResult.errorTitle) : reportCompileError(
             compilationResult.error,
             compilationResult.loadContext.mdx,
             compilationResult.errorTitle

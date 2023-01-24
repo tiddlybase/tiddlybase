@@ -8,15 +8,16 @@ import {
 } from "@tiddlybase/plugin-mdx/src/mdx-client/mdx-client";
 import { MDXErrorDetails } from "../mdx-client/mdx-error-details";
 
+export type Dependencies = Set<string>;
+
 export interface ModuleLoaderContext {
   // stack of module names requiring each other leading to current module
   requireStack: string[];
   // direct requirements of currently loaded module (popuplated as imports are executed during load).
-  requiredModules: Set<string>;
+  dependencies: Dependencies;
   // module-type (eg: MDX) specific context necessary for compiling
   // required modules module exports not already available.
   mdxContext: MDXContext;
-  onRequire?: OnRequire;
   mdx?: string; // optional, the MDX source code used for eg: error reporting
 }
 
@@ -42,8 +43,6 @@ export type MDXContext = Record<string, any> & {
   requireAsync?: RequireAsync;
 }
 
-type OnRequire = (moduleName: string) => void;
-
 export class RequireAsyncError extends Error {
   props: ModuleLoadError;
   constructor(props: ModuleLoadError) {
@@ -53,6 +52,8 @@ export class RequireAsyncError extends Error {
 }
 
 const MD_MIME_TYPE = "text/x-markdown";
+
+const MODULE_DROP_EXPORT_NAME = "__drop__";
 
 const compilationResultToModuleExports = (compilationResult: CompilationResult): ModuleExportsResult => {
   if ('moduleExports' in compilationResult) {
@@ -72,15 +73,14 @@ const getContextValues = (mdxContext: MDXContext): any[] =>
     return acc;
   }, [] as any[]);
 
-const makeInitialModuleLoaderContext = (context?: MDXContext, onRequire?: OnRequire, mdx?: string):ModuleLoaderContext => ({
-    requireStack: [],
-    requiredModules: new Set<string>([]),
-    mdxContext: context ?? {
-      definingTiddlerTitle: undefined,
-      components: {}
-    },
-    onRequire,
-    mdx
+const makeInitialModuleLoaderContext = (context?: MDXContext, mdx?: string): ModuleLoaderContext => ({
+  requireStack: [],
+  dependencies: new Set<string>([]),
+  mdxContext: context ?? {
+    definingTiddlerTitle: undefined,
+    components: {}
+  },
+  mdx
 });
 
 export class MDXModuleLoader {
@@ -89,6 +89,9 @@ export class MDXModuleLoader {
   wiki: $tw.Wiki;
   modules: $tw.TW5Modules;
   compilationResults: Record<string, Promise<CompilationResult>> = {};
+  dependencies: Record<string, Dependencies> = {};
+  knownModules: Set<string> = new Set([]);
+  invalidatedModules: Set<string> = new Set([]);
 
   constructor({
     wiki = globalThis.$tw.wiki,
@@ -96,18 +99,15 @@ export class MDXModuleLoader {
   }: {
     wiki?: $tw.Wiki,
     modules?: $tw.TW5Modules,
-  }={}) {
+  } = {}) {
     this.wiki = wiki;
     this.modules = modules;
   }
 
   private getRequireAsync(
     loadContext: ModuleLoaderContext,
-  ):RequireAsync {
+  ): RequireAsync {
     return async (requiredModuleName: string) => {
-      if (loadContext.onRequire) {
-        loadContext.onRequire(requiredModuleName);
-      }
 
       const maybeExports = await this.getModuleExports({
         loadContext,
@@ -121,7 +121,7 @@ export class MDXModuleLoader {
           loadContext: maybeExports.loadContext
         });
       }
-      loadContext.requiredModules.add(requiredModuleName);
+      loadContext.dependencies.add(requiredModuleName);
       return maybeExports.moduleExports;
     };
   }
@@ -142,15 +142,6 @@ export class MDXModuleLoader {
     } catch (e) {
       return { error: e as Error };
     }
-  };
-
-  private defineModule(
-    tiddler: string,
-    exports: $tw.ModuleExports,
-    requiredModules: Set<string>,
-  ): void {
-    this.modules.define(tiddler, "library", exports);
-    this.modules.titles[tiddler].requires = requiredModules;
   };
 
   private async compileAndExecute({
@@ -203,7 +194,7 @@ export class MDXModuleLoader {
 
       return {
         ...compilationResult,
-        moduleExports,
+        moduleExports
       };
     } catch (e) {
       if (e instanceof RequireAsyncError) {
@@ -213,6 +204,19 @@ export class MDXModuleLoader {
     }
   };
 
+  private async invokeDrop(tiddler: string, compilationResult: Promise<CompilationResult>):Promise<void> {
+    const result = await compilationResult;
+    if ('moduleExports' in result) {
+      const moduleExports = result.moduleExports;
+      if (MODULE_DROP_EXPORT_NAME in moduleExports) {
+        try {
+          moduleExports[MODULE_DROP_EXPORT_NAME](result);
+        } catch (e) {
+          console.warn(`Error in ${tiddler}:__drop__(): ${String(e)}`);
+        }
+      }
+    }
+  }
 
   private async getModuleExports({
     loadContext: prevLoadContext,
@@ -234,10 +238,12 @@ export class MDXModuleLoader {
     }
 
     // There are several possible scenarios:
-    // 1. The module has already been execute()-ed and $tw.modules.title[$TITLE].exports exists.
-    // 2. The module has been defined ($tw.modules.title[$TITLE] exists), is regular JS, but has not been run yet and thus it's exports aren't available yet.
-    // 3. The module has not been defined. For MDX modules, we can do that here.
-    // 4. The MDX module's compilation has started, but has not yet completed.
+    // 1. The module is JS, has already been execute()-ed and $tw.modules.title[$TITLE].exports exists.
+    // 2. The module is JS, has been defined ($tw.modules.title[$TITLE] exists), but has not been run yet and thus it's exports aren't available yet.
+    // 3. The module is MDX, has been evaluated, is not invalidated, exports are available.
+    // 4. The module is MDX, evaluation has started, is not invalidated, but has not yet completed.
+    // 5. The module is MDX, has not yet been evaluated or has been invalidated, so exports aren't available yet, compilation is necessary
+
 
     if (tiddler in this.modules.titles) {
       if (this.modules.titles[tiddler].exports) {
@@ -258,12 +264,12 @@ export class MDXModuleLoader {
       }
     }
 
-    // Case 4: MDX module's compilation has already begun
-    if (tiddler in this.compilationResults) {
+    // Cases 3 & 4: MDX module's compilation has already begun (possibly completed)
+    if (!this.invalidatedModules.has(tiddler) && (tiddler in this.compilationResults)) {
       return compilationResultToModuleExports(await this.compilationResults[tiddler]);
     }
 
-    // Cases 3: MDX module needs execution
+    // Case 5: MDX module needs execution
 
     // Fail if tiddler not found
     const tiddlerObj = this.wiki.getTiddler(tiddler);
@@ -275,7 +281,7 @@ export class MDXModuleLoader {
       };
     }
 
-    // Cannot evaluate non-MDX tiddlers as MDX modules
+    // Cannot evaluate non-MDX tiddlers not registered under $tw.modules
     if (tiddlerObj?.fields?.type !== MD_MIME_TYPE) {
       return {
         error: new Error(
@@ -289,31 +295,33 @@ export class MDXModuleLoader {
     const mdx = tiddlerObj.fields.text ?? "";
     loadContext.mdx = mdx;
 
-    // save promise to compilation result
+    // If recompiling an invalidated module, invoke drop() if defined
+    if (tiddler in this.compilationResults) {
+      this.invokeDrop(tiddler, this.compilationResults[tiddler]);
+    }
+
+    // Save promise to compilationResults before it's value is available to
+    // avoid simulatenous invocations for the same module.
     this.compilationResults[tiddler] = this.compileAndExecute({
       loadContext,
       tiddler,
       mdx,
-    }).then((compilationResult:CompilationResult) => {
-      // register freshely compiled module under $tw.modules
-      if ('moduleExports' in compilationResult) {
-        this.defineModule(
-          tiddler,
-          compilationResult.moduleExports,
-          loadContext.requiredModules
-        );
-      }
-      return compilationResult;
     });
-    return compilationResultToModuleExports(await this.compilationResults[tiddler]);
+    // If recompiling an invalidated module, remove invalidation marker.
+    this.invalidatedModules.delete(tiddler);
+    const compilationResult = await this.compilationResults[tiddler];
+    if ('moduleExports' in compilationResult) {
+      this.knownModules.add(tiddler);
+      this.dependencies[tiddler] = loadContext.dependencies;
+    }
+    return compilationResultToModuleExports(compilationResult);
   };
 
   private makeModuleLoaderContext(prevLoadContext: ModuleLoaderContext, tiddler?: string): ModuleLoaderContext {
     const ctxt: ModuleLoaderContext = {
       requireStack: prevLoadContext.requireStack.slice(),
       mdxContext: { ...prevLoadContext.mdxContext },
-      requiredModules: new Set<string>([]),
-      onRequire: prevLoadContext.onRequire
+      dependencies: new Set<string>([])
     };
     if (tiddler) {
       ctxt.mdxContext.definingTiddlerTitle = tiddler;
@@ -322,17 +330,39 @@ export class MDXModuleLoader {
     return ctxt
   };
 
-  async getCompilationResult(tiddler:string):Promise<CompilationResult|undefined> {
-    return this.compilationResults[tiddler];
+  async getCompilationResult(tiddler: string): Promise<CompilationResult | undefined> {
+    return tiddler in this.compilationResults ? await this.compilationResults[tiddler] : undefined;
   }
 
-  async evaluateMDX({ mdx, context, onRequire, moduleLoaderContext }: {
+  hasModule(tiddler: string): boolean {
+    return this.knownModules.has(tiddler);
+  }
+
+  getDependencies(tiddler: string): Dependencies | undefined {
+    return this.dependencies[tiddler];
+  }
+
+  getConsumers(tiddler: string): Set<string> {
+    return Object.entries(this.dependencies).reduce((consumerSet, [title, dependencies]) => {
+      if (dependencies.has(tiddler)) {
+        consumerSet.add(title);
+      }
+      return consumerSet;
+    }, new Set<string>([]));
+  }
+
+  invalidateModule(tiddler: string): void {
+    if (tiddler in this.compilationResults) {
+      this.invalidatedModules.add(tiddler);
+    }
+  }
+
+  async evaluateMDX({ mdx, context, moduleLoaderContext }: {
     mdx: string,
     context?: MDXContext,
-    onRequire?: OnRequire,
     moduleLoaderContext?: ModuleLoaderContext
   }): Promise<CompilationResult> {
-    const loadContext = moduleLoaderContext ?? makeInitialModuleLoaderContext(context, onRequire, mdx);
+    const loadContext = moduleLoaderContext ?? makeInitialModuleLoaderContext(context, mdx);
     return await this.compileAndExecute({
       loadContext,
       mdx,
@@ -340,14 +370,13 @@ export class MDXModuleLoader {
   }
 
   async loadModule({
-    tiddler, context, onRequire
+    tiddler, context
   }: {
     tiddler: string,
     context?: MDXContext,
-    onRequire?: OnRequire,
   }): Promise<ModuleExportsResult> {
     return await this.getModuleExports({
-      loadContext: makeInitialModuleLoaderContext(context, onRequire),
+      loadContext: makeInitialModuleLoaderContext(context),
       tiddler,
     })
   }

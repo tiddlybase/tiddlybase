@@ -1,16 +1,6 @@
 /// <reference types="@tiddlybase/tw5-types/src/tw5" />
 import { patchedEvalGlobal } from './patched-eval-global';
 
-export const depthFirstSearch = <T>(getChildren:(node:T)=>Set<T>, currentNode: T, visited: Set<T>=new Set<T>([])) => {
-  visited.add(currentNode);
-  for (let child of getChildren(currentNode)) {
-    if (!visited.has(child)) {
-      depthFirstSearch(getChildren, child, visited);
-    }
-  }
-  return visited;
-};
-
 export class PatchedModules implements $tw.TW5Modules {
   isPatched = true;
   titles: Record<string, $tw.TW5Module> = {};
@@ -40,18 +30,6 @@ export class PatchedModules implements $tw.TW5Modules {
     return this.titles[moduleName]?.requires ?? new Set<string>([]);
   }
 
-  getAllModulesRequiring(moduleName:string): Set<string> {
-    const moduleSet = depthFirstSearch(this.getModulesRequiring.bind(this), moduleName);
-    moduleSet.delete(moduleName);
-    return moduleSet;
-  }
-
-  getAllModulesRequiredBy(moduleName:string): Set<string> {
-    const moduleSet = depthFirstSearch(this.getModulesRequiredBy.bind(this), moduleName);
-    moduleSet.delete(moduleName);
-    return moduleSet;
-  }
-
   normalizeModuleName(moduleName: string, moduleRoot?: string): string {
     let name = moduleName;
     if (moduleName.charAt(0) === ".") {
@@ -73,27 +51,6 @@ export class PatchedModules implements $tw.TW5Modules {
     return name;
   }
 
-  clearExports(moduleName: string) {
-    const moduleInfo = this.titles[moduleName];
-    if (!moduleInfo?.exports) {
-      // Nothing to do for nonexisting modules or those without exports.
-      return;
-    }
-    const drop = moduleInfo?.exports?.__drop__;
-    if (typeof drop === 'function') {
-      console.log("Calling __drop__ for previous version of module " + moduleName);
-      drop(moduleInfo);
-    }
-    // get module dependencies
-    const modulesRequiring = this.getAllModulesRequiring(moduleName);
-    // clear cached exports
-    moduleInfo.exports = undefined;
-    // NOTE: don't clear requires because then widget updates wont be detectable.
-    console.log(`clearExports('${moduleName}') cleared module exports`);
-    // recursively clear all dependencies
-    modulesRequiring.forEach(this.clearExports.bind(this));
-  }
-
   define(moduleName: string, moduleType: $tw.ModuleType, definition: $tw.ModuleExports | string) {
     // Create the moduleInfo
     var moduleInfo: $tw.TW5Module = {
@@ -112,7 +69,6 @@ export class PatchedModules implements $tw.TW5Modules {
       // If module already exists in the types of module map, remove it, because
       // new version of module might have a different type
       delete this.types[this.titles[moduleName].moduleType]?.[moduleName];
-      this.clearExports(moduleName);
     }
 
     // Store the module in the titles hashmap
