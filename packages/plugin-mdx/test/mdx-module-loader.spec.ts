@@ -1,4 +1,4 @@
-import { MDXModuleLoader } from '../src/widget/mdx-module-loader'
+import { CompilationResult, MDXModuleLoader, ModuleSet } from '../src/widget/mdx-module-loader'
 import type { } from "@tiddlybase/tw5-types/src/index";
 import { jest } from '@jest/globals'
 import TestRenderer from 'react-test-renderer';
@@ -14,12 +14,20 @@ const makeMDXTiddler = (title: string, text: string): $tw.Tiddler => ({
   }
 }) as any as $tw.Tiddler;
 
-const assertRegisteredModules = (loader:MDXModuleLoader, moduleNames:Array<string>):void => {
-  expect(loader.knownModules).toEqual(new Set(moduleNames));
+const assertRegisteredModules = async (loader:MDXModuleLoader, moduleNames:Array<string>):Promise<void> => {
+  // access to private class field
+  const knownModules: ModuleSet = new Set<string>([]);
+  const compilationResults: Record<string, Promise<CompilationResult>> = (loader as any).compilationResults;
+  for (let [title, resultPromise] of Object.entries(compilationResults)) {
+    if ('moduleExports' in (await resultPromise)) {
+      knownModules.add(title);
+    }
+  }
+  expect(knownModules).toEqual(new Set(moduleNames));
 }
 
-const assertDependencies = (loader:MDXModuleLoader, module:string, dependsOn:Array<string>):void => {
-  expect(loader.getDependencies(module)).toEqual(new Set(dependsOn));
+const assertDependencies = async (loader:MDXModuleLoader, module:string, dependsOn:Array<string>):Promise<void> => {
+  expect(await loader.getDependencies(module)).toEqual(new Set(dependsOn));
 }
 
 
@@ -77,7 +85,7 @@ describe('load MDX module by tiddler title', () => {
     if ('moduleExports' in result) {
       const savedCompilationResult = await loader.getCompilationResult('tiddler1');
       expect(savedCompilationResult).not.toBeFalsy();
-      expect(Object.keys(savedCompilationResult ?? {}).sort()).toEqual(["compiledFn", "moduleExports", "warnings"]);
+      expect(Object.keys(savedCompilationResult ?? {}).sort()).toEqual(["compiledFn", "dependencies", "moduleExports", "warnings"]);
       if ('moduleExports' in savedCompilationResult!) {
         expect(savedCompilationResult!.moduleExports).toEqual(
           result.moduleExports
@@ -209,14 +217,14 @@ describe('load MDX module by tiddler title', () => {
     });
     expect(Object.keys(result)).toContain('moduleExports');
     if ('moduleExports' in result) {
-      assertDependencies(loader, 'tiddler2', ['tiddler1'])
+      await assertDependencies(loader, 'tiddler2', ['tiddler1'])
       expect(renderToAST(result.moduleExports.default())).toEqual([
         { type: 'h1', props: {}, children: ['hi!'] }
         , "\n" as any,
         { type: 'p', props: {}, children: ['asdf'] }
       ])
     }
-    assertRegisteredModules(loader, ['tiddler1', 'tiddler2']);
+    await assertRegisteredModules(loader, ['tiddler1', 'tiddler2']);
   })
 
   it('load mdx with syntax error in dependency', async function () {
@@ -254,7 +262,7 @@ describe('load MDX module by tiddler title', () => {
         'tiddler1'
       );
     }
-    assertRegisteredModules(loader, []);
+    await assertRegisteredModules(loader, []);
   });
 
   it('load mdx with runtime error in dependency', async function () {
@@ -286,7 +294,7 @@ asdf
     if ('moduleExports' in result) {
       expect(() => renderToAST(result.moduleExports.default())).toThrowError("BANG!");
     }
-    assertRegisteredModules(loader, ['tiddler1', 'tiddler2', 'tiddler3']);
+    await assertRegisteredModules(loader, ['tiddler1', 'tiddler2', 'tiddler3']);
   });
 
   it('load mdx with missing dependency', async function () {
@@ -324,7 +332,7 @@ asdf
         'tiddler1'
       );
     }
-    assertRegisteredModules(loader, []);
+    await assertRegisteredModules(loader, []);
   });
 
   it('load mdx with import error in dependency', async function () {
@@ -405,7 +413,7 @@ asdf
         'tiddler3'
       );
     }
-    assertRegisteredModules(loader, []);
+    await assertRegisteredModules(loader, []);
   });
 
 })

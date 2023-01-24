@@ -8,13 +8,13 @@ import {
 } from "@tiddlybase/plugin-mdx/src/mdx-client/mdx-client";
 import { MDXErrorDetails } from "../mdx-client/mdx-error-details";
 
-export type Dependencies = Set<string>;
+export type ModuleSet = Set<string>;
 
 export interface ModuleLoaderContext {
   // stack of module names requiring each other leading to current module
   requireStack: string[];
   // direct requirements of currently loaded module (popuplated as imports are executed during load).
-  dependencies: Dependencies;
+  dependencies: ModuleSet;
   // module-type (eg: MDX) specific context necessary for compiling
   // required modules module exports not already available.
   mdxContext: MDXContext;
@@ -29,7 +29,7 @@ export type ModuleLoadError = {
 
 export type CompilationResult =
   | ModuleLoadError
-  | { warnings: Array<MDXErrorDetails>; compiledFn: any; moduleExports: $tw.ModuleExports; };
+  | { warnings: Array<MDXErrorDetails>; compiledFn: any; moduleExports: $tw.ModuleExports; dependencies: ModuleSet; };
 
 export type ModuleExportsResult =
   | ModuleLoadError
@@ -88,10 +88,8 @@ export class MDXModuleLoader {
   // TiddlyWiki standard objects, which default to global $tw.{wiki, modules}.
   wiki: $tw.Wiki;
   modules: $tw.TW5Modules;
-  compilationResults: Record<string, Promise<CompilationResult>> = {};
-  dependencies: Record<string, Dependencies> = {};
-  knownModules: Set<string> = new Set([]);
-  invalidatedModules: Set<string> = new Set([]);
+  private compilationResults: Record<string, Promise<CompilationResult>> = {};
+  private invalidatedModules: Set<string> = new Set([]);
 
   constructor({
     wiki = globalThis.$tw.wiki,
@@ -194,6 +192,7 @@ export class MDXModuleLoader {
 
       return {
         ...compilationResult,
+        dependencies: loadContext.dependencies,
         moduleExports
       };
     } catch (e) {
@@ -204,13 +203,13 @@ export class MDXModuleLoader {
     }
   };
 
-  private async invokeDrop(tiddler: string, compilationResult: Promise<CompilationResult>):Promise<void> {
-    const result = await compilationResult;
+  private async invokeDrop(tiddler: string, oldCompilationResult: Promise<CompilationResult>, newCompilationResult: Promise<CompilationResult>):Promise<void> {
+    const result = await oldCompilationResult;
     if ('moduleExports' in result) {
       const moduleExports = result.moduleExports;
       if (MODULE_DROP_EXPORT_NAME in moduleExports) {
         try {
-          moduleExports[MODULE_DROP_EXPORT_NAME](result);
+          moduleExports[MODULE_DROP_EXPORT_NAME](result, newCompilationResult);
         } catch (e) {
           console.warn(`Error in ${tiddler}:__drop__(): ${String(e)}`);
         }
@@ -295,26 +294,23 @@ export class MDXModuleLoader {
     const mdx = tiddlerObj.fields.text ?? "";
     loadContext.mdx = mdx;
 
-    // If recompiling an invalidated module, invoke drop() if defined
-    if (tiddler in this.compilationResults) {
-      this.invokeDrop(tiddler, this.compilationResults[tiddler]);
-    }
-
-    // Save promise to compilationResults before it's value is available to
-    // avoid simulatenous invocations for the same module.
-    this.compilationResults[tiddler] = this.compileAndExecute({
+    const compilationResultPromise = this.compileAndExecute({
       loadContext,
       tiddler,
       mdx,
     });
+
+    // If recompiling an invalidated module, invoke drop() if defined
+    if (tiddler in this.compilationResults) {
+      this.invokeDrop(tiddler, this.compilationResults[tiddler], compilationResultPromise);
+    }
+
+    // Save promise to compilationResults before it's value is available to
+    // avoid simulatenous invocations for the same module.
+    this.compilationResults[tiddler] = compilationResultPromise
     // If recompiling an invalidated module, remove invalidation marker.
     this.invalidatedModules.delete(tiddler);
-    const compilationResult = await this.compilationResults[tiddler];
-    if ('moduleExports' in compilationResult) {
-      this.knownModules.add(tiddler);
-      this.dependencies[tiddler] = loadContext.dependencies;
-    }
-    return compilationResultToModuleExports(compilationResult);
+    return compilationResultToModuleExports(await compilationResultPromise);
   };
 
   private makeModuleLoaderContext(prevLoadContext: ModuleLoaderContext, tiddler?: string): ModuleLoaderContext {
@@ -334,21 +330,29 @@ export class MDXModuleLoader {
     return tiddler in this.compilationResults ? await this.compilationResults[tiddler] : undefined;
   }
 
-  hasModule(tiddler: string): boolean {
-    return this.knownModules.has(tiddler);
+  async hasModule(tiddler: string): Promise<boolean> {
+    return tiddler in this.compilationResults && 'moduleExports' in (await this.compilationResults[tiddler]);
   }
 
-  getDependencies(tiddler: string): Dependencies | undefined {
-    return this.dependencies[tiddler];
+  async getDependencies(tiddler: string): Promise<ModuleSet> {
+    if (tiddler in this.compilationResults) {
+      const compilationResult = (await this.compilationResults[tiddler]);
+      if ('dependencies' in compilationResult) {
+        return compilationResult.dependencies;
+      }
+    }
+    return new Set<string>([]);
   }
 
-  getConsumers(tiddler: string): Set<string> {
-    return Object.entries(this.dependencies).reduce((consumerSet, [title, dependencies]) => {
-      if (dependencies.has(tiddler)) {
+  async getConsumers(tiddler: string): Promise<ModuleSet> {
+    return await Object.entries(this.compilationResults).reduce(async (consumerSetPromise, [title, compilationResultPromise]:[string, Promise<CompilationResult>]) => {
+      const consumerSet = await consumerSetPromise;
+      const compilationResult = await compilationResultPromise;
+      if ('dependencies' in compilationResult && compilationResult.dependencies.has(tiddler)) {
         consumerSet.add(title);
       }
       return consumerSet;
-    }, new Set<string>([]));
+    }, Promise.resolve(new Set<string>([])));
   }
 
   invalidateModule(tiddler: string): void {

@@ -93,7 +93,7 @@ const makeMDXContext = (
   return mdxContext;
 };
 
-const addTiddlerChangeHook = (
+const addTiddlerChangeHook = async (
   parentWidget: ReactWrapper,
   definingTiddlerTitle: string,
   loader: MDXModuleLoader
@@ -102,7 +102,7 @@ const addTiddlerChangeHook = (
   // changing - and rerendering being necessary as a result.
   // Through requireAsync, and module could add additional dependencies after
   // this mdx module is rendered. Changes to such dependencies will go unnoticed.
-  const transitiveDependencies: Set<string> = getTransitiveMDXModuleDependencies(definingTiddlerTitle, loader)
+  const transitiveDependencies: Set<string> = await getTransitiveMDXModuleDependencies(definingTiddlerTitle, loader)
   parentWidget.addChangedTiddlerHook(
     (changedTiddlers: $tw.ChangedTiddlers): boolean => Object.keys(changedTiddlers).some(
       (title) => transitiveDependencies.has(title)));
@@ -144,7 +144,7 @@ export const MDXFactory = async ({
     // add a callback for ReactWrapper to check if rerendering is necessary
     // due to changes in dependencies
     if (parentWidget) {
-      addTiddlerChangeHook(
+      await addTiddlerChangeHook(
         parentWidget as ReactWrapper,
         definingTiddlerTitle,
         loader

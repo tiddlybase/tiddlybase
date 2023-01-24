@@ -1,19 +1,19 @@
-import type { MDXModuleLoader } from './mdx-module-loader';
+import type { MDXModuleLoader, ModuleSet } from './mdx-module-loader';
 
-export const depthFirstSearch = <T>(getChildren:(node:T)=>Set<T>, currentNode: T, visited: Set<T>=new Set<T>([])) => {
+export const depthFirstSearch = async <T>(getChildren:(node:T)=>Promise<Set<T>>, currentNode: T, visited: Set<T>=new Set<T>([])) => {
   visited.add(currentNode);
-  for (let child of getChildren(currentNode)) {
+  for (let child of await getChildren(currentNode)) {
     if (!visited.has(child)) {
-      depthFirstSearch(getChildren, child, visited);
+      await depthFirstSearch(getChildren, child, visited);
     }
   }
   return visited;
 };
 
 // NOTE: includes the module itself in the set of consumers
-export const getTransitiveMDXModuleConsumers = (moduleName:string, loader:MDXModuleLoader, visited: Set<string>=new Set<string>([])): Set<string> => {
-    if (loader.hasModule(moduleName)) {
-      return depthFirstSearch(
+export const getTransitiveMDXModuleConsumers = async (moduleName:string, loader:MDXModuleLoader, visited: Set<string>=new Set<string>([])): Promise<ModuleSet> => {
+    if (await loader.hasModule(moduleName)) {
+      return await depthFirstSearch(
         (moduleName:string) => loader.getConsumers(moduleName),
         moduleName,
         visited);
@@ -22,10 +22,10 @@ export const getTransitiveMDXModuleConsumers = (moduleName:string, loader:MDXMod
   }
 
 // NOTE: includes the module itself in the set of consumers
-export const getTransitiveMDXModuleDependencies = (moduleName:string, loader:MDXModuleLoader, visited: Set<string>=new Set<string>([])): Set<string> => {
-  if (loader.hasModule(moduleName)) {
-    return depthFirstSearch(
-      (moduleName:string) => loader.getDependencies(moduleName) ?? new Set<string>([]),
+export const getTransitiveMDXModuleDependencies = async (moduleName:string, loader:MDXModuleLoader, visited: Set<string>=new Set<string>([])): Promise<ModuleSet> => {
+  if (await loader.hasModule(moduleName)) {
+    return await depthFirstSearch(
+      (moduleName:string) => loader.getDependencies(moduleName),
       moduleName,
       visited);
   }
