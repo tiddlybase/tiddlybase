@@ -209,7 +209,7 @@ export class MDXModuleLoader {
       const moduleExports = result.moduleExports;
       if (MODULE_DROP_EXPORT_NAME in moduleExports) {
         try {
-          moduleExports[MODULE_DROP_EXPORT_NAME](result, newCompilationResult);
+          moduleExports[MODULE_DROP_EXPORT_NAME](tiddler, result, newCompilationResult);
         } catch (e) {
           console.warn(`Error in ${tiddler}:__drop__(): ${String(e)}`);
         }
@@ -302,7 +302,7 @@ export class MDXModuleLoader {
 
     // If recompiling an invalidated module, invoke drop() if defined
     if (tiddler in this.compilationResults) {
-      this.invokeDrop(tiddler, this.compilationResults[tiddler], compilationResultPromise);
+      await this.invokeDrop(tiddler, this.compilationResults[tiddler], compilationResultPromise);
     }
 
     // Save promise to compilationResults before it's value is available to

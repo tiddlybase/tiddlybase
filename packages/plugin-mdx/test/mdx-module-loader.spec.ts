@@ -1,4 +1,4 @@
-import { CompilationResult, MDXModuleLoader, ModuleSet } from '../src/widget/mdx-module-loader'
+import { CompilationResult, MDXContext, MDXModuleLoader, ModuleSet } from '../src/widget/mdx-module-loader'
 import type { } from "@tiddlybase/tw5-types/src/index";
 import { jest } from '@jest/globals'
 import TestRenderer from 'react-test-renderer';
@@ -14,7 +14,7 @@ const makeMDXTiddler = (title: string, text: string): $tw.Tiddler => ({
   }
 }) as any as $tw.Tiddler;
 
-const assertRegisteredModules = async (loader:MDXModuleLoader, moduleNames:Array<string>):Promise<void> => {
+const assertRegisteredModules = async (loader: MDXModuleLoader, moduleNames: Array<string>): Promise<void> => {
   // access to private class field
   const knownModules: ModuleSet = new Set<string>([]);
   const compilationResults: Record<string, Promise<CompilationResult>> = (loader as any).compilationResults;
@@ -26,7 +26,7 @@ const assertRegisteredModules = async (loader:MDXModuleLoader, moduleNames:Array
   expect(knownModules).toEqual(new Set(moduleNames));
 }
 
-const assertDependencies = async (loader:MDXModuleLoader, module:string, dependsOn:Array<string>):Promise<void> => {
+const assertDependencies = async (loader: MDXModuleLoader, module: string, dependsOn: Array<string>): Promise<void> => {
   expect(await loader.getDependencies(module)).toEqual(new Set(dependsOn));
 }
 
@@ -151,7 +151,7 @@ describe('load MDX module by tiddler title', () => {
     }
     const compilationResult = await loader.getCompilationResult('tiddler1');
     if (compilationResult && 'warnings' in compilationResult) {
-      expect({...compilationResult.warnings[0]}).toEqual(
+      expect({ ...compilationResult.warnings[0] }).toEqual(
         {
           "name": "3:2",
           "message": "Incorrect indentation before bullet: remove 1 space",
@@ -174,7 +174,7 @@ describe('load MDX module by tiddler title', () => {
           "fatal": false,
           "url": "https://github.com/remarkjs/remark-lint/tree/main/packages/remark-lint-list-item-bullet-indent#readme"
         });
-      expect({...compilationResult.warnings[1]}).toEqual(
+      expect({ ...compilationResult.warnings[1] }).toEqual(
         {
           "name": "3:5",
           "message": "Incorrect list-item indent: remove 1 space",
@@ -415,5 +415,96 @@ asdf
     }
     await assertRegisteredModules(loader, []);
   });
+
+  it('__drop__() called when module recompiled', async function () {
+    const logEntries: string[] = [];
+    const wikiTiddlers = {
+      tiddler1: `
+export const foo = "V1";
+
+export const __drop__ = (tiddler, oldCompilationResult, newCompilationResultPromise) => {
+  log("running __drop__ V1")
+  oldCompilationResult.moduleExports.markedByDropV1 = true;
+  newCompilationResultPromise.then(r => {
+    log("running __drop__ V1 awaiting V2 result")
+    r.moduleExports.markedByDropV1 = true;
+  });
+};
+
+# hello V1
+asdf
+{log("executing default export V1")}
+`
+    }
+    const context: MDXContext = {
+      definingTiddlerTitle: 'tiddler1',
+      log: (msg: string) => { logEntries.push(msg) },
+      components: {}
+    }
+    const { loader } = setup(wikiTiddlers);
+    // compile first version of tiddler
+    const result = await loader.loadModule({
+      tiddler: 'tiddler1',
+      context
+    });
+    // assert initial version of module compiled as expected
+    expect(Object.keys(result)).toContain('moduleExports');
+    if ('moduleExports' in result) {
+      expect(renderToAST(result.moduleExports.default())).toEqual([
+        { type: 'h1', props: {}, children: ['hello V1'] },
+        '\n' as any,
+        { type: 'p', props: {}, children: ['asdf'] },
+        '\n' as any,
+      ]);
+      expect(result.moduleExports.foo).toEqual("V1");
+    }
+    // redefine module tiddler
+    wikiTiddlers.tiddler1 = `
+export const foo = "V2";
+
+export const __drop__ = (oldCompilationResult, newCompilationResultPromise) => {
+  log("running __drop__ V2")
+  oldCompilationResult.markedByDropV2 = true;
+  newCompilationResultPromise.then(r => {
+    r.markedByDropV2 = true;
+  });
+};
+
+# hello V2
+asdf
+{log("executing default export V2")}
+`
+    loader.invalidateModule('tiddler1');
+    // the loader still knows about invalidated modules
+    expect(await loader.hasModule('tiddler1')).toEqual(true);
+    // compile second version of tiddler
+    const result2 = await loader.loadModule({
+      tiddler: 'tiddler1',
+      context
+    });
+    // assert initial version of module compiled as expected
+    expect(Object.keys(result2)).toContain('moduleExports');
+    if ('moduleExports' in result2) {
+      expect(renderToAST(result2.moduleExports.default())).toEqual([
+        { type: 'h1', props: {}, children: ['hello V2'] },
+        '\n' as any,
+        { type: 'p', props: {}, children: ['asdf'] },
+        '\n' as any,
+      ]);
+      expect(result2.moduleExports.foo).toEqual("V2");
+      expect(result2.moduleExports.markedByDropV1).toEqual(true);
+      expect(result2.moduleExports.markedByDropV2).toEqual(undefined);
+    }
+    // verify old module "marked" by __drop__
+    if ('moduleExports' in result) {
+      expect(result.moduleExports.markedByDropV1).toEqual(true);
+    }
+    expect(logEntries).toEqual([
+      'executing default export V1',
+      'running __drop__ V1',
+      'running __drop__ V1 awaiting V2 result',
+      'executing default export V2'
+    ]);
+  })
 
 })
