@@ -53,6 +53,7 @@ export const MyComponent = ({foo, asdf}) => (<div>
     <TestComponent foo={foo}>{asdf}</TestComponent>
 </div>)`},
                 { type, title: "mdxt3import", text: `import {MyComponent} from "mdxt3export"
+import {withContext} from '$:/plugins/tiddlybase/react/components/TW5ReactContext.js';
 
 export const NewComponent = withContext(({context, asdf}) => {
     console.log("NewComponent got context", context);
