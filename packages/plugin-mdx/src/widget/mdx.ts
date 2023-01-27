@@ -7,14 +7,12 @@ import {
 import type {
   ReactWrapper, WrappedPropsBase
 } from "@tiddlybase/plugin-react/src/react-wrapper";
-import { JSError } from "packages/plugin-react/src/components/JSError";
-import React, { ReactNode } from "react";
+import React from "react";
 import * as ReactJSXRuntime from "react/jsx-runtime";
-import type { MDXErrorDetails } from "../mdx-client/mdx-error-details";
 import { components as baseComponents } from "./components";
-import { MDXError } from "./components/MDXError";
-import { CompilationResult, MDXModuleLoader, ModuleSet } from "./mdx-module-loader";
 import { mdxModuleLoader } from "./global";
+import { CompilationResult, MDXModuleLoader, ModuleSet } from "./mdx-module-loader";
+import { compiledMDXToReactComponent, reportRuntimeError } from "./mdx-util";
 import { getTransitiveMDXModuleDependencies } from "./module-utils";
 
 export type MDXFactoryProps = WrappedPropsBase & {
@@ -57,10 +55,6 @@ const getRenderProps = (
       : undefined;
   },
 });
-
-export const reportCompileError = (error: MDXErrorDetails, mdx?: string, title?: string) => MDXError({ title, mdx, details: error, fatal: true });
-
-export const reportRuntimeError = (error: Error, title?: string) => JSError({ title, error });
 
 const makeMDXContext = (
   definingTiddlerTitle?: string,
@@ -157,31 +151,9 @@ export const MDXFactory = async ({
     });
   }
 
-  return (props: any) => {
-    try {
-      if (!compilationResult) {
-        throw new Error("Internal error: compilationResult should not be falsy!");
-      }
-      const warnings = ("warnings" in compilationResult) ? compilationResult["warnings"] : [];
-      let body: ReactNode = undefined;
-      if (compilationResult) {
-        if ("moduleExports" in compilationResult) {
-          body = compilationResult?.moduleExports?.default({
-            ...props,
-            components: getBuiltinComponents(),
-          });
-        } else {
-          body = (compilationResult.error instanceof Error) ? reportRuntimeError(compilationResult.error, compilationResult.errorTitle) : reportCompileError(
-            compilationResult.error,
-            compilationResult.loadContext.mdx,
-            compilationResult.errorTitle
-          );
-        }
-      }
+  if (!compilationResult) {
+    throw new Error("Internal error: compilationResult should not be falsy!");
+  }
 
-      return [...warnings.map((details) => MDXError({ mdx, details })), body];
-    } catch (e) {
-      return reportRuntimeError(e as Error, "Error rendering default MDX component");
-    }
-  };
+  return compiledMDXToReactComponent(compilationResult);
 };

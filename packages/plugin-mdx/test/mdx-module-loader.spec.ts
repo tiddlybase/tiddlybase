@@ -85,7 +85,7 @@ describe('load MDX module by tiddler title', () => {
     if ('moduleExports' in result) {
       const savedCompilationResult = await loader.getCompilationResult('tiddler1');
       expect(savedCompilationResult).not.toBeFalsy();
-      expect(Object.keys(savedCompilationResult ?? {}).sort()).toEqual(["compiledFn", "dependencies", "moduleExports", "warnings"]);
+      expect(Object.keys(savedCompilationResult ?? {}).sort()).toEqual(["compiledFn", "dependencies", "mdx", "moduleExports", "warnings"]);
       if ('moduleExports' in savedCompilationResult!) {
         expect(savedCompilationResult!.moduleExports).toEqual(
           result.moduleExports

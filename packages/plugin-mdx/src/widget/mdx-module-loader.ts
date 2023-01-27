@@ -18,7 +18,6 @@ export interface ModuleLoaderContext {
   // module-type (eg: MDX) specific context necessary for compiling
   // required modules module exports not already available.
   mdxContext: MDXContext;
-  mdx?: string; // optional, the MDX source code used for eg: error reporting
 }
 
 export type ModuleLoadError = {
@@ -27,9 +26,9 @@ export type ModuleLoadError = {
   loadContext: ModuleLoaderContext
 };
 
-export type CompilationResult =
-  | ModuleLoadError
-  | { warnings: Array<MDXErrorDetails>; compiledFn: any; moduleExports: $tw.ModuleExports; dependencies: ModuleSet; };
+export type CompilationResult = { mdx?: string } & (
+  ModuleLoadError
+  | { warnings: Array<MDXErrorDetails>; compiledFn: any; moduleExports: $tw.ModuleExports; dependencies: ModuleSet; });
 
 export type ModuleExportsResult =
   | ModuleLoadError
@@ -73,14 +72,13 @@ const getContextValues = (mdxContext: MDXContext): any[] =>
     return acc;
   }, [] as any[]);
 
-const makeInitialModuleLoaderContext = (context?: MDXContext, mdx?: string): ModuleLoaderContext => ({
+const makeInitialModuleLoaderContext = (context?: MDXContext): ModuleLoaderContext => ({
   requireStack: [],
   dependencies: new Set<string>([]),
   mdxContext: context ?? {
     definingTiddlerTitle: undefined,
     components: {}
-  },
-  mdx
+  }
 });
 
 export class MDXModuleLoader {
@@ -134,8 +132,6 @@ export class MDXModuleLoader {
       fnName = `mdx_generated_${this.anonymousGeneratedFunctionCounter++}`;
     }
     try {
-      // TODO: getting the context keys should be generic, but
-      // assuming T === MDXContext for now
       return await compile(fnName, mdx, getContextKeys(mdxContext));
     } catch (e) {
       return { error: e as Error };
@@ -168,6 +164,7 @@ export class MDXModuleLoader {
     );
     if ("error" in compilationResult) {
       return {
+        mdx,
         error: compilationResult.error,
         errorTitle: "Error compiling MDX source",
         loadContext
@@ -193,17 +190,18 @@ export class MDXModuleLoader {
       return {
         ...compilationResult,
         dependencies: loadContext.dependencies,
-        moduleExports
+        moduleExports,
+        mdx
       };
     } catch (e) {
       if (e instanceof RequireAsyncError) {
         return e.props;
       }
-      return { error: e as Error, errorTitle: "Error executing compiled MDX", loadContext };
+      return { mdx, error: e as Error, errorTitle: "Error executing compiled MDX", loadContext };
     }
   };
 
-  private async invokeDrop(tiddler: string, oldCompilationResult: Promise<CompilationResult>, newCompilationResult: Promise<CompilationResult>):Promise<void> {
+  private async invokeDrop(tiddler: string, oldCompilationResult: Promise<CompilationResult>, newCompilationResult: Promise<CompilationResult>): Promise<void> {
     const result = await oldCompilationResult;
     if ('moduleExports' in result) {
       const moduleExports = result.moduleExports;
@@ -292,7 +290,6 @@ export class MDXModuleLoader {
     }
 
     const mdx = tiddlerObj.fields.text ?? "";
-    loadContext.mdx = mdx;
 
     const compilationResultPromise = this.compileAndExecute({
       loadContext,
@@ -345,7 +342,7 @@ export class MDXModuleLoader {
   }
 
   async getConsumers(tiddler: string): Promise<ModuleSet> {
-    return await Object.entries(this.compilationResults).reduce(async (consumerSetPromise, [title, compilationResultPromise]:[string, Promise<CompilationResult>]) => {
+    return await Object.entries(this.compilationResults).reduce(async (consumerSetPromise, [title, compilationResultPromise]: [string, Promise<CompilationResult>]) => {
       const consumerSet = await consumerSetPromise;
       const compilationResult = await compilationResultPromise;
       if ('dependencies' in compilationResult && compilationResult.dependencies.has(tiddler)) {
@@ -366,7 +363,7 @@ export class MDXModuleLoader {
     context?: MDXContext,
     moduleLoaderContext?: ModuleLoaderContext
   }): Promise<CompilationResult> {
-    const loadContext = moduleLoaderContext ?? makeInitialModuleLoaderContext(context, mdx);
+    const loadContext = moduleLoaderContext ?? makeInitialModuleLoaderContext(context);
     return await this.compileAndExecute({
       loadContext,
       mdx,
