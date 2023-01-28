@@ -1,77 +1,6 @@
-import { CompilationResult, MDXContext, MDXModuleLoader, ModuleSet } from '../src/widget/mdx-module-loader'
 import type { } from "@tiddlybase/tw5-types/src/index";
-import { jest } from '@jest/globals'
-import TestRenderer from 'react-test-renderer';
-
-// test renderer docs: https://reactjs.org/docs/test-renderer.html
-export const renderToAST = (component: any) => TestRenderer.create(component).toJSON();
-
-const makeMDXTiddler = (title: string, text: string): $tw.Tiddler => ({
-  fields: {
-    text,
-    title,
-    type: "text/x-markdown"
-  }
-}) as any as $tw.Tiddler;
-
-const assertRegisteredModules = async (loader: MDXModuleLoader, moduleNames: Array<string>): Promise<void> => {
-  // access to private class field
-  const knownModules: ModuleSet = new Set<string>([]);
-  const compilationResults: Record<string, Promise<CompilationResult>> = (loader as any).compilationResults;
-  for (let [title, resultPromise] of Object.entries(compilationResults)) {
-    if ('moduleExports' in (await resultPromise)) {
-      knownModules.add(title);
-    }
-  }
-  expect(knownModules).toEqual(new Set(moduleNames));
-}
-
-const assertDependencies = async (loader: MDXModuleLoader, module: string, dependsOn: Array<string>): Promise<void> => {
-  expect(await loader.getDependencies(module)).toEqual(new Set(dependsOn));
-}
-
-
-const makeMockModules = () => {
-  const modules = {
-    titles: {}
-  } as any as $tw.TW5Modules;
-  modules.define = jest.fn<$tw.TW5Modules["define"]>(
-    (moduleName: string, moduleType: $tw.ModuleType, definition: string | $tw.ModuleExports) => {
-      modules.titles[moduleName] = {
-        definition,
-        exports: definition as $tw.ModuleExports,
-        moduleType,
-        requires: new Set<string>()
-      }
-    }
-  );
-  modules.execute = jest.fn<$tw.TW5Modules["execute"]>(
-    (moduleName: string, _: string | undefined): $tw.ModuleExports => {
-      const def = modules.titles[moduleName].definition;
-      if (typeof def === 'string') {
-        return eval(def);
-      }
-      return {};
-    }
-  );
-  return modules;
-}
-
-const makeMockWiki = (tiddlers: Record<string, string>): $tw.Wiki => {
-  const getTiddler = jest.fn<(s: string) => $tw.Tiddler | undefined>((title: string) => {
-    return title in tiddlers ? makeMDXTiddler(title, tiddlers[title]) : undefined;
-  });
-  return {
-    getTiddler
-  } as any as $tw.Wiki;
-}
-
-const setup = (tiddlers: Record<string, string>) => {
-  const wiki = makeMockWiki(tiddlers);
-  const modules = makeMockModules();
-  const loader = new MDXModuleLoader({ wiki, modules });
-  return { modules, wiki, loader };
-}
+import { assertDependencies, assertRegisteredModules, renderToAST, setup } from "./mdx-test-utils";
+import { MDXContext } from "../src/widget/mdx-module-loader";
 
 describe('load MDX module by tiddler title', () => {
 
@@ -353,22 +282,10 @@ asdf
       tiddler: 'tiddler1',
     });
     expect(Object.keys(result)).toContain('error');
-    expect(await loader.getCompilationResult('tiddler1')).toEqual({
+    expect(await loader.getCompilationResult('tiddler1')).toEqual(expect.objectContaining({
       "error": new Error('bang'),
       "errorTitle": "Error executing module dep",
-      "loadContext": {
-        "mdxContext": {
-          "components": {},
-          "definingTiddlerTitle": "dep",
-        },
-        "requireStack": [
-          "tiddler1",
-          "dep",
-        ],
-        "dependencies": new Set<string>([]),
-      },
-    }
-    );
+    }));
   })
 
   it('Throw error if circular dependency detected', async function () {
