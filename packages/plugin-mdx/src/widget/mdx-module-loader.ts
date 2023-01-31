@@ -83,6 +83,25 @@ const makeInitialModuleLoaderContext = (context?: MDXContext): ModuleLoaderConte
   }
 });
 
+// a simplified version of FC
+type FunctionComponent = (props?: Record<string, any>)=>any;
+
+const withBoundProps = (functionComponent:FunctionComponent, components?: Record<string, any>, boundProps?: Record<string, any>):FunctionComponent => {
+  const boundPropComponent = (props?: Record<string, any>) => functionComponent({
+    // if bound props are provided, always pass them to the component
+    ...(boundProps ?? {}),
+    // they can be overridden by the actual props passed by the caller
+    ...props,
+    // component is a special case: those passed in must be merged with what's
+    // available at compile time.
+    components: {...(components), ...(props?.['components']) },
+  });
+
+  // save original unwrapped component debugging purposes
+  boundPropComponent.original = functionComponent;
+  return boundPropComponent;
+}
+
 export class MDXModuleLoader {
   anonymousGeneratedFunctionCounter = 0;
   // TiddlyWiki standard objects, which default to global $tw.{wiki, modules}.
@@ -144,11 +163,12 @@ export class MDXModuleLoader {
     loadContext,
     mdx,
     tiddler,
+    boundProps
   }: {
     loadContext: ModuleLoaderContext,
     mdx: string;
     tiddler?: string;
-    requiredModules?: Set<string>;
+    boundProps?: object
   }): Promise<CompilationResult> {
 
     const compilationResult = await this.compileMDX(
@@ -173,14 +193,9 @@ export class MDXModuleLoader {
         getContextValues(loadContext.mdxContext)
       );
 
-      // make default() receive the components prop by default if
-      // 'components' exists in the context to pass in overridden
-      // and implicitly available react components.
-      moduleExports.default = (props: any) =>
-        jsxCompiledDefault({
-          ...props,
-          components: { ...(props?.components ?? {}), ...(loadContext.mdxContext.components) },
-        });
+      // add mdxContext.components and any additional boundProps to the component's
+      // props in addition to what's passed in by the caller.
+      moduleExports.default = withBoundProps(jsxCompiledDefault, loadContext.mdxContext.components, boundProps)
 
       return {
         ...compilationResult,
@@ -359,15 +374,17 @@ export class MDXModuleLoader {
     }
   }
 
-  async evaluateMDX({ mdx, context, moduleLoaderContext }: {
+  async evaluateMDX({ mdx, context, moduleLoaderContext, boundProps }: {
     mdx: string,
     context?: MDXContext,
-    moduleLoaderContext?: ModuleLoaderContext
+    moduleLoaderContext?: ModuleLoaderContext,
+    boundProps?: object
   }): Promise<CompilationResult> {
     const loadContext = moduleLoaderContext ?? this.makeModuleLoaderContext(makeInitialModuleLoaderContext(context));
     return await this.compileAndExecute({
       loadContext,
       mdx,
+      boundProps
     });
   }
 

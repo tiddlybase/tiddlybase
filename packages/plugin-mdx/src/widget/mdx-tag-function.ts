@@ -100,7 +100,8 @@ export const getMdxTagFn = ({
   const mdxContent = constructMDXContent(stringParts);
   const compilationResultPromise = loader.evaluateMDX({
     mdx: mdxContent,
-    moduleLoaderContext
+    moduleLoaderContext,
+    boundProps: {literalBoundValues}
   });
   // save compilation result promise to cache entry
   if (!moduleLoaderContext.mdxLiteralCompilationResults) {
@@ -110,10 +111,10 @@ export const getMdxTagFn = ({
   // all of these literals' compilation can be awaited before the entire MDX
   // module is ready.
   let returnValue:CompiledMDXLiteral|undefined = undefined;
-  const cacheIndex = moduleLoaderContext.mdxLiteralCompilationResults.push(compilationResultPromise);
+  const mdxLiteralIndex = moduleLoaderContext.mdxLiteralCompilationResults.push(compilationResultPromise);
   const componentPromise = compilationResultPromise.then(
     result => {
-      const component:CompiledMDXLiteral = compiledMDXToReactComponent(result, {literalBoundValues});
+      const component:CompiledMDXLiteral = compiledMDXToReactComponent(result);
       if (returnValue) {
         returnValue.compilationResult = result;
         if ('moduleExports' in result) {
@@ -127,7 +128,7 @@ export const getMdxTagFn = ({
     err => {
       const component = () => JSError({
         error: err as Error,
-        title: `Error compiling MDX literal for cache entry ${cacheIndex}`,
+        title: `Error compiling MDX literal number ${mdxLiteralIndex}`,
       });
       return component;
     }

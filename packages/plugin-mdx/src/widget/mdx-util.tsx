@@ -4,30 +4,62 @@ import type { MDXErrorDetails } from "../mdx-client/mdx-error-details";
 import { MDXError } from "./components/MDXError";
 import { CompilationResult } from "./mdx-module-loader";
 
-export const reportCompileError = (error: MDXErrorDetails, mdx?: string, title?: string) => MDXError({ title, mdx, details: error, fatal: true });
+export const reportCompileError = (
+  error: MDXErrorDetails,
+  mdx?: string,
+  title?: string
+) => MDXError({ title, mdx, details: error, fatal: true });
 
-export const reportRuntimeError = (error: Error, title?: string) => JSError({ title, error });
+export const reportRuntimeError = (error: Error, title?: string) =>
+  JSError({ title, error });
 
-export const compiledMDXToReactComponent = (compilationResult:CompilationResult, additionalProps?:any):FC<any> => (props: any) => {
-    try {
-      const warnings = ("warnings" in compilationResult) ? compilationResult["warnings"] : [];
-      let body: ReactNode = undefined;
-      if (compilationResult) {
-        if ("moduleExports" in compilationResult) {
-          body = compilationResult?.moduleExports?.default({...(additionalProps ?? {}), ...props});
-        } else {
-          body = (compilationResult.error instanceof Error) ? reportRuntimeError(compilationResult.error, compilationResult.errorTitle) : reportCompileError(
-            compilationResult.error,
-            compilationResult.mdx,
-            compilationResult.errorTitle
+// Wrap MDX compiler emitted component in try / catch
+// and display any compilation warnings
+export const compiledMDXToReactComponent =
+  (compilationResult: CompilationResult): FC<any> =>
+  (props: any) => {
+    const warnings =
+      "warnings" in compilationResult ? compilationResult["warnings"] : [];
+    let body: ReactNode = undefined;
+    if (compilationResult) {
+      if ("moduleExports" in compilationResult) {
+        if (!("default" in compilationResult.moduleExports)) {
+          body = reportRuntimeError(
+            new Error("no default export found for module"),
+            "MDX module missing default export"
           );
+        } else {
+          try {
+            body = compilationResult.moduleExports.default(props);
+          } catch (e) {
+            body = reportRuntimeError(
+              e as Error,
+              "Error rendering default MDX component"
+            );
+          }
         }
+      } else {
+        // if !compilationResult
+        body =
+          compilationResult.error instanceof Error
+            ? reportRuntimeError(
+                compilationResult.error,
+                compilationResult.errorTitle
+              )
+            : reportCompileError(
+                compilationResult.error,
+                compilationResult.mdx,
+                compilationResult.errorTitle
+              );
       }
-      return <>
-        {warnings.map((details) => MDXError({ mdx: compilationResult.mdx, details }))}
+    }
+    return (
+      <>
+        {warnings.map((details) =>
+          // TODO: need to set 'key' field
+          MDXError({ mdx: compilationResult.mdx, details })
+        )}
         {body}
       </>
-    } catch (e) {
-      return reportRuntimeError(e as Error, "Error rendering default MDX component");
-    }
+    );
   };
