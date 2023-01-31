@@ -2,7 +2,7 @@ import type { CompilationResult, MDXModuleLoader, ModuleLoaderContext } from "./
 import { withAsyncComponent } from "@tiddlybase/plugin-react/src/components/withAsyncComponent";
 
 import React from "react";
-import { compiledMDXToReactComponent } from "./mdx-util";
+import { wrapMDXComponent } from "./mdx-util";
 import { JSError } from "@tiddlybase/plugin-react/src/components/JSError";
 
 export interface CompiledMDXLiteral extends React.FunctionComponent<any> {
@@ -114,7 +114,7 @@ export const getMdxTagFn = ({
   const mdxLiteralIndex = moduleLoaderContext.mdxLiteralCompilationResults.push(compilationResultPromise);
   const componentPromise = compilationResultPromise.then(
     result => {
-      const component:CompiledMDXLiteral = compiledMDXToReactComponent(result);
+      const component:CompiledMDXLiteral = wrapMDXComponent(result, moduleLoaderContext.mdxContext.definingTiddlerTitle);
       if (returnValue) {
         returnValue.compilationResult = result;
         if ('moduleExports' in result) {

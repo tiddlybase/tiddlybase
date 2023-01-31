@@ -30,7 +30,7 @@ export type ModuleLoadError = {
 
 export type CompilationResult = { mdx?: string } & (
   ModuleLoadError
-  | { warnings: Array<MDXErrorDetails>; compiledFn: any; moduleExports: $tw.ModuleExports; dependencies: ModuleSet; });
+  | { warnings: Array<MDXErrorDetails>; compiledFn: any; moduleExports: $tw.ModuleExports; dependencies: ModuleSet; tiddler?: string});
 
 export type ModuleExportsResult =
   | ModuleLoadError
@@ -170,11 +170,13 @@ export class MDXModuleLoader {
     tiddler?: string;
     boundProps?: object
   }): Promise<CompilationResult> {
+    const moduleExports:$tw.ModuleExports = {};
+    const mdxContext:MDXContext = {...loadContext.mdxContext, exports: moduleExports};
 
     const compilationResult = await this.compileMDX(
       tiddler,
       mdx,
-      loadContext.mdxContext
+      mdxContext
     );
     if ("error" in compilationResult) {
       return {
@@ -187,19 +189,21 @@ export class MDXModuleLoader {
 
     try {
       // evaluate compiled javascript
-      const { default: jsxCompiledDefault, ...moduleExports } = await getExports(
+      const { default: jsxCompiledDefault, ..._moduleExports } = await getExports(
         compilationResult.compiledFn,
-        loadContext.mdxContext.requireAsync,
-        getContextValues(loadContext.mdxContext)
+        mdxContext.requireAsync,
+        getContextValues(mdxContext)
       );
+      Object.assign(moduleExports, _moduleExports);
 
       // add mdxContext.components and any additional boundProps to the component's
       // props in addition to what's passed in by the caller.
-      moduleExports.default = withBoundProps(jsxCompiledDefault, loadContext.mdxContext.components, boundProps)
+      moduleExports.default = withBoundProps(jsxCompiledDefault, mdxContext.components, boundProps)
 
       return {
         ...compilationResult,
         dependencies: loadContext.dependencies,
+        tiddler,
         moduleExports,
         mdx
       };

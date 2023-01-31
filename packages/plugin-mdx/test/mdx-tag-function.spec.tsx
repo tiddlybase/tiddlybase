@@ -65,6 +65,7 @@ describe("MDX tag function", () => {
         "dependencies",
         "mdx",
         "moduleExports",
+        "tiddler",
         "warnings",
       ]);
       if (savedCompilationResult && "moduleExports" in savedCompilationResult) {
@@ -124,6 +125,7 @@ export const Dynamic_content = mdx\`*hello \${num} and \${str}*\`;
         "dependencies",
         "mdx",
         "moduleExports",
+        "tiddler",
         "warnings",
       ]);
       if (savedCompilationResult && "moduleExports" in savedCompilationResult) {

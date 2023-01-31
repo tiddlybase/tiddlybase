@@ -12,7 +12,7 @@ import * as ReactJSXRuntime from "react/jsx-runtime";
 import { components as baseComponents } from "./components";
 import { mdxModuleLoader } from "./global";
 import { CompilationResult, MDXModuleLoader, ModuleSet } from "./mdx-module-loader";
-import { compiledMDXToReactComponent, reportRuntimeError } from "./mdx-util";
+import { wrapMDXComponent, reportRuntimeError } from "./mdx-util";
 import { getTransitiveMDXModuleDependencies } from "./module-utils";
 
 export type MDXFactoryProps = WrappedPropsBase & {
@@ -38,7 +38,7 @@ const getBuiltinComponents = () => ({ ...baseComponents, ...customComponents });
 
 const getRenderProps = (
   context: TW5ReactContextType,
-  definingTiddlerName?: string,
+  definingTiddlerTitle?: string,
   components?: any
 ) => ({
   components,
@@ -50,8 +50,8 @@ const getRenderProps = (
     );
   },
   get definingTiddler() {
-    return !!definingTiddlerName
-      ? context.parentWidget?.wiki?.getTiddler(definingTiddlerName)
+    return !!definingTiddlerTitle
+      ? context.parentWidget?.wiki?.getTiddler(definingTiddlerTitle)
       : undefined;
   },
 });
@@ -155,5 +155,5 @@ export const MDXFactory = async ({
     throw new Error("Internal error: compilationResult should not be falsy!");
   }
 
-  return compiledMDXToReactComponent(compilationResult);
+  return wrapMDXComponent(compilationResult, definingTiddlerTitle);
 };
