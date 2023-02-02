@@ -1,10 +1,45 @@
-import { CompilationResult, MDXModuleLoader, ModuleSet } from '../src/widget/mdx-module-loader'
+import { CompilationResult, MDXModuleLoader, ModuleExportsResult, ModuleSet } from '../src/widget/mdx-module-loader'
 import type { } from "@tiddlybase/tw5-types/src/index";
 import { jest } from '@jest/globals'
-import TestRenderer from 'react-test-renderer';
+import "@testing-library/jest-dom";
+import {
+  TW5ReactContextType,
+  withContextProvider,
+} from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
+import { render, screen } from "@testing-library/react";
+import React from 'react';
 
-// test renderer docs: https://reactjs.org/docs/test-renderer.html
-export const renderToAST = (component: any) => TestRenderer.create(component).toJSON();
+export const stripNewlines = (str: string): string => str.replace(/\n/gm, "");
+
+export const getRendered = async (
+  result: ModuleExportsResult,
+  waitForText: string,
+  context?: TW5ReactContextType,
+  props?: any
+) => {
+  if ("moduleExports" in result) {
+    if ("default" in result.moduleExports) {
+      const Component = result.moduleExports.default as React.FC<any>;
+      let renderer: ReturnType<typeof render>;
+      if (context) {
+        renderer = render(
+          withContextProvider({
+            context,
+            Component,
+            props,
+          })
+        );
+      } else {
+        renderer = render(<Component {...props} />);
+      }
+
+      expect(await screen.findByText(waitForText)).toBeVisible();
+      return renderer.container;
+    }
+  }
+  console.log(result);
+  throw new Error("no default export found!");
+};
 
 export const makeMDXTiddler = (title: string, text: string): $tw.Tiddler => ({
   fields: {

@@ -8,6 +8,7 @@ import {
 } from "@tiddlybase/plugin-mdx/src/mdx-client/mdx-client";
 import { MDXErrorDetails } from "../mdx-client/mdx-error-details";
 import { getMdxTagFn } from "./mdx-tag-function";
+import { withContextHelpers } from "./with-context-helpers";
 
 export type ModuleSet = Set<string>;
 
@@ -25,6 +26,7 @@ export interface ModuleLoaderContext {
 export type ModuleLoadError = {
   error: MDXErrorDetails | Error;
   errorTitle: string;
+  source?: string;
   loadContext: ModuleLoaderContext
 };
 
@@ -83,24 +85,6 @@ const makeInitialModuleLoaderContext = (context?: MDXContext): ModuleLoaderConte
   }
 });
 
-// a simplified version of FC
-type FunctionComponent = (props?: Record<string, any>)=>any;
-
-const withBoundProps = (functionComponent:FunctionComponent, components?: Record<string, any>, boundProps?: Record<string, any>):FunctionComponent => {
-  const boundPropComponent = (props?: Record<string, any>) => functionComponent({
-    // if bound props are provided, always pass them to the component
-    ...(boundProps ?? {}),
-    // they can be overridden by the actual props passed by the caller
-    ...props,
-    // component is a special case: those passed in must be merged with what's
-    // available at compile time.
-    components: {...(components), ...(props?.['components']) },
-  });
-
-  // save original unwrapped component debugging purposes
-  boundPropComponent.original = functionComponent;
-  return boundPropComponent;
-}
 
 export class MDXModuleLoader {
   anonymousGeneratedFunctionCounter = 0;
@@ -198,7 +182,7 @@ export class MDXModuleLoader {
 
       // add mdxContext.components and any additional boundProps to the component's
       // props in addition to what's passed in by the caller.
-      moduleExports.default = withBoundProps(jsxCompiledDefault, mdxContext.components, boundProps)
+      moduleExports.default = withContextHelpers(jsxCompiledDefault, mdxContext.components, boundProps);
 
       return {
         ...compilationResult,
@@ -211,7 +195,7 @@ export class MDXModuleLoader {
       if (e instanceof RequireAsyncError) {
         return e.props;
       }
-      return { mdx, error: e as Error, errorTitle: "Error executing compiled MDX", loadContext };
+      return { mdx, error: e as Error, errorTitle: `Error executing compiled MDX`, loadContext, source: compilationResult.compiledFn.toString() };
     }
   };
 

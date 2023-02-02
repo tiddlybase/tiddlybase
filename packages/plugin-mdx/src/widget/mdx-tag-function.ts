@@ -15,7 +15,7 @@ export const constructMDXContent = (stringParts: string[]): string => stringPart
   (content, part, partIx) => {
     const parts: string[] = [content, part];
     if (partIx < stringParts.length - 1) {
-      parts.push(`{props.literalBoundValues[${partIx}]}`);
+      parts.push(`props.literalBoundValues[${partIx}]`);
     }
     return parts.join('');
   }, "").trim();
@@ -114,7 +114,7 @@ export const getMdxTagFn = ({
   const mdxLiteralIndex = moduleLoaderContext.mdxLiteralCompilationResults.push(compilationResultPromise);
   const componentPromise = compilationResultPromise.then(
     result => {
-      const component:CompiledMDXLiteral = wrapMDXComponent(result, moduleLoaderContext.mdxContext.definingTiddlerTitle);
+      const component:CompiledMDXLiteral = wrapMDXComponent(result);
       if (returnValue) {
         returnValue.compilationResult = result;
         if ('moduleExports' in result) {

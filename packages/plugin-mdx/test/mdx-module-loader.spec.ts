@@ -1,6 +1,7 @@
 import type { } from "@tiddlybase/tw5-types/src/index";
-import { assertDependencies, assertRegisteredModules, renderToAST, setup } from "./mdx-test-utils";
+import { assertDependencies, assertRegisteredModules, getRendered, setup, stripNewlines } from "./mdx-test-utils";
 import { MDXContext } from "../src/widget/mdx-module-loader";
+import { toJSON } from "@tiddlybase/plugin-browser-test-utils/src/tojson";
 
 describe('load MDX module by tiddler title', () => {
 
@@ -20,7 +21,32 @@ describe('load MDX module by tiddler title', () => {
           result.moduleExports
         );
       }
-      expect(renderToAST(result.moduleExports.default())).toEqual({ type: 'h1', props: {}, children: ['hi!'] });
+      expect(
+        toJSON(
+          await getRendered(
+            await loader.loadModule({ tiddler: "tiddler1" }),
+            "hi!"
+          ))).toEqual({
+            "attributes": {},
+            "childNodes": [
+              {
+                "attributes": {},
+                "childNodes": [
+                  {
+                    "childNodes": [],
+                    "nodeName": "#text",
+                    "nodeType": 3,
+                    "nodeValue": "hi!",
+                  },
+                ],
+                "nodeType": 1,
+                "tagName": "h1",
+              },
+            ],
+            "nodeType": 1,
+            "tagName": "div",
+          }
+          );
     }
   })
 
@@ -36,47 +62,17 @@ describe('load MDX module by tiddler title', () => {
     expect(Object.keys(result)).toContain('moduleExports');
     if ('moduleExports' in result) {
 
-      expect(renderToAST(result.moduleExports.default())).toEqual([
-        {
-          "type": "h1",
-          "props": {},
-          "children": [
-            "hi!"
-          ]
-        },
-        "\n" as any,
-        {
-          "type": "ul",
-          "props": {},
-          "children": [
-            "\n",
-            {
-              "type": "li",
-              "props": {},
-              "children": [
-                "one"
-              ]
-            },
-            "\n"
-          ]
-        },
-        "\n",
-        {
-          "type": "ul",
-          "props": {},
-          "children": [
-            "\n",
-            {
-              "type": "li",
-              "props": {},
-              "children": [
-                "two"
-              ]
-            },
-            "\n"
-          ]
-        }
-      ]);
+      expect(stripNewlines((await getRendered(
+        await loader.loadModule({ tiddler: "tiddler1" }),
+        "hi!"
+      )).innerHTML)).toEqual(stripNewlines(`
+<h1>hi!</h1>
+<ul>
+<li>one</li>
+</ul>
+<ul>
+<li>two</li>
+</ul>`));
     }
     const compilationResult = await loader.getCompilationResult('tiddler1');
     if (compilationResult && 'warnings' in compilationResult) {
@@ -147,11 +143,10 @@ describe('load MDX module by tiddler title', () => {
     expect(Object.keys(result)).toContain('moduleExports');
     if ('moduleExports' in result) {
       await assertDependencies(loader, 'tiddler2', ['tiddler1'])
-      expect(renderToAST(result.moduleExports.default())).toEqual([
-        { type: 'h1', props: {}, children: ['hi!'] }
-        , "\n" as any,
-        { type: 'p', props: {}, children: ['asdf'] }
-      ])
+      expect(stripNewlines((await getRendered(
+        await loader.loadModule({ tiddler: "tiddler1" }),
+        "hi!"
+      )).innerHTML)).toEqual(stripNewlines(`<h1>hi!</h1>`));
     }
     await assertRegisteredModules(loader, ['tiddler1', 'tiddler2']);
   })
@@ -221,7 +216,12 @@ asdf
       tiddler: 'tiddler3'
     });
     if ('moduleExports' in result) {
-      expect(() => renderToAST(result.moduleExports.default())).toThrowError("BANG!");
+      await expect(async () => await getRendered(
+        result,
+        "asdf!"
+      ))
+        .rejects
+        .toThrowError("BANG!");
     }
     await assertRegisteredModules(loader, ['tiddler1', 'tiddler2', 'tiddler3']);
   });
@@ -267,7 +267,7 @@ asdf
   it('load mdx with import error in dependency', async function () {
     const { modules, loader } = setup({
       tiddler1: `
-      import {default as d} from "dep";
+      import {default as D} from "dep";
 
       {d()}
 
@@ -367,12 +367,10 @@ asdf
     // assert initial version of module compiled as expected
     expect(Object.keys(result)).toContain('moduleExports');
     if ('moduleExports' in result) {
-      expect(renderToAST(result.moduleExports.default())).toEqual([
-        { type: 'h1', props: {}, children: ['hello V1'] },
-        '\n' as any,
-        { type: 'p', props: {}, children: ['asdf'] },
-        '\n' as any,
-      ]);
+      expect(stripNewlines((await getRendered(
+        await loader.loadModule({ tiddler: "tiddler1" }),
+        "hello V1"
+      )).innerHTML)).toEqual(stripNewlines(`<h1>hello V1</h1><p>asdf</p>`));
       expect(result.moduleExports.foo).toEqual("V1");
     }
     // redefine module tiddler
@@ -402,12 +400,10 @@ asdf
     // assert initial version of module compiled as expected
     expect(Object.keys(result2)).toContain('moduleExports');
     if ('moduleExports' in result2) {
-      expect(renderToAST(result2.moduleExports.default())).toEqual([
-        { type: 'h1', props: {}, children: ['hello V2'] },
-        '\n' as any,
-        { type: 'p', props: {}, children: ['asdf'] },
-        '\n' as any,
-      ]);
+      expect(stripNewlines((await getRendered(
+        result2,
+        "hello V2"
+      )).innerHTML)).toEqual(stripNewlines(`<h1>hello V2</h1><p>asdf</p>`));
       expect(result2.moduleExports.foo).toEqual("V2");
       expect(result2.moduleExports.markedByDropV1).toEqual(true);
       expect(result2.moduleExports.markedByDropV2).toEqual(undefined);

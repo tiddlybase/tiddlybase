@@ -155,5 +155,5 @@ export const MDXFactory = async ({
     throw new Error("Internal error: compilationResult should not be falsy!");
   }
 
-  return wrapMDXComponent(compilationResult, definingTiddlerTitle);
+  return wrapMDXComponent(compilationResult);
 };

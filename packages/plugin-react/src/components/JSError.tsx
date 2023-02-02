@@ -1,5 +1,6 @@
 export interface JSErrorProps {
   title?: string,
+  source?: string,
   error:Error
 }
 
@@ -22,6 +23,12 @@ export const JSError = (props:JSErrorProps) => {
       </div>
       {props.error.stack && (
         <pre>{props.error.stack}</pre>
+      )}
+      {props.source && (
+        <>
+        <h3>source</h3>
+        <pre>{props.source}</pre>
+        </>
       )}
     </div>
   );

@@ -3,7 +3,6 @@ import { FC, ReactNode } from "react";
 import type { MDXErrorDetails } from "../mdx-client/mdx-error-details";
 import { MDXError } from "./components/MDXError";
 import { CompilationResult } from "./mdx-module-loader";
-import { withContextHelpers } from "./with-context-helpers";
 
 export const reportCompileError = (
   error: MDXErrorDetails,
@@ -11,15 +10,15 @@ export const reportCompileError = (
   title?: string
 ) => MDXError({ title, mdx, details: error, fatal: true });
 
-export const reportRuntimeError = (error: Error, title?: string) =>
-  JSError({ title, error });
+export const reportRuntimeError = (error: Error, title?: string, source?: string) =>
+  JSError({ title, error, source });
 
 
 
 // Wrap MDX compiler emitted component in try / catch
 // and display any compilation warnings
 export const wrapMDXComponent =
-  (compilationResult: CompilationResult, tiddler?: string): FC<any> =>
+  (compilationResult: CompilationResult): FC<any> =>
   (props: any) => {
     const warnings =
       "warnings" in compilationResult ? compilationResult["warnings"] : [];
@@ -33,7 +32,7 @@ export const wrapMDXComponent =
           );
         } else {
           try {
-            body = withContextHelpers(compilationResult.moduleExports.default, tiddler)(props);
+            body = compilationResult.moduleExports.default(props);
           } catch (e) {
             body = reportRuntimeError(
               e as Error,
@@ -47,7 +46,8 @@ export const wrapMDXComponent =
           compilationResult.error instanceof Error
             ? reportRuntimeError(
                 compilationResult.error,
-                compilationResult.errorTitle
+                compilationResult.errorTitle,
+                compilationResult.source
               )
             : reportCompileError(
                 compilationResult.error,
