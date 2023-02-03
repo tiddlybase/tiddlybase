@@ -1,18 +1,13 @@
 import type { } from "@tiddlybase/tw5-types/src/index";
 
-import {
-  TW5ReactContextType,
-  withContext
-} from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
 import type {
   ReactWrapper, WrappedPropsBase
 } from "@tiddlybase/plugin-react/src/react-wrapper";
 import React from "react";
-import * as ReactJSXRuntime from "react/jsx-runtime";
 import { components as baseComponents } from "./components";
 import { mdxModuleLoader } from "./global";
-import { CompilationResult, MDXModuleLoader, ModuleSet } from "./mdx-module-loader";
-import { wrapMDXComponent, reportRuntimeError } from "./mdx-util";
+import { CompilationResult, MDXContext, MDXModuleLoader, ModuleSet } from "./mdx-module-loader";
+import { wrapMDXComponent } from "./mdx-util";
 import { getTransitiveMDXModuleDependencies } from "./module-utils";
 
 export type MDXFactoryProps = WrappedPropsBase & {
@@ -36,56 +31,12 @@ export const registerComponent = (
 
 const getBuiltinComponents = () => ({ ...baseComponents, ...customComponents });
 
-const getRenderProps = (
-  context: TW5ReactContextType,
-  definingTiddlerTitle?: string,
-  components?: any
-) => ({
-  components,
-  context,
-  parentWidget: context.parentWidget,
-  get currentTiddler() {
-    return context.parentWidget?.wiki?.getTiddler(
-      context.parentWidget?.getVariable("currentTiddler")
-    );
-  },
-  get definingTiddler() {
-    return !!definingTiddlerTitle
-      ? context.parentWidget?.wiki?.getTiddler(definingTiddlerTitle)
-      : undefined;
-  },
-});
-
 const makeMDXContext = (
   definingTiddlerTitle?: string,
-) => {
-  const components = getBuiltinComponents();
-  const mdxContext = {
-    definingTiddlerTitle,
-    components,
-    render: (
-      component: React.FunctionComponent<ReturnType<typeof getRenderProps>>
-    ) => {
-      return (ReactJSXRuntime as any).jsx(
-        withContext(({ context }) => {
-          if (!context) {
-            return reportRuntimeError(new Error("No react context available to render()."));
-          }
-          try {
-            return component(getRenderProps(
-              context,
-              definingTiddlerTitle,
-              components));
-          } catch (e) {
-            return reportRuntimeError(e as Error, "Error in dynamic component passed to render().");
-          }
-        }),
-        {} // no props passed
-      );
-    },
-  };
-  return mdxContext;
-};
+): MDXContext => ({
+  definingTiddlerTitle,
+  components: getBuiltinComponents(),
+});
 
 const addTiddlerChangeHook = async (
   parentWidget: ReactWrapper,
