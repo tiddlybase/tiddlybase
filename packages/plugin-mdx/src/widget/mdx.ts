@@ -103,7 +103,7 @@ export const MDXFactory = async ({
   }
 
   if (!compilationResult) {
-    throw new Error("Internal error: compilationResult should not be falsy!");
+    throw new Error("Internal MDX error: compilationResult should not be falsy!");
   }
 
   return wrapMDXComponent(compilationResult);
