@@ -57,11 +57,13 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
     }
 
     const renderToHTML = async (text, parserConstructor, wiki = new $tw.Wiki()) => {
-        return getElement(await (renderToDOM(text, parserConstructor, wiki)), parserConstructor).outerHTML;
+        const elem = getElement(await (renderToDOM(text, parserConstructor, wiki)), parserConstructor)
+        return parserConstructor === markdownParser ? elem.innerHTML : elem.outerHTML;
     }
 
     const renderToJSON = async (text, parserConstructor, wiki = new $tw.Wiki()) => {
-        return toJSON(getElement(await (renderToDOM(text, parserConstructor, wiki)), parserConstructor));
+        const elem = getElement(await (renderToDOM(text, parserConstructor, wiki)), parserConstructor)
+        return toJSON(parserConstructor === markdownParser ? elem.children[0] : elem);
     }
 
     const stripNewlines = str => str.replace(/(\r\n|\n|\r)/gm, "")
@@ -72,9 +74,7 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
 
     const assertRenderTree = async (wiki, parser, input, expectedOutput) => {
         const actualOutput = await renderToJSON(input, parser, wiki);
-        console.log("assertRenderTree", actualOutput, expectedOutput);
         expect(actualOutput).toEqual(expectedOutput);
-        // nodeType: 3, nodeName: '#text', nodeValue: ' ', childNodes: [  ]
     }
 
     describe("Parsing markdown", function () {
@@ -167,7 +167,7 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
                         "nodeType": 1,
                         "tagName": "a",
                         "attributes": {
-                            "class": "tc-tiddlylink-external",
+                            "class": "tc-tiddlylink-external _codified_",
                             "href": "https://github.com/neumark/",
                             "rel": "noopener noreferrer",
                             "target": "_blank"
@@ -187,7 +187,10 @@ Tests the wikitext rendering pipeline end-to-end. We also need tests that indivi
             const wiki = new $tw.Wiki();
             expect(await renderToJSON(externalLinkMD, markdownParser, wiki)).toEqual(expected);
             expect(await renderToJSON(externalLinkMD, mdxParser, wiki)).toEqual(expected);
-            expect(await renderToJSON("[[neumark|https://github.com/neumark/]]",wikitextParser, wiki)).toEqual(expected);
+            // the WikiText parser doesn't add the _codified_ CSS class
+            const expectWikiText = JSON.parse(JSON.stringify(expected));
+            expectWikiText.childNodes[0].attributes['class'] = "tc-tiddlylink-external";
+            expect(await renderToJSON("[[neumark|https://github.com/neumark/]]",wikitextParser, wiki)).toEqual(expectWikiText);
         });
 
         it("should render internal link to existing tiddlers identically", async function () {

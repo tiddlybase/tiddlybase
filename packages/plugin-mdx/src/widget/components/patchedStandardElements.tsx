@@ -6,7 +6,9 @@ import { errorMsg } from "@tiddlybase/plugin-react/src/components/JSError";
 import { makeWikiLink } from "./tw5-utils";
 
 const DEFAULT_EXTERNAL_LINK_PROPS = {
-  className: "tc-tiddlylink-external",
+  // TiddlyWiki 5.2.7 includes https://github.com/Jermolene/TiddlyWiki5/pull/6528
+  // which adds the "_codified_" class to links.",
+  className: "tc-tiddlylink-external _codified_",
   rel: "noopener noreferrer",
   target: "_blank",
 };
