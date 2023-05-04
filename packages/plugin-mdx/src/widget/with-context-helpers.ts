@@ -11,7 +11,7 @@ export const withContextHelpers = (
       ...(boundProps ?? {}),
       // they can be overridden by the actual props passed by the caller
       ...props,
-      // component is a special case: those passed in must be merged with
+      // components is a special case: those passed in must be merged with
       // defaults available at compile time.
       components: { ...(components), ...(props?.components) },
     }
@@ -21,12 +21,7 @@ export const withContextHelpers = (
     if (context) {
       propsWithContext = {
         ...propsWithDefaults,
-        context,
-        get currentTiddler() {
-          return context.parentWidget?.wiki?.getTiddler(
-            context.parentWidget?.getVariable("currentTiddler")
-          );
-        }
+        context
       }
     }
     return Component(propsWithContext);

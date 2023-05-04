@@ -32,10 +32,12 @@ export const registerComponent = (
 const getBuiltinComponents = () => ({ ...baseComponents, ...customComponents });
 
 const makeMDXContext = (
+  loader: MDXModuleLoader,
   definingTiddlerTitle?: string,
 ): MDXContext => ({
   definingTiddlerTitle,
   components: getBuiltinComponents(),
+  tiddlybase: loader.mdxTiddlybaseAPI
 });
 
 const addTiddlerChangeHook = async (
@@ -45,7 +47,7 @@ const addTiddlerChangeHook = async (
 ) => {
   // This is merely a heuristic, a good enough indicator of transitive dependencies
   // changing - and rerendering being necessary as a result.
-  // Through requireAsync, and module could add additional dependencies after
+  // Through requireAsync, any module could add additional dependencies after
   // this mdx module is rendered. Changes to such dependencies will go unnoticed.
   const transitiveDependencies: ModuleSet = await getTransitiveMDXModuleDependencies(definingTiddlerTitle, loader)
   parentWidget.addChangedTiddlerHook(
@@ -81,7 +83,7 @@ export const MDXFactory = async ({
     // load the module if not yet loaded
     await loader.loadModule({
       tiddler: definingTiddlerTitle,
-      context: makeMDXContext(definingTiddlerTitle),
+      context: makeMDXContext(loader, definingTiddlerTitle),
     });
     // getCompilationResult is guaranteed to return an actual value due to the
     // previous loadModule() call.
@@ -98,7 +100,7 @@ export const MDXFactory = async ({
   } else {
     compilationResult = await loader.evaluateMDX({
       mdx,
-      context: makeMDXContext(undefined),
+      context: makeMDXContext(loader, undefined),
     });
   }
 

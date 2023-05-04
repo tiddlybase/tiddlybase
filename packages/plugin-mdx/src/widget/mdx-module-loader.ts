@@ -9,6 +9,8 @@ import {
 import { MDXErrorDetails } from "../mdx-client/mdx-error-details";
 import { getMdxTagFn } from "./mdx-tag-function";
 import { withContextHelpers } from "./with-context-helpers";
+import { MDXTiddlybaseAPIImpl } from "./mdx-tiddlybase-api-impl";
+import type { MDXTiddlybaseAPI } from "./mdx-tiddlybase-api";
 
 export type ModuleSet = Set<string>;
 
@@ -76,21 +78,13 @@ const getContextValues = (mdxContext: MDXContext): any[] =>
     return acc;
   }, [] as any[]);
 
-const makeInitialModuleLoaderContext = (context?: MDXContext): ModuleLoaderContext => ({
-  requireStack: [],
-  dependencies: new Set<string>([]),
-  mdxContext: context ?? {
-    definingTiddlerTitle: undefined,
-    components: {}
-  }
-});
-
 
 export class MDXModuleLoader {
   anonymousGeneratedFunctionCounter = 0;
   // TiddlyWiki standard objects, which default to global $tw.{wiki, modules}.
   wiki: $tw.Wiki;
   modules: $tw.TW5Modules;
+  mdxTiddlybaseAPI: MDXTiddlybaseAPI;
   private compilationResults: Record<string, Promise<CompilationResult>> = {};
   private invalidatedModules: Set<string> = new Set([]);
 
@@ -103,6 +97,19 @@ export class MDXModuleLoader {
   } = {}) {
     this.wiki = wiki;
     this.modules = modules;
+    this.mdxTiddlybaseAPI = new MDXTiddlybaseAPIImpl(this.wiki)
+  }
+
+  private makeInitialModuleLoaderContext (context?: MDXContext): ModuleLoaderContext {
+    return {
+      requireStack: [],
+      dependencies: new Set<string>([]),
+      mdxContext: context ?? {
+        definingTiddlerTitle: undefined,
+        components: {},
+        tiddlybase: this.mdxTiddlybaseAPI
+      }
+    };
   }
 
   private getRequireAsync(
@@ -368,7 +375,7 @@ export class MDXModuleLoader {
     moduleLoaderContext?: ModuleLoaderContext,
     boundProps?: object
   }): Promise<CompilationResult> {
-    const loadContext = moduleLoaderContext ?? this.makeModuleLoaderContext(makeInitialModuleLoaderContext(context));
+    const loadContext = moduleLoaderContext ?? this.makeModuleLoaderContext(this.makeInitialModuleLoaderContext(context));
     return await this.compileAndExecute({
       loadContext,
       mdx,
@@ -383,7 +390,7 @@ export class MDXModuleLoader {
     context?: MDXContext,
   }): Promise<ModuleExportsResult> {
     return await this.getModuleExports({
-      loadContext: makeInitialModuleLoaderContext(context),
+      loadContext: this.makeInitialModuleLoaderContext(context),
       tiddler,
     })
   }

@@ -9,7 +9,7 @@
 declare namespace $tw {
 
   // standard tiddler definition, but every field except title is optional, allowing any custom field
-  export type TiddlerFields = Partial<{
+  export type TiddlerFields = {title: string} & Partial<{
     tags: string[];
     text: string;
     type: string;
@@ -17,10 +17,10 @@ declare namespace $tw {
     creator: string;
     modified: Date;
     modifier: string;
-  }> & Record<string, string>
+  }> & Record<string, any>
 
   export class Tiddler {
-    constructor(...fields: Tiddler['fields'][]);
+    constructor(...fields: TiddlerFields[]);
     fields: TiddlerFields;
     getFieldDay: () => string;
     getFieldList: (fieldName: string) => any[];

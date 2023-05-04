@@ -1,6 +1,7 @@
 import { CompilationResult, MDXModuleLoader, ModuleExportsResult, ModuleSet } from '../src/widget/mdx-module-loader'
 import type { } from "@tiddlybase/tw5-types/src/index";
 import { jest } from '@jest/globals'
+import '@testing-library/jest-dom/extend-expect'
 import "@testing-library/jest-dom";
 import {
   TW5ReactContextType,
@@ -33,7 +34,7 @@ export const getRendered = async (
         renderer = render(<Component {...props} />);
       }
 
-      expect(await screen.findByText(waitForText)).toBeVisible();
+      expect(await screen.findByText(waitForText)).toBeVisible()
       return renderer.container;
     }
   }
@@ -106,3 +107,25 @@ export const setup = (tiddlers: Record<string, string>) => {
   const loader = new MDXModuleLoader({ wiki, modules });
   return { modules, wiki, loader };
 }
+
+export const assertElementVisible = async (Component: React.FC, text: string) => {
+  render(<Component />);
+  expect(await screen.findByText(text)).toBeVisible();
+};
+
+export const makeMockContext = (
+  tiddler: string,
+  wiki: $tw.Wiki,
+  variables?: Record<string, any>
+): TW5ReactContextType => {
+  const vars: Record<string, any> = { ...variables, currentTiddler: tiddler };
+  const context = {
+    parentWidget: {
+      wiki,
+      getVariable(varname) {
+        return vars[varname];
+      },
+    },
+  } as TW5ReactContextType;
+  return context;
+};

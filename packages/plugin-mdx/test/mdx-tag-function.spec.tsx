@@ -219,7 +219,7 @@ export const Content = mdx\`welcome to my {\${<Website />}}\`;
       literaltest: `
 export const L0 = mdx\`# {props.l0}\`;
 export const L1 = mdx\`
-*currentTiddler*: {props.currentTiddler?.fields?.title}<br />
+*currentTiddler*: {tiddlybase.currentTiddler?.title}<br />
 *definingTiddler*: {definingTiddlerTitle}<br />
 *passedInProp*: {props.passedInProp}\`;
 export const L2 = mdx\`
@@ -228,7 +228,7 @@ export const L2 = mdx\`
 \`;
 
 # default export
-*currentTiddler*: {props.currentTiddler?.fields?.title}<br />
+*currentTiddler*: {tiddlybase.currentTiddler?.title}<br />
 *definingTiddler*: {definingTiddlerTitle}<br />
 *passedInProp*: {props.passedInProp+"B"}
 

@@ -1,3 +1,3 @@
 import { MDXModuleLoader } from "./mdx-module-loader";
 
-export const mdxModuleLoader: MDXModuleLoader = new MDXModuleLoader();
+export const mdxModuleLoader = new MDXModuleLoader();
