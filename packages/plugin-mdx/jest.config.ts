@@ -5,13 +5,13 @@ const config: Config.InitialOptions = {
     preset: 'ts-jest/presets/default-esm',
     testEnvironment: 'jsdom',
     verbose: true,
-    globals: {
-        'ts-jest': {
+    coverageProvider: 'v8',
+    transform: {
+        'test/*.tsx?': ['ts-jest', { 
             tsconfig: './tsconfig.json',
             useESM: true
-        }
+        }],
     },
-    coverageProvider: 'v8',
     transformIgnorePatterns: ['<rootDir>/node_modules/']
 };
 export default config;
