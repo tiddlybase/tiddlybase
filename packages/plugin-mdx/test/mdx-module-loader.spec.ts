@@ -1,7 +1,8 @@
 import type { } from "@tiddlybase/tw5-types/src/index";
-import { assertDependencies, assertRegisteredModules, getRendered, setup, stripNewlines } from "./mdx-test-utils";
+import { assertDependencies, assertRegisteredModules, getRendered, stripNewlines } from "./mdx-test-utils";
 import { MDXContext } from "../src/widget/mdx-module-loader";
 import { toJSON } from "@tiddlybase/plugin-browser-test-utils/src/tojson";
+import { setup } from "./tw5-mocks";
 
 describe('load MDX module by tiddler title', () => {
 

@@ -1,5 +1,6 @@
 import type { } from "@tiddlybase/tw5-types/src/index";
-import { assertElementVisible, setup } from "./mdx-test-utils";
+import { assertElementVisible } from "./mdx-test-utils";
+import { setup } from "./tw5-mocks";
 
 
 describe("MDX template module", () => {

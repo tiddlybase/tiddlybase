@@ -1,6 +1,6 @@
 import type {} from "@tiddlybase/tw5-types/src/index";
 import React from "react";
-import { getRendered, setup, stripNewlines } from "./mdx-test-utils";
+import { getRendered, stripNewlines } from "./mdx-test-utils";
 
 import { render, screen } from "@testing-library/react";
 import { constructMDXContent } from "../src/widget/mdx-tag-function";
@@ -8,6 +8,7 @@ import { toJSON } from "@tiddlybase/plugin-browser-test-utils/src/tojson";
 import {
   TW5ReactContextType,
 } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
+import { setup } from "./tw5-mocks";
 
 const assertElementVisible = async (Component: React.FC, text: string) => {
   render(<Component />);

@@ -20,7 +20,7 @@ declare namespace $tw {
   }> & Record<string, any>
 
   export class Tiddler {
-    constructor(...fields: TiddlerFields[]);
+    constructor(...fields: Partial<TiddlerFields>[]);
     fields: TiddlerFields;
     getFieldDay: () => string;
     getFieldList: (fieldName: string) => any[];
@@ -151,7 +151,7 @@ declare namespace $tw {
     addEventListener: (...args: WikiAddEventListenerArgs) => void;
     // addIndexer: (indexer,name)  => void;
     // addIndexersToWiki: ()  => void;
-    // addTiddler: (tiddler)  => void;
+    addTiddler: (tiddler:Tiddler|TiddlerFields)  => void;
     // addTiddlers: (tiddlers)  => void;
     // addToHistory: (title,fromPageRect,historyTitle)  => void;
     // addToStory: (title,fromTitle,storyTitle,options)  => void;
@@ -186,13 +186,13 @@ declare namespace $tw {
     // generateNewTitle: (baseTitle,options)  => void;
     // getCacheForTiddler: (title,cacheName,initializer)  => void;
     // getChangeCount: (title)  => void;
-    // getCreationFields: ()  => void;
+    getCreationFields: ()  => Partial<TiddlerFields>;
     // getFilterOperators: ()  => void;
     // getFilterRunPrefixes: ()  => void;
     // getGlobalCache: (cacheName,initializer)  => void;
     // getIndexer: (name)  => void;
     getMissingTitles: () => string[];
-    // getModificationFields: ()  => void;
+    getModificationFields: ()  => Partial<TiddlerFields>;
     getOrphanTitles: () => string[];
     // getPluginInfo: (title)  => void;
     getPluginTypes: () => string[];
@@ -262,16 +262,6 @@ declare namespace $tw {
 
   // Documented at https://tiddlywiki.com/dev/static/SyncAdaptorModules.html
   export interface SyncAdaptor {
-    name?: string;
-    supportsLazyLoading?: boolean;
-    setLoggerSaveBuffer?: (buffer: any) => void;
-    isReady: () => boolean;
-    getTiddlerInfo: (tiddler: Tiddler) => SyncAdaptorTiddlerInfo | undefined;
-    getTiddlerRevision: (title: string) => string | undefined;
-    getStatus: (callback: Callback) => void;
-    // login, logout not used
-    saveTiddler: (tiddler: Tiddler, callback: Callback) => void;
-    loadTiddler: (title: string, callback: Callback) => void;
     deleteTiddler: (
       title: string,
       callback: Callback,
@@ -281,6 +271,19 @@ declare namespace $tw {
         };
       },
     ) => void;
+    getSkinnyTiddlers?: (callback: Callback) => void;
+    getStatus?: (callback: Callback) => void;
+    getTiddlerInfo: (tiddler: Tiddler) => SyncAdaptorTiddlerInfo | undefined;
+    getTiddlerRevision?: (title: string) => string | undefined;
+    getUpdatedTiddlers?: (syncer: any, callback: Callback) => void;
+    isReady: () => boolean;
+    loadTiddler: (title: string, callback: Callback) => void;
+    login?: (username: string, password: string, callback: Callback) => void;
+    logout?: (callback: Callback) => void;
+    name?: string;
+    saveTiddler: (tiddler: Tiddler, callback: Callback) => void;
+    setLoggerSaveBuffer?: (buffer: any) => void;
+    supportsLazyLoading?: boolean;
   }
 
 
