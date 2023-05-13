@@ -1,5 +1,5 @@
 import { User } from '@firebase/auth';
-import { makeRPC } from '@tiddlybase/rpc';
+import { makeRPC } from "@tiddlybase/rpc/src/make-rpc";
 import { handleSignedInUser, handleSignedOutUser } from './login';
 import { createParentApi } from './top-level-api-impl';
 import { TiddlybaseConfig, WikiLaunchConfig } from '@tiddlybase/shared/src/tiddlybase-config-schema';
@@ -60,7 +60,7 @@ const initApp = async () => {
     const iframe = await createWikiIframe(launchConfig.build);
     if (iframe) {
       const rpc = makeRPC();
-      createParentApi(rpc, user, firebaseState, isLocal(searchParams));
+      createParentApi(rpc, user, firebaseState, isLocal(searchParams), iframe.contentWindow || undefined);
       console.log("child iframe created");
       tw5Started = true;
     } else {

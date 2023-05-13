@@ -28,6 +28,7 @@
         "@testing-library/react": "^13.4.0",
         "@tiddlybase/plugin-browser-test-utils": "workspace:*",
         "@tiddlybase/plugin-tiddlybase-utils": "workspace:*",
+        "@tiddlybase/shared": "workspace:*",
         "@tiddlybase/tw5-types": "workspace:*",
         "@tiddlybase/webpack-config": "workspace:*",
         "@types/jest": "^29.2.5",

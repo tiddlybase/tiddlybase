@@ -2120,6 +2120,7 @@ __metadata:
     "@testing-library/react": ^13.4.0
     "@tiddlybase/plugin-browser-test-utils": "workspace:*"
     "@tiddlybase/plugin-tiddlybase-utils": "workspace:*"
+    "@tiddlybase/shared": "workspace:*"
     "@tiddlybase/tw5-types": "workspace:*"
     "@tiddlybase/webpack-config": "workspace:*"
     "@types/jest": ^29.2.5
@@ -2167,6 +2168,24 @@ __metadata:
     jest: 29.5
     react: ^18.0.0
     react-dom: ^18.0.0
+    ts-jest: 29.1.0
+    typescript: 5.0.4
+    webpack: 5.81.0
+    webpack-cli: ^4.9.2
+  languageName: unknown
+  linkType: soft
+
+"@tiddlybase/plugin-rpc-syncadaptor@workspace:packages/plugin-rpc-syncadaptor":
+  version: 0.0.0-use.local
+  resolution: "@tiddlybase/plugin-rpc-syncadaptor@workspace:packages/plugin-rpc-syncadaptor"
+  dependencies:
+    "@tiddlybase/plugin-tiddlybase-utils": "workspace:*"
+    "@tiddlybase/rpc": "workspace:*"
+    "@tiddlybase/tw5-types": "workspace:*"
+    "@tiddlybase/webpack-config": "workspace:*"
+    "@types/jest": ^27.4.1
+    cross-env: ^7.0.3
+    jest: 29.5
     ts-jest: 29.1.0
     typescript: 5.0.4
     webpack: 5.81.0

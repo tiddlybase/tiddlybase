@@ -1,5 +1,6 @@
 import type { } from "@tiddlybase/tw5-types/src/index"
-import { apiDefiner, apiClient, makeRPC } from "@tiddlybase/rpc";
+import { apiDefiner, apiClient } from "@tiddlybase/rpc";
+import { makeRPC } from "@tiddlybase/rpc/src/make-rpc";
 import type { TopLevelAPIForSandboxedWiki } from "@tiddlybase/rpc/src/top-level-api";
 import type { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
 import { createWikiInfoConfig } from "@tiddlybase/shared/src/wiki-info";
@@ -58,7 +59,8 @@ import { PatchedModules } from "./patched-modules";
         isLocal,
         parentLocation,
         user,
-        storageConfig
+        storageConfig,
+        rpc
       };
       try {
         const tiddlers: Array<$tw.TiddlerFields> =

@@ -1,6 +1,6 @@
 import { TW5ReactContext } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
 import { useContext } from "react";
-import { MDXTiddlybaseAPI, TiddlerObject } from "./mdx-tiddlybase-api";
+import { MDXTiddlybaseAPI } from "./mdx-tiddlybase-api";
 
 const createMergedTiddler = (wiki: $tw.Wiki, previousVersion: $tw.TiddlerFields | undefined, currentVersion: $tw.TiddlerFields, update: boolean): $tw.TiddlerFields => {
   const mergedTiddler = {
@@ -34,7 +34,7 @@ export class MDXTiddlybaseAPIImpl implements MDXTiddlybaseAPI {
     const previousVersion = this.getTiddler(tiddler.title);
     return createMergedTiddler(this.wiki, previousVersion, tiddler, true);
   }
-  get currentTiddler(): TiddlerObject | undefined {
+  get currentTiddler(): $tw.TiddlerFields | undefined {
     const context = useContext(TW5ReactContext);
     if (context) {
       const currentTiddlerTitle = context.parentWidget?.getVariable("currentTiddler")
@@ -44,12 +44,12 @@ export class MDXTiddlybaseAPIImpl implements MDXTiddlybaseAPI {
     }
     return undefined;
   }
-  getTiddler (title: string): TiddlerObject | undefined {
+  getTiddler (title: string): $tw.TiddlerFields | undefined {
     return this.wiki.getTiddler(title)?.fields;
   }
-  filterTiddlers (filterExpression: string): TiddlerObject[] {
+  filterTiddlers (filterExpression: string): $tw.TiddlerFields[] {
     return this.wiki.filterTiddlers(filterExpression)
       .map(title => this.getTiddler(title))
-      .filter(tiddlerObject => tiddlerObject !== undefined) as TiddlerObject[];
+      .filter(tiddlerObject => tiddlerObject !== undefined) as $tw.TiddlerFields[];
   }
 }

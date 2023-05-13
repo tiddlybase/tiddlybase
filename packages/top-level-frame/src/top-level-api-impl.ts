@@ -1,8 +1,10 @@
 import MiniIframeRPC from "mini-iframe-rpc";
-import { apiDefiner } from "@tiddlybase/rpc";
+import { apiClient, apiDefiner } from "@tiddlybase/rpc";
 import { StorageFileMetadata, TopLevelAPIForSandboxedWiki } from "@tiddlybase/rpc/src/top-level-api";
+import { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
 import type { CallableFunctionType } from "@tiddlybase/functions/src/apis";
 import { getDownloadURL, getMetadata, getStorage, getBlob, ref } from '@firebase/storage';
+import { getFirestore } from '@firebase/firestore';
 import { getFunctions, httpsCallable, HttpsCallable, connectFunctionsEmulator } from "@firebase/functions";
 import type { User } from '@firebase/auth'
 import { TiddlyBaseUser, USER_FIELDS } from "@tiddlybase/rpc/src/top-level-api";
@@ -10,8 +12,9 @@ import { deleteAccount } from "./login";
 import { FirebaseState } from "./types";
 import { FirebaseStorage } from '@firebase/storage';
 import { Functions } from '@firebase/functions'
-import { getStorageConfig } from "packages/shared/src/tiddlybase-config-schema";
+import { getStorageConfig } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import { toggleVisibleDOMSection, replaceChildrenWithText } from "./dom-utils";
+import { FirestoreTiddlerStore } from "./firestore-tiddler-store";
 
 export const devSetup = (functions: Functions) => connectFunctionsEmulator(functions, "localhost", 5001);
 
@@ -54,8 +57,14 @@ const objFilter = <K extends keyof any = string, V = any>(fn: (k: K, v: V) => bo
 
 const convertUser = (firebaseUser: User): TiddlyBaseUser => objFilter<keyof TiddlyBaseUser, any>((k) => USER_FIELDS.includes(k), firebaseUser) as TiddlyBaseUser;
 
-export const createParentApi = (rpc: MiniIframeRPC, user: User, firebaseState: FirebaseState, isLocal: boolean) => {
+export const createParentApi = (rpc: MiniIframeRPC, user: User, firebaseState: FirebaseState, isLocal: boolean, childIframe?: Window) => {
   const def = apiDefiner<TopLevelAPIForSandboxedWiki>(rpc);
+
+  const exposeObjectMethod = (fn: Parameters<typeof def>[0], obj:Partial<TopLevelAPIForSandboxedWiki>) => {
+    if (obj[fn]) {
+      def(fn, obj[fn]!.bind(obj));
+    }
+  }
 
   if (firebaseState.tiddlybaseConfig.functions) {
     const functions = getFunctions(firebaseState.app, firebaseState.tiddlybaseConfig.functions.location);
@@ -68,6 +77,18 @@ export const createParentApi = (rpc: MiniIframeRPC, user: User, firebaseState: F
   }
 
   const storage = getStorage(firebaseState.app);
+
+  if (childIframe) {
+    const firestore = getFirestore(firebaseState.app);
+    const sandboxedAPIClient = apiClient<SandboxedWikiAPIForTopLevel>(rpc, childIframe);
+    // TODO: derive wikiName from launchConfig
+    const wikiName = 'default';
+    const firestoreTiddlerStore = new FirestoreTiddlerStore(firestore, sandboxedAPIClient, firebaseState.tiddlybaseConfig.name, wikiName);
+    exposeObjectMethod('setTiddler', firestoreTiddlerStore);
+    exposeObjectMethod('getTiddler', firestoreTiddlerStore);
+    exposeObjectMethod('deleteTiddler', firestoreTiddlerStore);
+  }
+
 
   def('childIframeReady', async () => {
     return {
@@ -87,5 +108,5 @@ export const createParentApi = (rpc: MiniIframeRPC, user: User, firebaseState: F
   def('loadError', async (message: string) => {
     replaceChildrenWithText(document.getElementById("wiki-error-message"), message);
     toggleVisibleDOMSection('wiki-error');
-  })
+  });
 }

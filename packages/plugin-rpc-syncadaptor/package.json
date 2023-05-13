@@ -1,0 +1,28 @@
+{
+    "name": "@tiddlybase/plugin-rpc-syncadaptor",
+    "description": "TW5 Syncadaptor plugin which invokes parent frame functions via RPC",
+    "version": "0.0.3",
+    "private": true,
+    "author": "Peter Neumark",
+    "license": "Apache-2.0",
+    "scripts": {
+        "build": "webpack",
+        "build:dev": "MODE=development webpack",
+        "test": "jest"
+    },
+    "dependencies": {
+        "@tiddlybase/plugin-tiddlybase-utils": "workspace:*"
+    },
+    "devDependencies": {
+        "@tiddlybase/rpc": "workspace:*",
+        "@tiddlybase/tw5-types": "workspace:*",
+        "@tiddlybase/webpack-config": "workspace:*",
+        "@types/jest": "^27.4.1",
+        "cross-env": "^7.0.3",
+        "jest": "29.5",
+        "ts-jest": "29.1.0",
+        "typescript": "5.0.4",
+        "webpack": "5.81.0",
+        "webpack-cli": "^4.9.2"
+    }
+}

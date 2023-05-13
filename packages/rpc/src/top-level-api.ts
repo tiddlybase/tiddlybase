@@ -3,6 +3,7 @@ import type { AddNumbers, NotifyAdmin } from "@tiddlybase/functions/src/apis";
 import type { User } from '@firebase/auth';
 import { ParentAPIBase } from "./base";
 import { WikiLaunchConfig } from "@tiddlybase/shared/src/tiddlybase-config-schema"
+import type { TiddlerStore } from "@tiddlybase/shared/src/tiddler-store";
 
 export const USER_FIELDS = ['emailVerified', 'displayName', 'photoURL', 'providerId', 'uid'] as const;
 
@@ -25,8 +26,7 @@ export interface StorageFileMetadata {
   md5Hash?: string
 }
 
-
-export interface TopLevelAPIForSandboxedWiki extends ParentAPIBase<ChildInitProps> {
+export interface TopLevelAPIForSandboxedWiki extends ParentAPIBase<ChildInitProps>, TiddlerStore {
   getStorageFileAsBlob: (filename: string) => Promise<Blob>;
   getStorageFileMetadata: (filename: string) => Promise<StorageFileMetadata>;
   getStorageFileDownloadUrl: (filename: string) => Promise<string>;
