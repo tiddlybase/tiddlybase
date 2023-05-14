@@ -4,6 +4,15 @@ import { joinPaths } from './join-paths';
 
 export interface WikiLaunchConfig {
   build: string,
+  /* TODO: wikiNames should be renamed to something like 'collections' with
+  type:
+  export type TiddlerCollectionSource =
+  { type: 'bakedin' }
+  | { type: 'http', url: string }
+  | { type: 'firebase_storage', path: string }
+  | { type: 'tiddlyweb', url: string }
+  | { type: 'firestore', prefix: string }
+  */
   wikiNames: string[],
   settings: Partial<$tw.WikiInfoConfig>
 }
