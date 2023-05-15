@@ -81,9 +81,13 @@ export const createParentApi = (rpc: MiniIframeRPC, user: User, firebaseState: F
   if (childIframe) {
     const firestore = getFirestore(firebaseState.app);
     const sandboxedAPIClient = apiClient<SandboxedWikiAPIForTopLevel>(rpc, childIframe);
-    // TODO: derive wikiName from launchConfig
-    const wikiName = 'default';
-    const firestoreTiddlerStore = new FirestoreTiddlerStore(firestore, sandboxedAPIClient, firebaseState.tiddlybaseConfig.name, wikiName);
+    // TODO: tiddlerCollectionName should come from the tiddlerSource in the config.
+    const tiddlerCollectionName = "shared";
+    const firestoreTiddlerStore = new FirestoreTiddlerStore(firestore, sandboxedAPIClient, firebaseState.tiddlybaseConfig.name, tiddlerCollectionName);
+    firestoreTiddlerStore.startListening();
+    firestoreTiddlerStore.getAllTiddlers().then(allTiddlers => {
+      console.log("read tiddlers from firestore", allTiddlers);
+    })
     exposeObjectMethod('setTiddler', firestoreTiddlerStore);
     exposeObjectMethod('getTiddler', firestoreTiddlerStore);
     exposeObjectMethod('deleteTiddler', firestoreTiddlerStore);

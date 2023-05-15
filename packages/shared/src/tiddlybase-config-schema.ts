@@ -26,6 +26,9 @@ const STORAGE_WIKIS_PATH_SUFFIX = 'wikis'
  * @tiddlybase/top-level-frame.
  */
 export interface TiddlybaseConfig {
+  // TODO: rename name to instanceName to make it obvious that this is the
+  // name of the tidldyspace instance (of which there can be several in a
+  // firebase project).
   name: string,
   topLevel? : {
     title?: string,
