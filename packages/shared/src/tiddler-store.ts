@@ -1,7 +1,9 @@
 import type { } from "@tiddlybase/tw5-types/src/index";
 
+export type TiddlerCollection = Record<string, $tw.TiddlerFields>;
+
 export interface TiddlerSource {
-  getAllTiddlers: () => Promise<Record<string, $tw.TiddlerFields>>;
+  getAllTiddlers: () => Promise<TiddlerCollection>;
 }
 
 export interface TiddlerStore extends TiddlerSource{

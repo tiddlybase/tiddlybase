@@ -85,7 +85,7 @@ service firebase.storage {
             allow delete: if false;
         }
         // wiki dir, containing wiki
-        match ${joinPaths('/', getStorageConfig(config).wikisPath, RULES_WILDCARD_SUFFIX)} {
+        match ${joinPaths('/', getStorageConfig(config).tiddlerCollectionsPath, RULES_WILDCARD_SUFFIX)} {
             // allow read if custom claim set
             allow get: if hasReadAccess();
             // don't allow lists:

@@ -4,7 +4,6 @@ import { makeRPC } from "@tiddlybase/rpc/src/make-rpc";
 import type { TopLevelAPIForSandboxedWiki } from "@tiddlybase/rpc/src/top-level-api";
 import type { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
 import { createWikiInfoConfig } from "@tiddlybase/shared/src/wiki-info";
-import { loadWikiTiddlers } from "./load-tiddlers";
 import { PatchedModules } from "./patched-modules";
 
 (() => {
@@ -48,30 +47,23 @@ import { PatchedModules } from "./patched-modules";
       const topLevelResponse = await topLevelClient('childIframeReady', []);
       const {
         user,
-        launchConfig: { wikiNames, settings },
-        isLocal,
+        tiddlers,
         storageConfig,
-        parentLocation
+        parentLocation,
+        wikiInfoConfig,
+        isLocal
       } = topLevelResponse;
       console.log('child iframe received user info', topLevelResponse);
       window.$tw.tiddlybase = {
         topLevelClient,
-        isLocal,
         parentLocation,
         user,
         storageConfig,
-        rpc
+        rpc,
+        isLocal
       };
       try {
-        const tiddlers: Array<$tw.TiddlerFields> =
-          (await Promise.all(
-            wikiNames.map(
-              wikiName => loadWikiTiddlers(
-                topLevelClient,
-                storageConfig,
-                wikiName,
-                isLocal)))).flat();
-        tiddlers.push(createWikiInfoConfig(settings))
+        tiddlers.push(createWikiInfoConfig(wikiInfoConfig))
         $tw.preloadTiddlerArray(tiddlers);
         bootTiddlyWiki();
       } catch (e) {

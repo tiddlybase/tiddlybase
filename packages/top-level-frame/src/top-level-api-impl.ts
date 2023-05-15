@@ -9,26 +9,27 @@ import { getFunctions, httpsCallable, HttpsCallable, connectFunctionsEmulator } 
 import type { User } from '@firebase/auth'
 import { TiddlyBaseUser, USER_FIELDS } from "@tiddlybase/rpc/src/top-level-api";
 import { deleteAccount } from "./login";
-import { FirebaseState } from "./types";
+import { FirebaseAPIs, FirebaseState } from "./types";
 import { FirebaseStorage } from '@firebase/storage';
 import { Functions } from '@firebase/functions'
 import { getStorageConfig } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import { toggleVisibleDOMSection, replaceChildrenWithText } from "./dom-utils";
 import { FirestoreTiddlerStore } from "./firestore-tiddler-store";
+import { readTiddlerSources } from "./tiddler-source";
 
 export const devSetup = (functions: Functions) => connectFunctionsEmulator(functions, "localhost", 5001);
 
-const makeGetStorageFileDownloadUrl = (storage: FirebaseStorage) => async (filename: string):Promise<string> => {
+const makeGetStorageFileDownloadUrl = (storage: FirebaseStorage) => async (filename: string): Promise<string> => {
   const fileRef = ref(storage, filename);
   return await getDownloadURL(fileRef);
 };
 
-const makeGetStorageFileAsBlob = (storage: FirebaseStorage) => async (filename: string):Promise<Blob> => {
+const makeGetStorageFileAsBlob = (storage: FirebaseStorage) => async (filename: string): Promise<Blob> => {
   const fileRef = ref(storage, filename);
   return await getBlob(fileRef);
 };
 
-const makeGetStorageFileMetadata = (storage: FirebaseStorage) => async (filename: string):Promise<StorageFileMetadata> => {
+const makeGetStorageFileMetadata = (storage: FirebaseStorage) => async (filename: string): Promise<StorageFileMetadata> => {
   const fileRef = ref(storage, filename);
   const metadata = await getMetadata(fileRef);
   return {
@@ -57,56 +58,57 @@ const objFilter = <K extends keyof any = string, V = any>(fn: (k: K, v: V) => bo
 
 const convertUser = (firebaseUser: User): TiddlyBaseUser => objFilter<keyof TiddlyBaseUser, any>((k) => USER_FIELDS.includes(k), firebaseUser) as TiddlyBaseUser;
 
-export const createParentApi = (rpc: MiniIframeRPC, user: User, firebaseState: FirebaseState, isLocal: boolean, childIframe?: Window) => {
+export const createParentApi = (rpc: MiniIframeRPC, user: User, firebaseState: FirebaseState, childIframe: Window) => {
+  const apis: FirebaseAPIs = {};
   const def = apiDefiner<TopLevelAPIForSandboxedWiki>(rpc);
 
-  const exposeObjectMethod = (fn: Parameters<typeof def>[0], obj:Partial<TopLevelAPIForSandboxedWiki>) => {
+  const exposeObjectMethod = (fn: Parameters<typeof def>[0], obj: Partial<TopLevelAPIForSandboxedWiki>) => {
     if (obj[fn]) {
       def(fn, obj[fn]!.bind(obj));
     }
   }
 
   if (firebaseState.tiddlybaseConfig.functions) {
-    const functions = getFunctions(firebaseState.app, firebaseState.tiddlybaseConfig.functions.location);
-    if (isLocal) {
-      devSetup(functions);
+    apis.functions = getFunctions(firebaseState.app, firebaseState.tiddlybaseConfig.functions.location);
+    if (firebaseState.launchConfig.isLocal) {
+      devSetup(apis.functions);
     }
-    const exposeCallable = (fn: Parameters<typeof def>[0]) => def(fn, getStub(functions, fn))
+    const exposeCallable = (fn: Parameters<typeof def>[0]) => def(fn, getStub(apis.functions!, fn))
     exposeCallable('addNumbers');
     exposeCallable('notifyAdmin');
   }
 
-  const storage = getStorage(firebaseState.app);
+  apis.storage = getStorage(firebaseState.app);
+  apis.firestore = getFirestore(firebaseState.app);
 
-  if (childIframe) {
-    const firestore = getFirestore(firebaseState.app);
-    const sandboxedAPIClient = apiClient<SandboxedWikiAPIForTopLevel>(rpc, childIframe);
-    // TODO: tiddlerCollectionName should come from the tiddlerSource in the config.
-    const tiddlerCollectionName = "shared";
-    const firestoreTiddlerStore = new FirestoreTiddlerStore(firestore, sandboxedAPIClient, firebaseState.tiddlybaseConfig.name, tiddlerCollectionName);
-    firestoreTiddlerStore.startListening();
-    firestoreTiddlerStore.getAllTiddlers().then(allTiddlers => {
-      console.log("read tiddlers from firestore", allTiddlers);
-    })
-    exposeObjectMethod('setTiddler', firestoreTiddlerStore);
-    exposeObjectMethod('getTiddler', firestoreTiddlerStore);
-    exposeObjectMethod('deleteTiddler', firestoreTiddlerStore);
-  }
-
+  const sandboxedAPIClient = apiClient<SandboxedWikiAPIForTopLevel>(rpc, childIframe);
+  const tiddlerSourcesPromise = readTiddlerSources(firebaseState.tiddlybaseConfig, firebaseState.launchConfig, apis, sandboxedAPIClient);
 
   def('childIframeReady', async () => {
+
+    const { tiddlers, sources } = await tiddlerSourcesPromise;
+
+    // TODO: these RPC methods should be received by a dispatcher, not firestoreTiddlerStore directly
+    const store = sources.find(source => source instanceof FirestoreTiddlerStore);
+    if (store) {
+      exposeObjectMethod('setTiddler', store);
+      exposeObjectMethod('getTiddler', store);
+      exposeObjectMethod('deleteTiddler', store);
+    }
+
     return {
       user: convertUser(user),
-      launchConfig: firebaseState.launchConfig,
+      tiddlers: Object.values(tiddlers),
+      wikiInfoConfig: firebaseState.launchConfig.settings,
       storageConfig: getStorageConfig(firebaseState.tiddlybaseConfig),
+      isLocal: firebaseState.launchConfig.isLocal,
       parentLocation: JSON.parse(JSON.stringify(window.location)),
-      isLocal
     }
   });
 
-  def('getStorageFileAsBlob', makeGetStorageFileAsBlob(storage));
-  def('getStorageFileMetadata', makeGetStorageFileMetadata(storage));
-  def('getStorageFileDownloadUrl', makeGetStorageFileDownloadUrl(storage));
+  def('getStorageFileAsBlob', makeGetStorageFileAsBlob(apis.storage));
+  def('getStorageFileMetadata', makeGetStorageFileMetadata(apis.storage));
+  def('getStorageFileDownloadUrl', makeGetStorageFileDownloadUrl(apis.storage));
   def('authSignOut', firebaseState.auth.signOut.bind(firebaseState.auth));
   def('authDeleteAccount', deleteAccount);
   def('loadError', async (message: string) => {

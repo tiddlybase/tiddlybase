@@ -2,15 +2,15 @@ import { User } from '@firebase/auth';
 import { makeRPC } from "@tiddlybase/rpc/src/make-rpc";
 import { handleSignedInUser, handleSignedOutUser } from './login';
 import { createParentApi } from './top-level-api-impl';
-import { TiddlybaseConfig, WikiLaunchConfig } from '@tiddlybase/shared/src/tiddlybase-config-schema';
+import { TiddlybaseConfig, LaunchConfig } from '@tiddlybase/shared/src/tiddlybase-config-schema';
 import { TIDDLYBASE_CONFIG_URL } from '@tiddlybase/shared/src/constants'
-import { parseSearchParams, isLocal } from '@tiddlybase/shared/src/search-params'
+import { parseSearchParams } from '@tiddlybase/shared/src/search-params'
 import { initializeApp } from '@firebase/app'
 import { getAuth } from '@firebase/auth'
 import * as firebaseui from 'firebaseui';
 import { FirebaseState, StartTW5 } from './types';
 import type { } from '@tiddlybase/tw5-types/src/index'
-import { getLaunchConfig } from './launch-config';
+import { getNormalizedLaunchConfig } from './launch-config';
 
 const createWikiIframe = async (build?: string) => {
   // append URL fragment so permalinks to tiddlers work as expected
@@ -37,7 +37,7 @@ const initApp = async () => {
   console.log('parsed url search params', searchParams);
   const tiddlybaseConfig: TiddlybaseConfig = await (await fetch(TIDDLYBASE_CONFIG_URL)).json();
   console.log('got tiddlybase config', tiddlybaseConfig);
-  const launchConfig: WikiLaunchConfig = getLaunchConfig(searchParams, tiddlybaseConfig);
+  const launchConfig: LaunchConfig = getNormalizedLaunchConfig(searchParams, tiddlybaseConfig);
   console.log('got launch config', launchConfig)
   if (searchParams['signInFlow'] === 'popup') {
     tiddlybaseConfig.authentication.firebaseui.signInFlow = 'popup';
@@ -60,7 +60,7 @@ const initApp = async () => {
     const iframe = await createWikiIframe(launchConfig.build);
     if (iframe) {
       const rpc = makeRPC();
-      createParentApi(rpc, user, firebaseState, isLocal(searchParams), iframe.contentWindow || undefined);
+      createParentApi(rpc, user, firebaseState, iframe.contentWindow!);
       console.log("child iframe created");
       tw5Started = true;
     } else {
