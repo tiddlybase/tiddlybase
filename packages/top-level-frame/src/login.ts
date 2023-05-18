@@ -11,7 +11,7 @@ const sleep = (ms:number) => new Promise((resolve) => {
 function getUiConfig(firebaseState:FirebaseState, startTW5: StartTW5) {
   console.log('running getUiConfig');
   return {
-    ...firebaseState.tiddlybaseConfig.authentication.firebaseui,
+    ...firebaseState.tiddlybaseClientConfig.authentication.firebaseui,
     callbacks: {
       // Called when the user has been successfully signed in.
       // Note: types in node_modules/firebaseui/dist/index.d.ts

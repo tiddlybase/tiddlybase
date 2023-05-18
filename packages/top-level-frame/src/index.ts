@@ -2,8 +2,7 @@ import { User } from '@firebase/auth';
 import { makeRPC } from "@tiddlybase/rpc/src/make-rpc";
 import { handleSignedInUser, handleSignedOutUser } from './login';
 import { createParentApi } from './top-level-api-impl';
-import { TiddlybaseConfig, LaunchConfig } from '@tiddlybase/shared/src/tiddlybase-config-schema';
-import { TIDDLYBASE_CONFIG_URL } from '@tiddlybase/shared/src/constants'
+import { LaunchConfig, TiddlybaseClientConfig } from '@tiddlybase/shared/src/tiddlybase-config-schema';
 import { parseSearchParams } from '@tiddlybase/shared/src/search-params'
 import { initializeApp } from '@firebase/app'
 import { getAuth } from '@firebase/auth'
@@ -11,6 +10,10 @@ import * as firebaseui from 'firebaseui';
 import { FirebaseState, StartTW5 } from './types';
 import type { } from '@tiddlybase/tw5-types/src/index'
 import { getNormalizedLaunchConfig } from './launch-config';
+
+declare global {
+  interface Window { tiddlybaseClientConfig: TiddlybaseClientConfig; }
+}
 
 const createWikiIframe = async (build?: string) => {
   // append URL fragment so permalinks to tiddlers work as expected
@@ -35,18 +38,18 @@ const initApp = async () => {
   console.log('running initApp')
   const searchParams = parseSearchParams(window.location.search);
   console.log('parsed url search params', searchParams);
-  const tiddlybaseConfig: TiddlybaseConfig = await (await fetch(TIDDLYBASE_CONFIG_URL)).json();
-  console.log('got tiddlybase config', tiddlybaseConfig);
-  const launchConfig: LaunchConfig = getNormalizedLaunchConfig(searchParams, tiddlybaseConfig);
+  const tiddlybaseClientConfig: TiddlybaseClientConfig = window.tiddlybaseClientConfig;
+  console.log('got tiddlybase config', tiddlybaseClientConfig);
+  const launchConfig: LaunchConfig = getNormalizedLaunchConfig(searchParams, tiddlybaseClientConfig);
   console.log('got launch config', launchConfig)
   if (searchParams['signInFlow'] === 'popup') {
-    tiddlybaseConfig.authentication.firebaseui.signInFlow = 'popup';
+    tiddlybaseClientConfig.authentication.firebaseui.signInFlow = 'popup';
     console.log('overriding sign in flow to be popup');
   }
-  const app = initializeApp(tiddlybaseConfig.clientConfig);
+  const app = initializeApp(tiddlybaseClientConfig.clientConfig);
   const auth = getAuth(app);
   const ui = new firebaseui.auth.AuthUI(auth);
-  const firebaseState: FirebaseState = { app, auth, ui, tiddlybaseConfig, launchConfig };
+  const firebaseState: FirebaseState = { app, auth, ui, tiddlybaseClientConfig, launchConfig };
 
   let tw5Started = false;
 

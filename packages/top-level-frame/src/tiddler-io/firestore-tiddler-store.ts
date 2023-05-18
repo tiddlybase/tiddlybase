@@ -2,7 +2,7 @@ import type { TiddlerStore } from "@tiddlybase/shared/src/tiddler-store";
 import { Firestore } from '@firebase/firestore';
 import { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
 import type { APIClient } from "@tiddlybase/rpc/src";
-import { setDoc, doc, DocumentReference, DocumentData, collection, onSnapshot, Unsubscribe, getDoc, deleteDoc } from "firebase/firestore";
+import { setDoc, doc, DocumentReference, DocumentData, collection, onSnapshot, Unsubscribe, getDoc, deleteDoc, Timestamp } from "firebase/firestore";
 import type { } from '@tiddlybase/tw5-types/src/index'
 
 const SEPARATOR = "/"
@@ -74,7 +74,15 @@ export class FirestoreTiddlerStore implements TiddlerStore {
               this.initialReadCompletePromiseResolver(this.initialReadTiddlers)
             }
           } else {
-            this.initialReadTiddlers[change.doc.data().tiddler.title] = change.doc.data().tiddler;
+            const tiddler = change.doc.data().tiddler;
+            // TODO: this is a hack, we should walk the entire object to find any date types in need of conversion
+            if (tiddler.created instanceof Timestamp) {
+              tiddler.created = (tiddler.created as Timestamp).toDate()
+            }
+            if (tiddler.modified instanceof Timestamp) {
+              tiddler.modified = (tiddler.modified as Timestamp).toDate()
+            }
+            this.initialReadTiddlers[tiddler.title] = tiddler;
           }
           // TODO: forward setTiddler to tiddlywiki in child iframe:
           // this.sandboxedAPIClient('onSetTiddler', [change.doc.data().tiddler]);

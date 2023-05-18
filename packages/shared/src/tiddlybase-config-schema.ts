@@ -1,12 +1,18 @@
-import type {} from '@tiddlybase/tw5-types/src/index'
+import type { } from '@tiddlybase/tw5-types/src/index'
 import type * as firebaseui from 'firebaseui';
 import { joinPaths } from './join-paths';
+
+export type TiddlerStoreType = 'private' | 'shared' | 'public';
+
+export type BaseTiddlerStoreSpec = {
+  storeType: TiddlerStoreType
+};
 
 export type TiddlerSourceSpec =
   | { type: 'http', url: string }
   | { type: 'firebase-storage', pathPostfix: string }
   | { type: 'tiddlyweb', url: string }
-  | { type: 'firestore', collection: string }
+  | ({ type: 'firestore', collection: string } & BaseTiddlerStoreSpec)
 
 export interface LaunchConfig {
   // build is the relative path to the child iframe HTML, eg: 'tiddlybase_public/default-build.html'
@@ -29,40 +35,44 @@ export interface TiddlybaseConfig {
   // name of the tidldyspace instance (of which there can be several in a
   // firebase project).
   instanceName: string,
-  topLevel? : {
+  htmlGeneration?: {
     title?: string,
     // generated with eg: https://realfavicongenerator.net/
     faviconCode?: string
   }
   clientConfig: {
-      projectId: string,
-      appId: string,
-      databaseURL: string,
-      storageBucket: string,
-      locationId: string,
-      apiKey: string,
-      authDomain: string,
-      messagingSenderId: string,
-      measurementId: string
+    projectId: string,
+    appId: string,
+    databaseURL: string,
+    storageBucket: string,
+    locationId: string,
+    apiKey: string,
+    authDomain: string,
+    messagingSenderId: string,
+    measurementId: string
   },
   authentication: {
-    // TODO: decomission jwt-based auth in favor of firestore-back permissions
+    // TODO: decomission jwt-based auth in favor of firestore-backed permissions
     jwtRoleClaim?: string,
     firebaseui: firebaseui.auth.Config
   },
-  storage?: Partial<$tw.StorageConfig>,
-  functions?: {
+  storage: Partial<$tw.StorageConfig> | undefined,
+  functions: {
     location: string
-  },
-  hosting? : {
+  } | undefined,
+  hosting?: {
     site: string
     pathPrefix?: string
   }
-  launchConfigs?: Record<string, Partial<LaunchConfig>>
+  launchConfigs: Record<string, Partial<LaunchConfig>>
 }
 
-export const getJWTRoleClaim = (config:TiddlybaseConfig):string => config.authentication.jwtRoleClaim ?? config.instanceName;
-export const getStorageConfig = (config:TiddlybaseConfig):$tw.StorageConfig => ({
+export const TIDDLYBASE_CLIENT_CONFIG_KEYS = ['instanceName', 'clientConfig', 'authentication', 'storage', 'launchConfigs', 'functions'] as const;
+
+export type TiddlybaseClientConfig = Pick<TiddlybaseConfig, typeof TIDDLYBASE_CLIENT_CONFIG_KEYS[number]>;
+
+export const getJWTRoleClaim = (config: TiddlybaseClientConfig): string => config.authentication.jwtRoleClaim ?? config.instanceName;
+export const getStorageConfig = (config: TiddlybaseClientConfig): $tw.StorageConfig => ({
   tiddlerCollectionsPath: config?.storage?.tiddlerCollectionsPath ?? joinPaths(config.instanceName, STORAGE_TIDDLER_COLLECTIONS_PATH_SUFFIX),
   filesPath: config?.storage?.filesPath ?? joinPaths(config.instanceName, STORAGE_FILES_PATH_SUFFIX)
 });

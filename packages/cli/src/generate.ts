@@ -1,5 +1,6 @@
-import { getJWTRoleClaim, getStorageConfig } from '@tiddlybase/shared/src/tiddlybase-config-schema';
+import { TIDDLYBASE_CLIENT_CONFIG_KEYS, TiddlybaseClientConfig, getJWTRoleClaim, getStorageConfig } from '@tiddlybase/shared/src/tiddlybase-config-schema';
 import { joinPaths } from '@tiddlybase/shared/src/join-paths';
+import { objFilter } from '@tiddlybase/shared/src/obj-filter';
 import { Arguments, Argv, CommandModule } from 'yargs';
 import { ParsedConfig, readConfig, requireSingleConfig } from './config';
 import { dirname, resolve } from 'path';
@@ -141,7 +142,9 @@ export const cmdGenerateIndexHTML: CommandModule = {
   builder: (argv: Argv) => argv,
   handler: async (args: Arguments) => {
     const config = requireSingleConfig(args);
-    console.log(renderMustacheTemplate('index.html.mustache', {config}));
+    const clientConfig:TiddlybaseClientConfig = objFilter<keyof TiddlybaseClientConfig, any>((k) => TIDDLYBASE_CLIENT_CONFIG_KEYS.includes(k), config);
+    const stringifiedClientConfig = JSON.stringify(clientConfig);
+    console.log(renderMustacheTemplate('index.html.mustache', {htmlGeneration: config.htmlGeneration, stringifiedClientConfig}));
   }
 };
 

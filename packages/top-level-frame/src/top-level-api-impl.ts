@@ -13,9 +13,9 @@ import { FirebaseAPIs, FirebaseState } from "./types";
 import { FirebaseStorage } from '@firebase/storage';
 import { Functions } from '@firebase/functions'
 import { getStorageConfig } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import { objFilter } from "@tiddlybase/shared/src/obj-filter";
 import { toggleVisibleDOMSection, replaceChildrenWithText } from "./dom-utils";
-import { FirestoreTiddlerStore } from "./firestore-tiddler-store";
-import { readTiddlerSources } from "./tiddler-source";
+import { MergedSources, readTiddlerSources } from "./tiddler-io/tiddler-source";
 
 export const devSetup = (functions: Functions) => connectFunctionsEmulator(functions, "localhost", 5001);
 
@@ -53,9 +53,6 @@ const getStub = <P extends CallableFunctionType>(functions: Functions, functionN
   return invoker as P;
 }
 
-const objFilter = <K extends keyof any = string, V = any>(fn: (k: K, v: V) => boolean, input: Record<K, V>): Record<K, V> =>
-  Object.fromEntries(Object.entries(input).filter(([k, v]) => fn(k as K, v as V))) as Record<K, V>;
-
 const convertUser = (firebaseUser: User): TiddlyBaseUser => objFilter<keyof TiddlyBaseUser, any>((k) => USER_FIELDS.includes(k), firebaseUser) as TiddlyBaseUser;
 
 export const createParentApi = (rpc: MiniIframeRPC, user: User, firebaseState: FirebaseState, childIframe: Window) => {
@@ -68,8 +65,8 @@ export const createParentApi = (rpc: MiniIframeRPC, user: User, firebaseState: F
     }
   }
 
-  if (firebaseState.tiddlybaseConfig.functions) {
-    apis.functions = getFunctions(firebaseState.app, firebaseState.tiddlybaseConfig.functions.location);
+  if (firebaseState.tiddlybaseClientConfig.functions) {
+    apis.functions = getFunctions(firebaseState.app, firebaseState.tiddlybaseClientConfig.functions.location);
     if (firebaseState.launchConfig.isLocal) {
       devSetup(apis.functions);
     }
@@ -82,25 +79,23 @@ export const createParentApi = (rpc: MiniIframeRPC, user: User, firebaseState: F
   apis.firestore = getFirestore(firebaseState.app);
 
   const sandboxedAPIClient = apiClient<SandboxedWikiAPIForTopLevel>(rpc, childIframe);
-  const tiddlerSourcesPromise = readTiddlerSources(firebaseState.tiddlybaseConfig, firebaseState.launchConfig, apis, sandboxedAPIClient);
+  const tiddlerSourcesPromise:Promise<MergedSources> = readTiddlerSources(firebaseState.tiddlybaseClientConfig, firebaseState.launchConfig, user.uid, apis, sandboxedAPIClient);
 
   def('childIframeReady', async () => {
 
-    const { tiddlers, sources } = await tiddlerSourcesPromise;
+    const { tiddlers, writeStore } = await tiddlerSourcesPromise;
 
-    // TODO: these RPC methods should be received by a dispatcher, not firestoreTiddlerStore directly
-    const store = sources.find(source => source instanceof FirestoreTiddlerStore);
-    if (store) {
-      exposeObjectMethod('setTiddler', store);
-      exposeObjectMethod('getTiddler', store);
-      exposeObjectMethod('deleteTiddler', store);
+    if (writeStore) {
+      exposeObjectMethod('setTiddler', writeStore);
+      exposeObjectMethod('getTiddler', writeStore);
+      exposeObjectMethod('deleteTiddler', writeStore);
     }
 
     return {
       user: convertUser(user),
       tiddlers: Object.values(tiddlers),
       wikiInfoConfig: firebaseState.launchConfig.settings,
-      storageConfig: getStorageConfig(firebaseState.tiddlybaseConfig),
+      storageConfig: getStorageConfig(firebaseState.tiddlybaseClientConfig),
       isLocal: firebaseState.launchConfig.isLocal,
       parentLocation: JSON.parse(JSON.stringify(window.location)),
     }
@@ -116,3 +111,4 @@ export const createParentApi = (rpc: MiniIframeRPC, user: User, firebaseState: F
     toggleVisibleDOMSection('wiki-error');
   });
 }
+

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>{{ config.topLevel.title }}</title>
-    {{{ config.topLevel.faviconCode }}}
+    <title>{{ htmlGeneration.title }}</title>
+    {{{ htmlGeneration.faviconCode }}}
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta name="application-name" content="Tiddlybase" />
@@ -25,6 +25,9 @@
       rel="stylesheet"
       href="https://www.gstatic.com/firebasejs/ui/6.0.0/firebase-ui-auth.css"
     />
+    <script>
+    var tiddlybaseClientConfig = {{{stringifiedClientConfig}}};
+    </script>
     <script src="tiddlybase_public/top-level-frame.js"></script>
   </head>
 
