@@ -2,17 +2,21 @@ import type { } from '@tiddlybase/tw5-types/src/index'
 import type * as firebaseui from 'firebaseui';
 import { joinPaths } from './join-paths';
 
-export type TiddlerStoreType = 'private' | 'shared' | 'public';
+export type TiddlerWriteCondition = { titlePrefix: string }; // more options in the future
 
-export type BaseTiddlerStoreSpec = {
-  storeType: TiddlerStoreType
-};
+export type BaseTiddlerStoreSpec = { storeType: 'private' } | { storeType: 'shared' } | { storeType: 'custom', writeCondition: TiddlerWriteCondition };
+
+export type FirestoreTiddlerStoreOptions = Partial<{
+      stripDocIDPrefix: string
+}>
 
 export type TiddlerSourceSpec =
   | { type: 'http', url: string }
   | { type: 'firebase-storage', pathPostfix: string }
   | { type: 'tiddlyweb', url: string }
-  | ({ type: 'firestore', collection: string } & BaseTiddlerStoreSpec)
+  | ({
+    type: 'firestore', collection: string, options?: FirestoreTiddlerStoreOptions
+  } & BaseTiddlerStoreSpec)
 
 export interface LaunchConfig {
   // build is the relative path to the child iframe HTML, eg: 'tiddlybase_public/default-build.html'

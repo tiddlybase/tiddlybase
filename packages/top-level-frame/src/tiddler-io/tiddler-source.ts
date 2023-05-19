@@ -54,7 +54,7 @@ const getTiddlerSource = (tiddlybaseClientConfig: TiddlybaseClientConfig, spec: 
       if (!apis.firestore) {
         throw new Error('Firestore DB required by tiddler source in launch config, but is uninitialized');
       }
-      const firestoreTiddlerStore = new FirestoreTiddlerStore(apis.firestore, sandboxedAPIClient, tiddlybaseClientConfig.instanceName, substituteUserid(spec.collection, userid));
+      const firestoreTiddlerStore = new FirestoreTiddlerStore(apis.firestore, sandboxedAPIClient, tiddlybaseClientConfig.instanceName, substituteUserid(spec.collection, userid), spec.options);
       firestoreTiddlerStore.startListening();
       return firestoreTiddlerStore;
     default:

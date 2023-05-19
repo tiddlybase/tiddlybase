@@ -1,19 +1,36 @@
 import { TiddlerCollection, TiddlerProvenance, TiddlerSource, TiddlerSourceWithSpec, TiddlerStore } from "@tiddlybase/shared/src/tiddler-store";
 import type { } from '@tiddlybase/tw5-types/src/index'
-import { TiddlerSourceSpec, TiddlerStoreType } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import { TiddlerSourceSpec, TiddlerWriteCondition } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 
 type PredicateFn = (tiddler: $tw.TiddlerFields) => boolean
 const KNOWN_PRIVATE = new Set<string>(['$:/StoryList', '$:/HistoryList', '$:/DefaultTiddlers'])
 const PRIVATE_PREFIX = '€:/'
 
 const ALWAYS = (_: $tw.TiddlerFields) => true;
-const PREDICATES: Record<TiddlerStoreType, PredicateFn> = {
-  private: tiddler => {
-    console.log("private predicate", tiddler);
-    return KNOWN_PRIVATE.has(tiddler.title) || tiddler.title.startsWith(PRIVATE_PREFIX) || ('draft.of' in tiddler)
-  },
-  shared: ALWAYS,
-  public: ALWAYS // TODO
+
+const getConditionPredicate = (writeCondition: TiddlerWriteCondition): PredicateFn => {
+  if (writeCondition.titlePrefix) {
+    return tiddler => tiddler.title.startsWith(writeCondition.titlePrefix);
+  }
+  // firestore is the only TiddlerStore currently supported
+  throw new Error("Cannot create PredicateFn for specified writeCondition");
+};
+
+const getPredicate = (spec: TiddlerSourceSpec) : PredicateFn => {
+  if (spec.type === 'firestore') {
+    switch (spec.storeType) {
+      case 'custom':
+        return getConditionPredicate(spec.writeCondition);
+      case 'private':
+        return tiddler => {
+          return KNOWN_PRIVATE.has(tiddler.title) || tiddler.title.startsWith(PRIVATE_PREFIX) || ('draft.of' in tiddler)
+        };
+      case 'shared':
+        return ALWAYS;
+    }
+  }
+  // firestore is the only TiddlerStore currently supported
+  throw new Error("Cannot create predicate for spec of type " + spec.type);
 }
 
 type CandidateStore = {
@@ -29,7 +46,7 @@ const isTiddlerStore = (s: TiddlerSource): s is TiddlerStore => {
 const getCandidateStore = (store: TiddlerStore, spec: TiddlerSourceSpec): CandidateStore => {
   let predicate = ALWAYS;
   if ('storeType' in spec) {
-    predicate = PREDICATES[spec.storeType];
+    predicate = getPredicate(spec);
   }
   return {
     spec,

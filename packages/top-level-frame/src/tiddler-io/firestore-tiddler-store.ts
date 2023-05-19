@@ -1,27 +1,23 @@
 import type { TiddlerStore } from "@tiddlybase/shared/src/tiddler-store";
-import { Firestore } from '@firebase/firestore';
-import { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
+import type { Firestore } from '@firebase/firestore';
+import type { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
 import type { APIClient } from "@tiddlybase/rpc/src";
 import { setDoc, doc, DocumentReference, DocumentData, collection, onSnapshot, Unsubscribe, getDoc, deleteDoc, Timestamp } from "firebase/firestore";
 import type { } from '@tiddlybase/tw5-types/src/index'
-
-const SEPARATOR = "/"
+import { getFirestoreCollectionPath } from "./firestore-tiddler-store-util";
+import type { FirestoreTiddlerStoreOptions } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 
 const SENTINEL_DOC_ID = "\uffffsentinel"
 
-const getFirestoreCollectionPath = (tiddlybaseInstanceName: string, tiddlerCollectionName: string) => {
-  ///wikis/family/collections/shared/tiddlers/ExampleTiddler
-  return [
-    "tiddlybase-instances",
-    tiddlybaseInstanceName,
-    "collections",
-    tiddlerCollectionName,
-    "tiddlers",
-  ].map(s => encodeURIComponent(s)).join(SEPARATOR);
+const maybeTrimPrefix = (title: string, options: FirestoreTiddlerStoreOptions | undefined): string => {
+  if (options?.stripDocIDPrefix && title.startsWith(options.stripDocIDPrefix)) {
+    return title.substring(options.stripDocIDPrefix.length);
+  }
+  return title;
 }
 
-const writeTiddler = async (firestore: Firestore, path: string, tiddler: $tw.TiddlerFields): Promise<DocumentReference<DocumentData>> => {
-  const docRef = doc(firestore, path, encodeURIComponent(tiddler.title));
+const writeTiddler = async (firestore: Firestore, path: string, tiddler: $tw.TiddlerFields, docId: string): Promise<DocumentReference<DocumentData>> => {
+  const docRef = doc(firestore, path, docId);
   await setDoc(docRef, { tiddler });
   console.log("Document written with ID: ", docRef.id);
   return docRef;
@@ -49,12 +45,19 @@ export class FirestoreTiddlerStore implements TiddlerStore {
   initialReadCompletePromiseResolver: undefined | ((tidders: typeof this.initialReadTiddlers) => void) = undefined;
   initialReadCompletePromiseResolved: boolean = false;
   unsubscribe: Unsubscribe | undefined;
+  options: FirestoreTiddlerStoreOptions | undefined;
 
-  constructor(firestore: Firestore, sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>, tiddlybaseInstanceName: string, tiddlerCollectionName: string) {
+  constructor(
+    firestore: Firestore,
+    sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>,
+    tiddlybaseInstanceName: string,
+    tiddlerCollectionName: string,
+    options?: FirestoreTiddlerStoreOptions) {
     this.firestore = firestore;
     this.sandboxedAPIClient = sandboxedAPIClient;
     this.tiddlybaseInstanceName = tiddlybaseInstanceName;
     this.tiddlerCollectionName = tiddlerCollectionName;
+    this.options = options;
     this.initialReadCompletePromise = new Promise((resolve, _reject) => {
       this.initialReadCompletePromiseResolver = resolve;
     })
@@ -104,19 +107,24 @@ export class FirestoreTiddlerStore implements TiddlerStore {
     // TODO: reset initialTiddler state?
   }
 
+  private getDocId(title:string):string {
+    return encodeURIComponent(maybeTrimPrefix(title, this.options));
+  }
+
   async getTiddler(title: string): Promise<$tw.TiddlerFields | undefined> {
     // TODO
     console.log('getTiddler', title);
     return undefined;
   }
   async setTiddler(tiddler: $tw.TiddlerFields): Promise<$tw.TiddlerFields> {
-    const result = writeTiddler(this.firestore, getFirestoreCollectionPath(this.tiddlybaseInstanceName, this.tiddlerCollectionName), tiddler);
+    const docId = this.getDocId(tiddler.title);
+    const result = writeTiddler(this.firestore, getFirestoreCollectionPath(this.tiddlybaseInstanceName, this.tiddlerCollectionName), tiddler, docId);
     console.log('setTiddler (outer)', tiddler, result);
     return tiddler;
   }
   async deleteTiddler(title: string): Promise<void> {
     console.log('deleteTiddler (outer)', title);
-    const docRef = doc(this.firestore, getFirestoreCollectionPath(this.tiddlybaseInstanceName, this.tiddlerCollectionName), encodeURIComponent(title));
+    const docRef = doc(this.firestore, getFirestoreCollectionPath(this.tiddlybaseInstanceName, this.tiddlerCollectionName), this.getDocId(title));
     return await deleteDoc(docRef);
   }
   async getAllTiddlers(): Promise<Record<string, $tw.TiddlerFields>> {
