@@ -2,7 +2,8 @@
     "description": "minimal config necessary for tiddlybase to load wiki in iframe",
     "config": {},
     "plugins": [
-        "tiddlybase/init"
+        "tiddlybase/init",
+        "tiddlybase/rpc-syncadaptor"
     ],
     "themes": [
         "tiddlywiki/vanilla"

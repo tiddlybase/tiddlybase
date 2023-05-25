@@ -7,7 +7,7 @@ export type TiddlerWriteCondition = { titlePrefix: string }; // more options in 
 export type BaseTiddlerStoreSpec = { storeType: 'private' } | { storeType: 'shared' } | { storeType: 'custom', writeCondition: TiddlerWriteCondition };
 
 export type FirestoreTiddlerStoreOptions = Partial<{
-      stripDocIDPrefix: string
+  stripDocIDPrefix: string
 }>
 
 export type TiddlerSourceSpec =
@@ -17,6 +17,7 @@ export type TiddlerSourceSpec =
   | ({
     type: 'firestore', collection: string, options?: FirestoreTiddlerStoreOptions
   } & BaseTiddlerStoreSpec)
+  | ({ type: 'browser-storage', collection: string, useLocalStorage?: boolean } & BaseTiddlerStoreSpec)
 
 export interface LaunchConfig {
   // build is the relative path to the child iframe HTML, eg: 'tiddlybase_public/default-build.html'
