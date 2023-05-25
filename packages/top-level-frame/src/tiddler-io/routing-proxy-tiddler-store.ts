@@ -7,12 +7,12 @@ const KNOWN_PRIVATE = new Set<string>(['$:/StoryList', '$:/HistoryList', '$:/Def
 const PRIVATE_PREFIX = '€:/'
 
 const ALWAYS = (_: $tw.TiddlerFields) => true;
+const PRIVATE:PredicateFn = tiddler => KNOWN_PRIVATE.has(tiddler.title) || tiddler.title.startsWith(PRIVATE_PREFIX) || ('draft.of' in tiddler)
 
 const getConditionPredicate = (writeCondition: TiddlerWriteCondition): PredicateFn => {
   if (writeCondition.titlePrefix) {
     return tiddler => tiddler.title.startsWith(writeCondition.titlePrefix);
   }
-  // firestore is the only TiddlerStore currently supported
   throw new Error("Cannot create PredicateFn for specified writeCondition");
 };
 
@@ -22,14 +22,11 @@ const getPredicate = (spec: TiddlerSourceSpec) : PredicateFn => {
       case 'custom':
         return getConditionPredicate(spec.writeCondition);
       case 'private':
-        return tiddler => {
-          return KNOWN_PRIVATE.has(tiddler.title) || tiddler.title.startsWith(PRIVATE_PREFIX) || ('draft.of' in tiddler)
-        };
+        return PRIVATE;
       case 'shared':
         return ALWAYS;
     }
   }
-  // firestore is the only TiddlerStore currently supported
   throw new Error("Cannot create predicate for spec of type " + spec.type);
 }
 

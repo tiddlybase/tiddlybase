@@ -9,6 +9,11 @@ import { APIClient } from "@tiddlybase/rpc/src";
 import { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
 import { RoutingProxyTiddlerStore } from "./routing-proxy-tiddler-store";
 
+export const mergeTiddlerArray = (tiddlers:$tw.TiddlerFields[]):TiddlerCollection => tiddlers.reduce((coll, tiddler) => {
+  coll[tiddler.title] = tiddler;
+  return coll;
+}, {} as TiddlerCollection);
+
 export class FirebaseStorageTiddlerSource implements TiddlerSource {
   storage: FirebaseStorage;
   path: string;
@@ -16,11 +21,11 @@ export class FirebaseStorageTiddlerSource implements TiddlerSource {
     this.storage = storage;
     this.path = path;
   }
-  async getAllTiddlers(): Promise<Record<string, $tw.TiddlerFields>> {
+  async getAllTiddlers(): Promise<TiddlerCollection> {
     const fileRef = ref(this.storage, this.path);
     const blob = await getBlob(fileRef);
     const text = await blob.text()
-    return JSON.parse(text);
+    return mergeTiddlerArray(JSON.parse(text));
   }
 }
 
@@ -30,8 +35,8 @@ export class HttpTiddlerSource implements TiddlerSource {
     this.url = url
 
   }
-  async getAllTiddlers(): Promise<Record<string, $tw.TiddlerFields>> {
-    return await (await (fetch(this.url))).json();
+  async getAllTiddlers(): Promise<TiddlerCollection> {
+    return mergeTiddlerArray(await (await (fetch(this.url))).json());
   }
 }
 
