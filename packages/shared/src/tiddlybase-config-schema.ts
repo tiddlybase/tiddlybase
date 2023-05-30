@@ -13,7 +13,7 @@ export type FirestoreTiddlerStoreOptions = Partial<{
 export type TiddlerSourceSpec =
   | { type: 'http', url: string }
   | { type: 'firebase-storage', pathPostfix: string }
-  | ({ type: 'tiddlyweb' } & BaseTiddlerStoreSpec)
+  | ({ type: 'tiddlyweb', filterFilename?: string, filterExpression?: string} & BaseTiddlerStoreSpec)
   | ({
     type: 'firestore', collection: string, options?: FirestoreTiddlerStoreOptions
   } & BaseTiddlerStoreSpec)

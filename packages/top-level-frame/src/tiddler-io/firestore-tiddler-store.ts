@@ -2,7 +2,7 @@ import type { TiddlerChangeListener, TiddlerCollection, TiddlerStore } from "@ti
 import type { Firestore } from '@firebase/firestore';
 import { setDoc, doc, DocumentReference, DocumentData, collection, onSnapshot, Unsubscribe, getDoc, deleteDoc, Timestamp } from "firebase/firestore";
 import type { } from '@tiddlybase/tw5-types/src/index'
-import { getFirestoreCollectionPath } from "./firestore-tiddler-store-util";
+import { getFirestoreCollectionPath } from "./tiddler-store-utils";
 import type { FirestoreTiddlerStoreOptions } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 
 const SENTINEL_DOC_ID = "\uffffsentinel"

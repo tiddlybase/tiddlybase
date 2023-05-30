@@ -1,8 +1,8 @@
-import { TIDDLYBASE_CLIENT_CONFIG_KEYS, TiddlybaseClientConfig, getJWTRoleClaim, getStorageConfig } from '@tiddlybase/shared/src/tiddlybase-config-schema';
+import { TIDDLYBASE_CLIENT_CONFIG_KEYS, TiddlybaseClientConfig, TiddlybaseConfig, getJWTRoleClaim, getStorageConfig } from '@tiddlybase/shared/src/tiddlybase-config-schema';
 import { joinPaths } from '@tiddlybase/shared/src/join-paths';
 import { objFilter } from '@tiddlybase/shared/src/obj-filter';
 import { Arguments, Argv, CommandModule } from 'yargs';
-import { ParsedConfig, readConfig, requireSingleConfig } from './config';
+import { ParsedConfig, rawReadJSON, readConfig, requireSingleConfig } from './config';
 import { dirname, resolve } from 'path';
 import { render } from 'mustache';
 import {readFileSync} from 'fs';
@@ -136,12 +136,29 @@ export const cmdGenerateFirebaseJson: CommandModule = {
   },
 };
 
+const insertTiddlyWebFilter = (config:TiddlybaseConfig, configPath:string):void => {
+  for (let launchConfig of Object.values(config.launchConfigs)) {
+    for (let source of (launchConfig.sources || [])) {
+      if (source.type === 'tiddlyweb' && source.filterFilename) {
+        // read filter tiddler file and dump contents in source.filterExpression
+        const tiddler = rawReadJSON(resolve(configPath, '..', source.filterFilename));
+        // TODO: this is kind of a hack, because it only works on JSON tiddlers
+        // and assumes only a single tiddler is found in that file, which isn't
+        // always true...
+        source.filterExpression = tiddler[0].text.trim();
+        source.filterFilename = undefined;
+      }
+    }
+  }
+};
+
 export const cmdGenerateIndexHTML: CommandModule = {
   command: 'generate:index.html',
   describe: 'generate HTML file for single-page app top-level frame',
   builder: (argv: Argv) => argv,
   handler: async (args: Arguments) => {
-    const config = requireSingleConfig(args);
+    const {config, path} = requireSingleConfig(args);
+    insertTiddlyWebFilter(config, path);
     const clientConfig:TiddlybaseClientConfig = objFilter<keyof TiddlybaseClientConfig, any>((k) => TIDDLYBASE_CLIENT_CONFIG_KEYS.includes(k), config);
     const stringifiedClientConfig = JSON.stringify(clientConfig);
     console.log(renderMustacheTemplate('index.html.mustache', {htmlGeneration: config.htmlGeneration, stringifiedClientConfig}));

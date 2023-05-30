@@ -61,7 +61,7 @@ export const setrole: CommandModule = {
     if (!(roleName in USER_ROLES)) {
       throw new Error('Unknown role ' + cliContext.args.role);
     }
-    const config = requireSingleConfig(cliContext.args);
+    const {config} = requireSingleConfig(cliContext.args);
     const claims = await doSetRole(cliContext.app.auth(), user, getJWTRoleClaim(config), roleName);
     console.log(inspect(claims));
   }),
@@ -89,7 +89,7 @@ export const adduser: CommandModule = {
     if (!(roleName in USER_ROLES)) {
       throw new Error('Unknown role ' + cliContext.args.role);
     }
-    const config = requireSingleConfig(cliContext.args);
+    const {config} = requireSingleConfig(cliContext.args);
     const claims = await doSetRole(cliContext.app.auth(), user, getJWTRoleClaim(config), roleName);
     console.log(inspect(claims));
   }),

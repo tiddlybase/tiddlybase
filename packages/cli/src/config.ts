@@ -16,11 +16,11 @@ export const readConfig = (filename: string | string[]): Array<ParsedConfig> => 
   return (typeof filename === 'string' ? [filename] : filename).map(readJSON)
 }
 
-export const requireSingleConfig = (args: Arguments): TiddlybaseConfig => {
+export const requireSingleConfig = (args: Arguments) => {
   const configFilePaths = args['config'] as string | string[];
   const parsedConfigs = readConfig(configFilePaths);
   if (parsedConfigs.length !== 1) {
     throw new Error('Expecting a single tiddlybase-config.json')
   }
-  return parsedConfigs[0].config;
+  return {config: parsedConfigs[0].config, path: configFilePaths as string};
 }

@@ -10,11 +10,8 @@ import { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-
 import { RoutingProxyTiddlerStore } from "./routing-proxy-tiddler-store";
 import { BrowserStorageTiddlerStore } from "./browser-storage-tiddler-store";
 import { TiddlyWebTiddlerStore } from "./tiddlyweb-tiddler-store";
-
-export const mergeTiddlerArray = (tiddlers: $tw.TiddlerFields[]): TiddlerCollection => tiddlers.reduce((coll, tiddler) => {
-  coll[tiddler.title] = tiddler;
-  return coll;
-}, {} as TiddlerCollection);
+import { mergeTiddlerArray } from "./tiddler-store-utils";
+import { HttpTiddlerSource } from "./http-tiddler-source";
 
 export class FirebaseStorageTiddlerSource implements TiddlerSource {
   storage: FirebaseStorage;
@@ -28,17 +25,6 @@ export class FirebaseStorageTiddlerSource implements TiddlerSource {
     const blob = await getBlob(fileRef);
     const text = await blob.text()
     return mergeTiddlerArray(JSON.parse(text));
-  }
-}
-
-export class HttpTiddlerSource implements TiddlerSource {
-  url: string;
-  constructor(url: string) {
-    this.url = url
-
-  }
-  async getAllTiddlers(): Promise<TiddlerCollection> {
-    return mergeTiddlerArray(await (await (fetch(this.url))).json());
   }
 }
 
@@ -73,7 +59,9 @@ const getTiddlerSource = async (tiddlybaseClientConfig: TiddlybaseClientConfig, 
     case "browser-storage":
       return new BrowserStorageTiddlerStore(spec.useLocalStorage === true ? window.localStorage : window.sessionStorage, tiddlybaseClientConfig.instanceName, spec.collection)
     case "tiddlyweb":
-      return new TiddlyWebTiddlerStore();
+      return new TiddlyWebTiddlerStore({
+        filterExpression: spec.filterExpression
+      });
     case "firestore":
       if (!apis.firestore) {
         throw new Error('Firestore DB required by tiddler source in launch config, but is uninitialized');
