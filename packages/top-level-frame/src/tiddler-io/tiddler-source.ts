@@ -1,4 +1,4 @@
-import { TiddlerCollection, TiddlerProvenance, TiddlerSource, TiddlerSourceWithSpec, TiddlerStore } from "@tiddlybase/shared/src/tiddler-store";
+import { TiddlerChangeListener, TiddlerCollection, TiddlerProvenance, TiddlerSource, TiddlerSourceWithSpec, TiddlerStore } from "@tiddlybase/shared/src/tiddler-store";
 import { FirebaseStorage, getBlob, ref } from '@firebase/storage';
 import { LaunchConfig, TiddlerSourceSpec, TiddlybaseClientConfig, getStorageConfig } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import { joinPaths } from '@tiddlybase/shared/src/join-paths';
@@ -42,9 +42,24 @@ export class HttpTiddlerSource implements TiddlerSource {
   }
 }
 
+export class ProxyToSandboxedIframeChangeListener implements TiddlerChangeListener {
+  sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>;
+
+  constructor(sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>) {
+    this.sandboxedAPIClient = sandboxedAPIClient;
+  }
+
+  onSetTiddler (tiddler: $tw.TiddlerFields): void {
+    this.sandboxedAPIClient('onSetTiddler', [tiddler]);
+  }
+  onDeleteTiddler (title: string): void {
+    this.sandboxedAPIClient('onDeleteTiddler', [title]);
+  }
+}
+
 const substituteUserid = (template: string, userid: string): string => template.replace("$USERID", () => userid);
 
-const getTiddlerSource = (tiddlybaseClientConfig: TiddlybaseClientConfig, spec: TiddlerSourceSpec, userid: string, apis: FirebaseAPIs, sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>): TiddlerSource => {
+const getTiddlerSource = async (tiddlybaseClientConfig: TiddlybaseClientConfig, spec: TiddlerSourceSpec, userid: string, apis: FirebaseAPIs, sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>): Promise<TiddlerSource> => {
   switch (spec.type) {
     case "http":
       return new HttpTiddlerSource(spec.url);
@@ -63,8 +78,13 @@ const getTiddlerSource = (tiddlybaseClientConfig: TiddlybaseClientConfig, spec: 
       if (!apis.firestore) {
         throw new Error('Firestore DB required by tiddler source in launch config, but is uninitialized');
       }
-      const firestoreTiddlerStore = new FirestoreTiddlerStore(apis.firestore, sandboxedAPIClient, tiddlybaseClientConfig.instanceName, substituteUserid(spec.collection, userid), spec.options);
-      firestoreTiddlerStore.startListening();
+      const firestoreTiddlerStore = new FirestoreTiddlerStore(
+        apis.firestore,
+        tiddlybaseClientConfig.instanceName,
+        substituteUserid(spec.collection, userid),
+        spec.options,
+        new ProxyToSandboxedIframeChangeListener(sandboxedAPIClient));
+      await firestoreTiddlerStore.startListening();
       return firestoreTiddlerStore;
     default:
       throw new Error(`Tiddler source spec unrecognized!`)
@@ -76,11 +96,21 @@ export type MergedSources = {
   provenance: TiddlerProvenance;
   writeStore?: TiddlerStore;
 }
+
+type TiddlerSourcePromiseWithSpec = {
+  source: Promise<TiddlerSource>;
+  spec: TiddlerSourceSpec;
+}
+
 export const readTiddlerSources = async (tiddlybaseClientConfig: TiddlybaseClientConfig, launchConfig: LaunchConfig, userid: string, apis: FirebaseAPIs, sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>): Promise<MergedSources> => {
-  const sourcesWithSpecs: TiddlerSourceWithSpec[] = launchConfig.sources.map(spec => ({ spec, source: getTiddlerSource(tiddlybaseClientConfig, spec, userid, apis, sandboxedAPIClient) }));
-  const collections = await Promise.all(sourcesWithSpecs.map(s => s.source.getAllTiddlers()));
+  const sourcePromisesWithSpecs: TiddlerSourcePromiseWithSpec[] = launchConfig.sources.map(spec => ({ spec, source: getTiddlerSource(tiddlybaseClientConfig, spec, userid, apis, sandboxedAPIClient) }));
+  const collections = await Promise.all(sourcePromisesWithSpecs.map(async s => (await s.source).getAllTiddlers()));
+  const sourcesWithSpecs: TiddlerSourceWithSpec[] = await Promise.all(sourcePromisesWithSpecs.map(async s => ({
+    ...s,
+    source: await s.source
+  })));
   const mergedSources: MergedSources = { tiddlers: {}, provenance: {} };
-  for (let sourceIx = 0; sourceIx < sourcesWithSpecs.length; sourceIx++) {
+  for (let sourceIx = 0; sourceIx < sourcePromisesWithSpecs.length; sourceIx++) {
     for (let [title, tiddler] of Object.entries(collections[sourceIx])) {
       mergedSources.tiddlers[title] = tiddler;
       mergedSources.provenance[title] = sourcesWithSpecs[sourceIx];

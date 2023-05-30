@@ -1,7 +1,5 @@
-import type { TiddlerStore } from "@tiddlybase/shared/src/tiddler-store";
+import type { TiddlerChangeListener, TiddlerCollection, TiddlerStore } from "@tiddlybase/shared/src/tiddler-store";
 import type { Firestore } from '@firebase/firestore';
-import type { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
-import type { APIClient } from "@tiddlybase/rpc/src";
 import { setDoc, doc, DocumentReference, DocumentData, collection, onSnapshot, Unsubscribe, getDoc, deleteDoc, Timestamp } from "firebase/firestore";
 import type { } from '@tiddlybase/tw5-types/src/index'
 import { getFirestoreCollectionPath } from "./firestore-tiddler-store-util";
@@ -34,33 +32,48 @@ const createCollectionSentinel = async (firestore: Firestore, tiddlybaseInstance
   return docRef;
 };
 
+type InitialReadState = {
+  tiddlers: TiddlerCollection;
+  completePromise: Promise<TiddlerCollection>;
+  completePromiseResolver: undefined | ((tidders: TiddlerCollection) => void);
+  completePromiseResolved: boolean;
+}
+
 export class FirestoreTiddlerStore implements TiddlerStore {
 
   firestore: Firestore;
-  sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>;
   tiddlybaseInstanceName: string;
   tiddlerCollectionName: string;
-  initialReadTiddlers: Record<string, $tw.TiddlerFields> = {};
-  initialReadCompletePromise: Promise<typeof this.initialReadTiddlers>;
-  initialReadCompletePromiseResolver: undefined | ((tidders: typeof this.initialReadTiddlers) => void) = undefined;
-  initialReadCompletePromiseResolved: boolean = false;
-  unsubscribe: Unsubscribe | undefined;
   options: FirestoreTiddlerStoreOptions | undefined;
+  changeListener: TiddlerChangeListener | undefined;
+  initialReadState: InitialReadState;
+  unsubscribe: Unsubscribe | undefined;
+
+  private getInitialReadState(): InitialReadState {
+    let completePromiseResolver = undefined;
+    const completePromise = new Promise<TiddlerCollection>((resolve, _reject) => {
+      completePromiseResolver = resolve;
+    });
+    return {
+      tiddlers: {},
+      completePromise,
+      completePromiseResolver,
+      completePromiseResolved: false
+    };
+  }
 
   constructor(
     firestore: Firestore,
-    sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>,
     tiddlybaseInstanceName: string,
     tiddlerCollectionName: string,
-    options?: FirestoreTiddlerStoreOptions) {
+    options?: FirestoreTiddlerStoreOptions,
+    changeListener?: TiddlerChangeListener) {
     this.firestore = firestore;
-    this.sandboxedAPIClient = sandboxedAPIClient;
     this.tiddlybaseInstanceName = tiddlybaseInstanceName;
     this.tiddlerCollectionName = tiddlerCollectionName;
     this.options = options;
-    this.initialReadCompletePromise = new Promise((resolve, _reject) => {
-      this.initialReadCompletePromiseResolver = resolve;
-    })
+    this.changeListener = changeListener;
+    this.initialReadState = this.getInitialReadState();
   }
 
   async startListening() {
@@ -69,31 +82,33 @@ export class FirestoreTiddlerStore implements TiddlerStore {
       // from: https://firebase.google.com/docs/firestore/query-data/listen#view_changes_between_snapshots
       snapshot.docChanges().forEach((change) => {
         if (change.type === "added" || change.type === "modified") {
-          // The first time the sentinel doc is encountered signals the end of the tiddler documents in the collection.
-          // Theoretically, the sentinel doc could be updated for some reason, but that doesn't impact initialReadTiddlers.
-          if (!this.initialReadCompletePromiseResolved && change.doc.id === SENTINEL_DOC_ID) {
-            this.initialReadCompletePromiseResolved = true;
-            if (this.initialReadCompletePromiseResolver) {
-              this.initialReadCompletePromiseResolver(this.initialReadTiddlers)
-            }
+          if (this.initialReadState.completePromiseResolved) {
+            // if the initial read of firestore documents in the collection is complete,
+            // only pass on the change event to the listener (when provided)
+            this.changeListener?.onSetTiddler(change.doc.data().tiddler);
           } else {
-            const tiddler = change.doc.data().tiddler;
-            // TODO: this is a hack, we should walk the entire object to find any date types in need of conversion
-            if (tiddler.created instanceof Timestamp) {
-              tiddler.created = (tiddler.created as Timestamp).toDate()
+            // The first time the sentinel doc is encountered signals the end of the tiddler documents in the collection.
+            if (change.doc.id === SENTINEL_DOC_ID) {
+              if (this.initialReadState.completePromiseResolver) {
+                this.initialReadState.completePromiseResolver(this.initialReadState.tiddlers);
+              }
+              this.initialReadState.completePromiseResolved = true;
+            } else {
+              // The document being read is not the last one (not the sentinel), so just store it for now.
+              const tiddler = change.doc.data().tiddler;
+              // TODO: this is a hack, we should walk the entire object to find any date types in need of conversion
+              if (tiddler.created instanceof Timestamp) {
+                tiddler.created = (tiddler.created as Timestamp).toDate()
+              }
+              if (tiddler.modified instanceof Timestamp) {
+                tiddler.modified = (tiddler.modified as Timestamp).toDate()
+              }
+              this.initialReadState.tiddlers[tiddler.title] = tiddler;
             }
-            if (tiddler.modified instanceof Timestamp) {
-              tiddler.modified = (tiddler.modified as Timestamp).toDate()
-            }
-            this.initialReadTiddlers[tiddler.title] = tiddler;
           }
-          // TODO: forward setTiddler to tiddlywiki in child iframe:
-          // this.sandboxedAPIClient('onSetTiddler', [change.doc.data().tiddler]);
         }
         if (change.type === "removed") {
-          // TODO: forward deleteTiddler to tiddlywiki in child iframe:
-          // this.sandboxedAPIClient('onDeleteTiddler', [change.doc.data().tiddler.title]);
-          console.log("Removed: ", change.doc.data());
+          this.changeListener?.onDeleteTiddler(change.doc.data().tiddler.title);
         }
       });
     });
@@ -107,7 +122,7 @@ export class FirestoreTiddlerStore implements TiddlerStore {
     // TODO: reset initialTiddler state?
   }
 
-  private getDocId(title:string):string {
+  private getDocId(title: string): string {
     return encodeURIComponent(maybeTrimPrefix(title, this.options));
   }
 
@@ -127,9 +142,9 @@ export class FirestoreTiddlerStore implements TiddlerStore {
     const docRef = doc(this.firestore, getFirestoreCollectionPath(this.tiddlybaseInstanceName, this.tiddlerCollectionName), this.getDocId(title));
     return await deleteDoc(docRef);
   }
-  async getAllTiddlers(): Promise<Record<string, $tw.TiddlerFields>> {
+  async getAllTiddlers(): Promise<TiddlerCollection> {
     // TODO: invoking this after writes have been issues fails to reflect
     // those changes.
-    return this.initialReadCompletePromise;
+    return this.initialReadState.tiddlers;
   }
 }
