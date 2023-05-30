@@ -9,6 +9,7 @@ import { APIClient } from "@tiddlybase/rpc/src";
 import { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
 import { RoutingProxyTiddlerStore } from "./routing-proxy-tiddler-store";
 import { BrowserStorageTiddlerStore } from "./browser-storage-tiddler-store";
+import { TiddlyWebTiddlerStore } from "./tiddlyweb-tiddler-store";
 
 export const mergeTiddlerArray = (tiddlers: $tw.TiddlerFields[]): TiddlerCollection => tiddlers.reduce((coll, tiddler) => {
   coll[tiddler.title] = tiddler;
@@ -57,7 +58,7 @@ const getTiddlerSource = (tiddlybaseClientConfig: TiddlybaseClientConfig, spec: 
     case "browser-storage":
       return new BrowserStorageTiddlerStore(spec.useLocalStorage === true ? window.localStorage : window.sessionStorage, tiddlybaseClientConfig.instanceName, spec.collection)
     case "tiddlyweb":
-      throw new Error("Tiddler source tiddlyweb not yet supported!")
+      return new TiddlyWebTiddlerStore();
     case "firestore":
       if (!apis.firestore) {
         throw new Error('Firestore DB required by tiddler source in launch config, but is uninitialized');

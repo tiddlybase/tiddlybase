@@ -17,7 +17,7 @@ const getConditionPredicate = (writeCondition: TiddlerWriteCondition): Predicate
 };
 
 const getPredicate = (spec: TiddlerSourceSpec) : PredicateFn => {
-  if (spec.type === 'firestore' || spec.type === 'browser-storage') {
+  if ('storeType' in spec) {
     switch (spec.storeType) {
       case 'custom':
         return getConditionPredicate(spec.writeCondition);
