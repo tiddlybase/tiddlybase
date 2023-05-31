@@ -145,6 +145,6 @@ export class FirestoreTiddlerStore implements TiddlerStore {
   async getAllTiddlers(): Promise<TiddlerCollection> {
     // TODO: invoking this after writes have been issues fails to reflect
     // those changes.
-    return this.initialReadState.tiddlers;
+    return this.initialReadState.completePromise;
   }
 }
