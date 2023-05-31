@@ -310,11 +310,14 @@ export class MDXModuleLoader {
     // Save promise to compilationResults before it's value is available to
     // avoid simulatenous invocations for the same module.
     this.compilationResults[tiddler] = compilationResultPromise
-    // If recompiling an invalidated module, remove invalidation marker.
-    this.invalidatedModules.delete(tiddler);
     // await literal MDX compilation (if any)
     await Promise.all(loadContext.mdxLiteralCompilationResults ?? []);
-    return compilationResultToModuleExports(await compilationResultPromise);
+    const result = await compilationResultPromise;
+    if ('compiledFn' in result) {
+      // If we just successfully recompiled an invalidated module, remove invalidation marker.
+      this.invalidatedModules.delete(tiddler);
+    }
+    return compilationResultToModuleExports(result);
   };
 
   private makeModuleLoaderContext(prevLoadContext: ModuleLoaderContext, tiddler?: string): ModuleLoaderContext {

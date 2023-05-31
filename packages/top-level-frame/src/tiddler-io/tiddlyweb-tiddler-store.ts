@@ -2,15 +2,38 @@ import type { } from '@tiddlybase/tw5-types/src/index'
 import type { TiddlerCollection, TiddlerStore } from "@tiddlybase/shared/src/tiddler-store";
 import { HttpTiddlerSource } from './http-tiddler-source';
 
+const dateFields = new Set<string>(["created", "modified"]);
+
 const knownFields = new Set<string>([
-  "bag", "created", "creator", "modified", "modifier", "permissions", "recipe", "revision", "tags", "text", "title", "type", "uri"
+  "bag", "creator",  "modifier", "permissions", "recipe", "revision", "tags", "text", "title", "type", "uri"
 ]);
 
 // based on TW5 source
+const pad = (value:number,length:number=2):string => {
+	var s = value.toString();
+	if(s.length < length) {
+		s = "000000000000000000000000000".substr(0,length - s.length) + s;
+	}
+	return s;
+}
+
+const formatDate = (value:Date):string => {
+    return value.getUTCFullYear() +
+        pad(value.getUTCMonth() + 1) +
+        pad(value.getUTCDate()) +
+        pad(value.getUTCHours()) +
+        pad(value.getUTCMinutes()) +
+        pad(value.getUTCSeconds()) +
+        pad(value.getUTCMilliseconds(),3);
+}
+
 const convertTiddlerToTiddlyWebFormat = (tiddler:$tw.TiddlerFields):string => {
   const result: Record<string, any> & {fields: Record<string, any>} = {fields: {}};
   for (let [fieldName, fieldValue] of Object.entries(tiddler)) {
-    if (knownFields.has(fieldName)) {
+    if (dateFields.has(fieldName)) {
+      result[fieldName] = formatDate(fieldValue);
+    }
+    else if (knownFields.has(fieldName)) {
       result[fieldName] = fieldValue;
     } else {
       result.fields[fieldName] = fieldValue

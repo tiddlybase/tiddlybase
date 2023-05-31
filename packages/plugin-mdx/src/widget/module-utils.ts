@@ -11,17 +11,6 @@ export const depthFirstSearch = async <T>(getChildren:(node:T)=>Promise<Set<T>>,
 };
 
 // NOTE: includes the module itself in the set of consumers
-export const getTransitiveMDXModuleConsumers = async (moduleName:string, loader:MDXModuleLoader, visited: Set<string>=new Set<string>([])): Promise<ModuleSet> => {
-    if (await loader.hasModule(moduleName)) {
-      return await depthFirstSearch(
-        (moduleName:string) => loader.getConsumers(moduleName),
-        moduleName,
-        visited);
-    }
-    return visited;
-  }
-
-// NOTE: includes the module itself in the set of consumers
 export const getTransitiveMDXModuleDependencies = async (moduleName:string, loader:MDXModuleLoader, visited: Set<string>=new Set<string>([])): Promise<ModuleSet> => {
   if (await loader.hasModule(moduleName)) {
     return await depthFirstSearch(
