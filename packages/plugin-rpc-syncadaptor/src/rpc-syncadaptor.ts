@@ -24,10 +24,14 @@ export class RPCSyncadaptor implements $tw.SyncAdaptor, TiddlerChangeListener {
   }
 
   onSetTiddler(tiddler: $tw.TiddlerFields): void {
-
+    // don't increment the changeCount
+    const changeCount = this.wiki.changeCount[tiddler.title];
+    this.wiki.addTiddler(tiddler);
+    this.wiki.changeCount[tiddler.title] = changeCount;
   }
-  onDeleteTiddler(title: string): void {
 
+  onDeleteTiddler(title: string): void {
+    this.wiki.deleteTiddler(title);
   }
 
   deleteTiddler(title: string, callback: $tw.Callback, options: { tiddlerInfo: { adaptorInfo: $tw.SyncAdaptorTiddlerInfo } }): void {

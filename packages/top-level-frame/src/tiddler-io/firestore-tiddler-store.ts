@@ -1,6 +1,6 @@
 import type { TiddlerChangeListener, TiddlerCollection, TiddlerStore } from "@tiddlybase/shared/src/tiddler-store";
 import type { Firestore } from '@firebase/firestore';
-import { setDoc, doc, DocumentReference, DocumentData, collection, onSnapshot, Unsubscribe, getDoc, deleteDoc, Timestamp } from "firebase/firestore";
+import { setDoc, doc, DocumentReference, DocumentData, collection, onSnapshot, Unsubscribe, getDoc, deleteDoc, Timestamp, serverTimestamp } from "firebase/firestore";
 import type { } from '@tiddlybase/tw5-types/src/index'
 import { getFirestoreCollectionPath } from "./tiddler-store-utils";
 import type { FirestoreTiddlerStoreOptions } from "@tiddlybase/shared/src/tiddlybase-config-schema";
@@ -14,9 +14,26 @@ const maybeTrimPrefix = (title: string, options: FirestoreTiddlerStoreOptions | 
   return title;
 }
 
+const convertTimestamps = (tiddler: $tw.TiddlerFields): $tw.TiddlerFields => {
+  // TODO: this is a hack, we should walk the entire object to find any date types in need of conversion
+  if (tiddler.created instanceof Timestamp) {
+    tiddler.created = (tiddler.created as Timestamp).toDate();
+  }
+  if (tiddler.modified instanceof Timestamp) {
+    tiddler.modified = (tiddler.modified as Timestamp).toDate();
+  }
+  return tiddler
+}
+
 const writeTiddler = async (firestore: Firestore, path: string, tiddler: $tw.TiddlerFields, docId: string): Promise<DocumentReference<DocumentData>> => {
   const docRef = doc(firestore, path, docId);
-  await setDoc(docRef, { tiddler });
+  await setDoc(docRef, {
+    tiddler: {
+      ...tiddler,
+      created: tiddler.created || serverTimestamp(),
+      modified: serverTimestamp(),
+    }
+  });
   console.log("Document written with ID: ", docRef.id);
   return docRef;
 }
@@ -85,7 +102,13 @@ export class FirestoreTiddlerStore implements TiddlerStore {
           if (this.initialReadState.completePromiseResolved) {
             // if the initial read of firestore documents in the collection is complete,
             // only pass on the change event to the listener (when provided)
-            this.changeListener?.onSetTiddler(change.doc.data().tiddler);
+            if (this.changeListener && change.doc.data().tiddler.modified) {
+              // firestore triggers the update twice: once when it's updated locally
+              // (then server side timestamp is null), and once more when the write
+              // goes through. We can safely ignore the first one.
+              // see: https://stackoverflow.com/questions/63123697/while-updating-firestore-data-timestamp-is-null
+              this.changeListener.onSetTiddler(convertTimestamps(change.doc.data().tiddler));
+            }
           } else {
             // The first time the sentinel doc is encountered signals the end of the tiddler documents in the collection.
             if (change.doc.id === SENTINEL_DOC_ID) {
@@ -95,14 +118,7 @@ export class FirestoreTiddlerStore implements TiddlerStore {
               this.initialReadState.completePromiseResolved = true;
             } else {
               // The document being read is not the last one (not the sentinel), so just store it for now.
-              const tiddler = change.doc.data().tiddler;
-              // TODO: this is a hack, we should walk the entire object to find any date types in need of conversion
-              if (tiddler.created instanceof Timestamp) {
-                tiddler.created = (tiddler.created as Timestamp).toDate()
-              }
-              if (tiddler.modified instanceof Timestamp) {
-                tiddler.modified = (tiddler.modified as Timestamp).toDate()
-              }
+              const tiddler = convertTimestamps(change.doc.data().tiddler);
               this.initialReadState.tiddlers[tiddler.title] = tiddler;
             }
           }

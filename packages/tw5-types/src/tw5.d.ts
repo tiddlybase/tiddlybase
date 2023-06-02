@@ -148,6 +148,8 @@ declare namespace $tw {
     | ['lazyload', (title: string) => void];
 
   export interface Wiki {
+    changeCount: Record<string, number>;
+
     addEventListener: (...args: WikiAddEventListenerArgs) => void;
     // addIndexer: (indexer,name)  => void;
     // addIndexersToWiki: ()  => void;
