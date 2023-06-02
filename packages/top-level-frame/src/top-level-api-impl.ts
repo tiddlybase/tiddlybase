@@ -16,6 +16,7 @@ import { getStorageConfig } from "@tiddlybase/shared/src/tiddlybase-config-schem
 import { objFilter } from "@tiddlybase/shared/src/obj-filter";
 import { toggleVisibleDOMSection, replaceChildrenWithText } from "./dom-utils";
 import { MergedSources, readTiddlerSources } from "./tiddler-io/tiddler-source";
+import { FirestoreTiddlerStore } from "./tiddler-io/firestore-tiddler-store";
 
 export const devSetup = (functions: Functions) => connectFunctionsEmulator(functions, "localhost", 5001);
 
@@ -77,6 +78,26 @@ export const createParentApi = (rpc: MiniIframeRPC, user: User, firebaseState: F
 
   apis.storage = getStorage(firebaseState.app);
   apis.firestore = getFirestore(firebaseState.app);
+
+  // only write user data on fresh login, not on reloads
+  if (!(user as any).reloadUserInfo) {
+    console.log("first login");
+    (new FirestoreTiddlerStore(
+      apis.firestore,
+      "admin",
+      "users",
+      {
+        stripDocIDPrefix: "users/"
+      }
+    )).setTiddler({
+      title: `users/${user.uid}`,
+      displayName: user.displayName,
+      photo: user.photoURL,
+      email: user.email,
+      emailVerified: user.emailVerified,
+      providers: user.providerData.map(p => p.providerId)
+    })
+  }
 
   const sandboxedAPIClient = apiClient<SandboxedWikiAPIForTopLevel>(rpc, childIframe);
   const tiddlerSourcesPromise:Promise<MergedSources> = readTiddlerSources(firebaseState.tiddlybaseClientConfig, firebaseState.launchConfig, user.uid, apis, sandboxedAPIClient);
