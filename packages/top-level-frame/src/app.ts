@@ -8,12 +8,13 @@ import { ParsedSearchParams } from "@tiddlybase/shared/src/search-params";
 import { getNormalizedLaunchConfig } from './launch-config';
 import { createParentApi } from './top-level-api-impl';
 import { initializeApp } from '@firebase/app'
-import { RPC, StartTW5 } from './types';
+import { RPC } from './types';
 import type { } from '@tiddlybase/tw5-types/src/index'
 import { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
 import { toggleVisibleDOMSection } from "./dom-utils";
 import { addFirebaseUI, writeUserProfile } from "./auth/firebaseui-utils";
 import { FirebaseAuthProvider } from "./auth/firebase-auth-provider";
+import {FirebaseApp} from '@firebase/app'
 
 const initRPC = (childIframe: Window):RPC => {
   const rpc = makeRPC();
@@ -56,41 +57,35 @@ export class TopLevelApp {
     return iframe.contentWindow!;
   };
 
+  loadWiki(user:TiddlyBaseUser, firebaseApp:FirebaseApp) {
+    const iframe = this.createWikiIframe(this.getIframeURL());
+    this.rpc = initRPC(iframe);
+    createParentApi(this.rpc, user, firebaseApp, this.config, this.launchConfig);
+  }
+
 
   initApp () {
     if (this.searchParams['signInFlow'] === 'popup') {
       this.config.authentication.firebaseui.signInFlow = 'popup';
       console.log('overriding sign in flow to be popup');
     }
+    // TODO: depending on the launchConfig, we might not even need a
+    // FirebaseApp instance in the future.
     const firebaseApp = initializeApp(this.config.clientConfig);
     const authProvider = new FirebaseAuthProvider(firebaseApp);
     addFirebaseUI(authProvider, '#firebaseui-container', this.config.authentication.firebaseui)
-
-    const startTW5: StartTW5 = async (user: TiddlyBaseUser) => {
-      // just in case, remove any previous wiki iframes
-      console.log('running startTW5 for user', user);
-      const iframe = this.createWikiIframe(this.getIframeURL());
-      if (iframe) {
-        this.rpc = initRPC(iframe);
-        createParentApi(this.rpc, user, firebaseApp, this.config, this.launchConfig);
-        console.log("child iframe created");
-      } else {
-        console.log("child iframe could not be created");
-      }
-    };
 
     authProvider.onLogin((user, authDetails) => {
       toggleVisibleDOMSection('user-signed-in');
       if (!authDetails.lastLogin) {
         writeUserProfile(firebaseApp, user);
       }
-      startTW5(user);
+      this.loadWiki(user, firebaseApp);
     });
+
     authProvider.onLogout(() => {
       toggleVisibleDOMSection('user-signed-out');
     });
 
-    // Disable auto-sign in.
-    // ui.disableAutoSignIn();
   };
 };
