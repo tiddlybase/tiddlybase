@@ -1,4 +1,4 @@
-import { AuthProvider, OnLoginHandler, OnLogoutHandler } from "./auth-provider";
+import { AuthDetails, AuthProvider, OnLoginHandler, OnLogoutHandler } from "./auth-provider";
 import { FirebaseApp } from '@firebase/app'
 import { getAuth, Auth, User } from '@firebase/auth'
 import { TiddlyBaseUser } from "packages/shared/src/users";
@@ -11,6 +11,15 @@ export const convertUser = (firebaseUser: User): TiddlyBaseUser => ({
   uid: firebaseUser.uid
 })
 
+export const getAuthDetails = (user: User): AuthDetails => {
+  const lastLoginTimestamp:string|undefined = (user as any)?.reloadUserInfo?.lastLoginAt
+  const authDetails:AuthDetails = {};
+  if (lastLoginTimestamp) {
+    authDetails.lastLogin = new Date(parseInt(lastLoginTimestamp, 10));
+  }
+  return authDetails;
+}
+
 export class FirebaseAuthProvider implements AuthProvider {
   auth: Auth;
   loginHanders: OnLoginHandler[] = [];
@@ -18,6 +27,7 @@ export class FirebaseAuthProvider implements AuthProvider {
 
   constructor(app: FirebaseApp) {
     this.auth = getAuth(app);
+    this.init();
   }
 
   onLogin(loginHandler: OnLoginHandler) {
@@ -28,12 +38,20 @@ export class FirebaseAuthProvider implements AuthProvider {
     this.logoutHandlers.push(logoutHandler);
   }
 
+  invokeLoginHanders(user: TiddlyBaseUser, authDetails: AuthDetails) {
+    this.loginHanders.forEach(h => h(user, authDetails));
+  }
+
+  invokeLogoutHandlers() {
+    this.logoutHandlers.forEach(h => h());
+  }
+
   init() {
     this.auth.onAuthStateChanged((user: User | null) => {
       if (user) {
-        this.loginHanders.forEach(h => h(convertUser(user)));
+        this.invokeLoginHanders(convertUser(user), getAuthDetails(user));
       } else {
-        this.logoutHandlers.forEach(h => h());
+        this.invokeLogoutHandlers();
       }
     });
   }
@@ -42,6 +60,5 @@ export class FirebaseAuthProvider implements AuthProvider {
     const user = this.auth.currentUser;
     return user ? convertUser(user) : undefined;
   }
-
 
 }
