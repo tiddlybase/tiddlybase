@@ -4,17 +4,16 @@ import type { CallableFunctionType } from "@tiddlybase/functions/src/apis";
 import { getDownloadURL, getMetadata, getStorage, getBlob, ref } from '@firebase/storage';
 import { getFirestore } from '@firebase/firestore';
 import { getFunctions, httpsCallable, HttpsCallable, connectFunctionsEmulator } from "@firebase/functions";
-import type { User } from '@firebase/auth'
-import { TiddlyBaseUser, USER_FIELDS } from "@tiddlybase/rpc/src/top-level-api";
+import type { Auth } from '@firebase/auth'
 import { deleteAccount } from "./login";
-import type { FirebaseAPIs, FirebaseState, RPC } from "./types";
+import type { FirebaseState, RPC } from "./types";
 import { FirebaseStorage } from '@firebase/storage';
 import { Functions } from '@firebase/functions'
 import { getStorageConfig } from "@tiddlybase/shared/src/tiddlybase-config-schema";
-import { objFilter } from "@tiddlybase/shared/src/obj-filter";
 import { toggleVisibleDOMSection, replaceChildrenWithText } from "./dom-utils";
 import { MergedSources, readTiddlerSources } from "./tiddler-io/tiddler-source";
 import { FirestoreTiddlerStore } from "./tiddler-io/firestore-tiddler-store";
+import { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
 
 export const devSetup = (functions: Functions) => connectFunctionsEmulator(functions, "localhost", 5001);
 
@@ -41,6 +40,17 @@ const makeGetStorageFileMetadata = (storage: FirebaseStorage) => async (filename
   }
 };
 
+const addStorageMethods = (toplevelAPIDefiner: APIDefiner<TopLevelAPIForSandboxedWiki>, storage: FirebaseStorage) => {
+  toplevelAPIDefiner('getStorageFileAsBlob', makeGetStorageFileAsBlob(storage));
+  toplevelAPIDefiner('getStorageFileMetadata', makeGetStorageFileMetadata(storage));
+  toplevelAPIDefiner('getStorageFileDownloadUrl', makeGetStorageFileDownloadUrl(storage));
+}
+
+const addAuthMethods = (toplevelAPIDefiner: APIDefiner<TopLevelAPIForSandboxedWiki>, auth: Auth) => {
+  toplevelAPIDefiner('authSignOut', auth.signOut.bind(auth));
+  toplevelAPIDefiner('authDeleteAccount', deleteAccount);
+}
+
 type StubFunction<T extends CallableFunctionType> = HttpsCallable<Parameters<T>, Awaited<ReturnType<T>>>
 
 const getStub = <P extends CallableFunctionType>(functions: Functions, functionName: string): P => {
@@ -52,8 +62,6 @@ const getStub = <P extends CallableFunctionType>(functions: Functions, functionN
   return invoker as P;
 }
 
-const convertUser = (firebaseUser: User): TiddlyBaseUser => objFilter<keyof TiddlyBaseUser, any>((k) => USER_FIELDS.includes(k), firebaseUser) as TiddlyBaseUser;
-
 const exposeObjectMethod = (def: APIDefiner<TopLevelAPIForSandboxedWiki>, fn: Parameters<APIDefiner<TopLevelAPIForSandboxedWiki>>[0], obj: Partial<TopLevelAPIForSandboxedWiki>) => {
   if (obj[fn]) {
     def(fn, obj[fn]!.bind(obj));
@@ -62,43 +70,38 @@ const exposeObjectMethod = (def: APIDefiner<TopLevelAPIForSandboxedWiki>, fn: Pa
 
 const exposeCallable = (def: APIDefiner<TopLevelAPIForSandboxedWiki>, fn: Parameters<APIDefiner<TopLevelAPIForSandboxedWiki>>[0], functions: Functions) => def(fn, getStub(functions, fn))
 
-export const createParentApi = (rpc: RPC, user: User, firebaseState: FirebaseState, childIframe: Window) => {
-  const apis: FirebaseAPIs = {};
+export const createParentApi = (rpc: RPC, user: TiddlyBaseUser, firebaseState: FirebaseState, childIframe: Window) => {
 
   if (firebaseState.tiddlybaseClientConfig.functions) {
-    apis.functions = getFunctions(firebaseState.app, firebaseState.tiddlybaseClientConfig.functions.location);
+    const functions = getFunctions(firebaseState.app, firebaseState.tiddlybaseClientConfig.functions.location);
     if (firebaseState.launchConfig.isLocal) {
-      devSetup(apis.functions);
+      devSetup(functions);
     }
 
-    exposeCallable(rpc.toplevelAPIDefiner, 'addNumbers', apis.functions);
-    exposeCallable(rpc.toplevelAPIDefiner, 'notifyAdmin', apis.functions);
+    exposeCallable(rpc.toplevelAPIDefiner, 'addNumbers', functions);
+    exposeCallable(rpc.toplevelAPIDefiner, 'notifyAdmin', functions);
   }
 
-  apis.storage = getStorage(firebaseState.app);
-  apis.firestore = getFirestore(firebaseState.app);
+  const storage = getStorage(firebaseState.app);
+  const firestore = getFirestore(firebaseState.app);
 
   // only write user data on fresh login, not on reloads
   if (!(user as any).reloadUserInfo) {
     console.log("first login");
     (new FirestoreTiddlerStore(
-      apis.firestore,
+      firestore,
       "admin",
       "users",
       {
         stripDocIDPrefix: "users/"
       }
     )).setTiddler({
-      title: `users/${user.uid}`,
-      displayName: user.displayName,
-      photo: user.photoURL,
-      email: user.email,
-      emailVerified: user.emailVerified,
-      providers: user.providerData.map(p => p.providerId)
+      ...user,
+      title: `users/${user.uid}`
     })
   }
 
-  const tiddlerSourcesPromise:Promise<MergedSources> = readTiddlerSources(firebaseState.tiddlybaseClientConfig, firebaseState.launchConfig, user.uid, apis, rpc.sandboxedAPIClient);
+  const tiddlerSourcesPromise:Promise<MergedSources> = readTiddlerSources(firebaseState.tiddlybaseClientConfig, firebaseState.launchConfig, user.uid, firebaseState.app, rpc.sandboxedAPIClient);
 
   rpc.toplevelAPIDefiner('childIframeReady', async () => {
 
@@ -111,7 +114,7 @@ export const createParentApi = (rpc: RPC, user: User, firebaseState: FirebaseSta
     }
 
     return {
-      user: convertUser(user),
+      user,
       tiddlers: Object.values(tiddlers),
       wikiInfoConfig: firebaseState.launchConfig.settings,
       storageConfig: getStorageConfig(firebaseState.tiddlybaseClientConfig),
@@ -120,11 +123,8 @@ export const createParentApi = (rpc: RPC, user: User, firebaseState: FirebaseSta
     }
   });
 
-  rpc.toplevelAPIDefiner('getStorageFileAsBlob', makeGetStorageFileAsBlob(apis.storage));
-  rpc.toplevelAPIDefiner('getStorageFileMetadata', makeGetStorageFileMetadata(apis.storage));
-  rpc.toplevelAPIDefiner('getStorageFileDownloadUrl', makeGetStorageFileDownloadUrl(apis.storage));
-  rpc.toplevelAPIDefiner('authSignOut', firebaseState.auth.signOut.bind(firebaseState.auth));
-  rpc.toplevelAPIDefiner('authDeleteAccount', deleteAccount);
+  addStorageMethods(rpc.toplevelAPIDefiner, storage);
+  addAuthMethods(rpc.toplevelAPIDefiner, firebaseState.auth);
   rpc.toplevelAPIDefiner('loadError', async (message: string) => {
     replaceChildrenWithText(document.getElementById("wiki-error-message"), message);
     toggleVisibleDOMSection('wiki-error');

@@ -6,15 +6,14 @@ import type { LaunchConfig, TiddlybaseClientConfig } from "@tiddlybase/shared/sr
 import { makeRPC } from "@tiddlybase/rpc/src/make-rpc";
 import { ParsedSearchParams } from "@tiddlybase/shared/src/search-params";
 import { getNormalizedLaunchConfig } from './launch-config';
-
-import { User } from '@firebase/auth';
 import { handleSignedInUser, handleSignedOutUser } from './login';
 import { createParentApi } from './top-level-api-impl';
 import { initializeApp } from '@firebase/app'
-import { getAuth } from '@firebase/auth'
 import * as firebaseui from 'firebaseui';
 import { FirebaseState, RPC, StartTW5 } from './types';
 import type { } from '@tiddlybase/tw5-types/src/index'
+import { FirebaseAuthProvider } from "./auth/firebase-auth-provider";
+import { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
 
 const initRPC = (childIframe: Window):RPC => {
   const rpc = makeRPC();
@@ -64,13 +63,14 @@ export class TopLevelApp {
       console.log('overriding sign in flow to be popup');
     }
     const app = initializeApp(this.config.clientConfig);
-    const auth = getAuth(app);
-    const ui = new firebaseui.auth.AuthUI(auth);
-    const firebaseState: FirebaseState = { app, auth, ui, tiddlybaseClientConfig: this.config, launchConfig: this.launchConfig };
+    const authProvider = new FirebaseAuthProvider(app);
+
+    const ui = new firebaseui.auth.AuthUI(authProvider.auth);
+    const firebaseState: FirebaseState = { app, auth: authProvider.auth, ui, tiddlybaseClientConfig: this.config, launchConfig: this.launchConfig };
 
     let tw5Started = false;
 
-    const startTW5: StartTW5 = async (user: User) => {
+    const startTW5: StartTW5 = async (user: TiddlyBaseUser) => {
       if (tw5Started) {
         console.log("tw5 already started, not starting again")
         return;
@@ -88,13 +88,11 @@ export class TopLevelApp {
       }
     };
 
-    // Listen to change in auth state so it displays the correct UI for when
-    // the user is signed in or not.
-    auth.onAuthStateChanged(function (user: User | null) {
-      console.log('running onAuthStateChanged callback');
-      user ? handleSignedInUser(firebaseState, startTW5, user!) : handleSignedOutUser(firebaseState, startTW5);
-    });
-    // Initialize the FirebaseUI Widget using Firebase.
+    if (authProvider.init) {
+      authProvider.init();
+    }
+    authProvider.onLogin(user => handleSignedInUser(firebaseState, startTW5, user));
+    authProvider.onLogout(() => handleSignedOutUser(firebaseState, startTW5));
 
     // Disable auto-sign in.
     ui.disableAutoSignIn();

@@ -1,7 +1,9 @@
-import { getAuth, User } from '@firebase/auth'
+import { getAuth } from '@firebase/auth'
 import * as firebaseui from 'firebaseui';
 import { toggleVisibleDOMSection } from './dom-utils';
 import { FirebaseState, StartTW5 } from './types';
+import { TiddlyBaseUser } from '@tiddlybase/shared/src/users';
+import { convertUser } from './auth/firebase-auth-provider';
 
 
 const sleep = (ms:number) => new Promise((resolve) => {
@@ -30,7 +32,7 @@ function getUiConfig(firebaseState:FirebaseState, startTW5: StartTW5) {
             return firebaseState.auth.currentUser?.getIdToken(true)
           }).then((...args: any[]) => {
             console.log("refreshed token, got", args);
-            handleSignedInUser(firebaseState, startTW5, firebaseState.auth.currentUser!);
+            handleSignedInUser(firebaseState, startTW5, convertUser(firebaseState.auth.currentUser!));
           });
         } else if (authResult.user) {
           console.log("welcome, existing user!");
@@ -51,7 +53,7 @@ function getUiConfig(firebaseState:FirebaseState, startTW5: StartTW5) {
  * Displays the UI for a signed in user.
  * @param {!firebase.User} user
  */
-export const handleSignedInUser = async function (firebaseState:FirebaseState, startTW5: StartTW5, user: User) {
+export const handleSignedInUser = async function (firebaseState:FirebaseState, startTW5: StartTW5, user: TiddlyBaseUser) {
   console.log('running handleSignedInUser');
   toggleVisibleDOMSection('user-signed-in');
   await startTW5(user);

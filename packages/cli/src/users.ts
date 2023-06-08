@@ -1,7 +1,7 @@
 import * as admin from 'firebase-admin';
 import { Argv, CommandModule } from 'yargs';
 import { inspect } from 'util';
-import { USER_ROLES } from '@tiddlybase/shared/src/user-roles'
+import { USER_ROLES } from '@tiddlybase/shared/src/users'
 import { requireSingleConfig } from './config';
 import { getJWTRoleClaim } from '@tiddlybase/shared/src/tiddlybase-config-schema';
 import { CLIContext, withCLIContext } from './cli-context';

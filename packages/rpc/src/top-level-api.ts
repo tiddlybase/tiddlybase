@@ -1,12 +1,9 @@
 import type { } from '@tiddlybase/tw5-types/src/index'
 import type { AddNumbers, NotifyAdmin } from "@tiddlybase/functions/src/apis";
-import type { User } from '@firebase/auth';
 import { ParentAPIBase } from "./base";
 import type { TiddlerStore } from "@tiddlybase/shared/src/tiddler-store";
+import type { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
 
-export const USER_FIELDS = ['emailVerified', 'displayName', 'photoURL', 'providerId', 'uid'] as const;
-
-export type TiddlyBaseUser = Pick<User, typeof USER_FIELDS[number]>
 
 export interface ChildInitProps {
   user: TiddlyBaseUser,
@@ -26,14 +23,25 @@ export interface StorageFileMetadata {
   md5Hash?: string
 }
 
-export interface TopLevelAPIForSandboxedWiki extends ParentAPIBase<ChildInitProps>, TiddlerStore {
+export interface StorageAPI {
   getStorageFileAsBlob: (filename: string) => Promise<Blob>;
   getStorageFileMetadata: (filename: string) => Promise<StorageFileMetadata>;
   getStorageFileDownloadUrl: (filename: string) => Promise<string>;
+}
+
+export interface AuthAPI {
   authSignOut: () => Promise<void>;
   authDeleteAccount: () => Promise<void>;
-  loadError: (message: string) => Promise<void>;
+}
+
+export interface BackendFunctions {
   // exposed firebase functions
   addNumbers: AddNumbers;
   notifyAdmin: NotifyAdmin;
 }
+
+export interface TopLevelUIAPI {
+  loadError: (message: string) => Promise<void>;
+}
+
+export interface TopLevelAPIForSandboxedWiki extends ParentAPIBase<ChildInitProps>, TiddlerStore, StorageAPI, AuthAPI, BackendFunctions, TopLevelUIAPI {}

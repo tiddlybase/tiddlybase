@@ -1,6 +1,5 @@
 import {initializeApp} from '@firebase/app'
 import {getAuth} from '@firebase/auth'
-import type { User } from '@firebase/auth';
 import * as firebaseui from 'firebaseui';
 import type { LaunchConfig, TiddlybaseClientConfig } from '@tiddlybase/shared/src/tiddlybase-config-schema';
 import type { FirebaseStorage } from '@firebase/storage';
@@ -11,9 +10,10 @@ import type { APIDefiner} from "@tiddlybase/rpc/src";
 import type { APIClient } from "@tiddlybase/rpc/src";
 import type { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
 import type { TopLevelAPIForSandboxedWiki } from "@tiddlybase/rpc/src/top-level-api";
+import { TiddlyBaseUser } from '@tiddlybase/shared/src/users';
 
 
-export type StartTW5 = (user: User) => Promise<void>;
+export type StartTW5 = (user: TiddlyBaseUser) => Promise<void>;
 
 export interface FirebaseState {
   app: ReturnType<typeof initializeApp>,

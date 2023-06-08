@@ -195,7 +195,7 @@ const getTW5PluginConfig = (options) => {
           // Externalize to a commonjs module using the request path
           return callback(null, externalPath);
         }
-        console.log(`NONEXTERNAL IMPORT IN  ${importedBy} : ${importName}`);
+        // console.log(`NONEXTERNAL IMPORT IN  ${importedBy} : ${importName}`);
         // Continue without externalizing the import
         return callback();
       },
