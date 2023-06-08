@@ -1,5 +1,5 @@
 import { TiddlerChangeListener, TiddlerCollection, TiddlerProvenance, TiddlerSource, TiddlerSourceWithSpec, TiddlerStore } from "@tiddlybase/shared/src/tiddler-store";
-import { FirebaseStorage, getBlob, ref } from '@firebase/storage';
+
 import { LaunchConfig, TiddlerSourceSpec, TiddlybaseClientConfig, getStorageConfig } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import { joinPaths } from '@tiddlybase/shared/src/join-paths';
 import { FirebaseAPIs } from "../types";
@@ -10,23 +10,8 @@ import { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-
 import { RoutingProxyTiddlerStore } from "./routing-proxy-tiddler-store";
 import { BrowserStorageTiddlerStore } from "./browser-storage-tiddler-store";
 import { TiddlyWebTiddlerStore } from "./tiddlyweb-tiddler-store";
-import { mergeTiddlerArray } from "./tiddler-store-utils";
 import { HttpTiddlerSource } from "./http-tiddler-source";
-
-export class FirebaseStorageTiddlerSource implements TiddlerSource {
-  storage: FirebaseStorage;
-  path: string;
-  constructor(storage: FirebaseStorage, path: string) {
-    this.storage = storage;
-    this.path = path;
-  }
-  async getAllTiddlers(): Promise<TiddlerCollection> {
-    const fileRef = ref(this.storage, this.path);
-    const blob = await getBlob(fileRef);
-    const text = await blob.text()
-    return mergeTiddlerArray(JSON.parse(text));
-  }
-}
+import { FirebaseStorageTiddlerSource } from "./firebase-storage-tiddler-source";
 
 export class ProxyToSandboxedIframeChangeListener implements TiddlerChangeListener {
   sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>;
