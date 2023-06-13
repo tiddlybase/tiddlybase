@@ -1,6 +1,7 @@
 import type { } from '@tiddlybase/tw5-types/src/index'
 import type * as firebaseui from 'firebaseui';
 import { joinPaths } from './join-paths';
+import { TiddlyBaseUser } from './users';
 
 export type TiddlerWriteCondition = { titlePrefix: string }; // more options in the future
 
@@ -19,11 +20,16 @@ export type TiddlerSourceSpec =
   } & BaseTiddlerStoreSpec)
   | ({ type: 'browser-storage', collection: string, useLocalStorage?: boolean } & BaseTiddlerStoreSpec)
 
+export type AuthProviderSpec =
+| { type: 'firebase', writeToFirestore?: boolean}
+| { type: 'trivial', user?: TiddlyBaseUser };
+
 export interface LaunchConfig {
   // build is the relative path to the child iframe HTML, eg: 'tiddlybase_public/default-build.html'
   build: string,
   sources: TiddlerSourceSpec[],
-  settings: Partial<$tw.WikiInfoConfig>,
+  auth: AuthProviderSpec,
+  wikiInfoConfig: Partial<$tw.WikiInfoConfig>,
   isLocal: boolean
 }
 

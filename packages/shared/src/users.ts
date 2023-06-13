@@ -5,9 +5,9 @@ export const USER_ROLES:Record<string, number> = {
 };
 
 export type TiddlyBaseUser = {
-  emailVerified: boolean,
+  emailVerified?: boolean,
   displayName?: string,
   photoURL?: string,
-  providerId: string,
-  uid: string
+  providerId?: string,
+  userId: string
 }

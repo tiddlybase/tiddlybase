@@ -2,13 +2,15 @@ import { AuthDetails, AuthProvider, OnLoginHandler, OnLogoutHandler } from "./au
 import { FirebaseApp } from '@firebase/app'
 import { getAuth, Auth, User } from '@firebase/auth'
 import { TiddlyBaseUser } from "packages/shared/src/users";
+import { Lazy } from "@tiddlybase/shared/src/lazy";
+
 
 export const convertUser = (firebaseUser: User): TiddlyBaseUser => ({
   emailVerified: firebaseUser.emailVerified,
   displayName: firebaseUser.displayName || undefined,
   photoURL: firebaseUser.photoURL || undefined,
   providerId: firebaseUser.providerId,
-  uid: firebaseUser.uid
+  userId: firebaseUser.uid
 })
 
 export const getAuthDetails = (user: User): AuthDetails => {
@@ -25,8 +27,8 @@ export class FirebaseAuthProvider implements AuthProvider {
   loginHanders: OnLoginHandler[] = [];
   logoutHandlers: OnLogoutHandler[] = [];
 
-  constructor(app: FirebaseApp) {
-    this.auth = getAuth(app);
+  constructor(lazyFirebaseApp: Lazy<FirebaseApp>) {
+    this.auth = getAuth(lazyFirebaseApp());
     this.init();
   }
 

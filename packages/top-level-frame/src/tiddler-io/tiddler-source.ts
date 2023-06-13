@@ -14,6 +14,7 @@ import { FirebaseStorageTiddlerSource } from "./firebase-storage-tiddler-source"
 import {FirebaseApp} from '@firebase/app'
 import { getStorage} from '@firebase/storage';
 import { getFirestore } from "firebase/firestore";
+import { Lazy } from "@tiddlybase/shared/src/lazy";
 
 export class ProxyToSandboxedIframeChangeListener implements TiddlerChangeListener {
   sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>;
@@ -32,14 +33,14 @@ export class ProxyToSandboxedIframeChangeListener implements TiddlerChangeListen
 
 const substituteUserid = (template: string, userid: string): string => template.replace("$USERID", () => userid);
 
-const getTiddlerSource = async (tiddlybaseClientConfig: TiddlybaseClientConfig, spec: TiddlerSourceSpec, userid: string, firebaseApp: FirebaseApp, sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>): Promise<TiddlerSource> => {
+const getTiddlerSource = async (tiddlybaseClientConfig: TiddlybaseClientConfig, spec: TiddlerSourceSpec, userid: string, lazyFirebaseApp:Lazy<FirebaseApp>, sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>): Promise<TiddlerSource> => {
   switch (spec.type) {
     case "http":
       return new HttpTiddlerSource(spec.url);
     case "firebase-storage":
       const storageConfig = getStorageConfig(tiddlybaseClientConfig);
       const fullPath = joinPaths(storageConfig.tiddlerCollectionsPath, spec.pathPostfix ?? DEFAULT_TIDDLER_COLLECTION_FILENAME)
-      const storage = getStorage(firebaseApp);
+      const storage = getStorage(lazyFirebaseApp());
       return new FirebaseStorageTiddlerSource(storage, fullPath);
     case "browser-storage":
       return new BrowserStorageTiddlerStore(spec.useLocalStorage === true ? window.localStorage : window.sessionStorage, tiddlybaseClientConfig.instanceName, spec.collection)
@@ -48,7 +49,7 @@ const getTiddlerSource = async (tiddlybaseClientConfig: TiddlybaseClientConfig, 
         filterExpression: spec.filterExpression
       });
     case "firestore":
-      const firestore = getFirestore(firebaseApp);
+      const firestore = getFirestore(lazyFirebaseApp());
       const firestoreTiddlerStore = new FirestoreTiddlerStore(
         firestore,
         tiddlybaseClientConfig.instanceName,
@@ -73,8 +74,8 @@ type TiddlerSourcePromiseWithSpec = {
   spec: TiddlerSourceSpec;
 }
 
-export const readTiddlerSources = async (tiddlybaseClientConfig: TiddlybaseClientConfig, launchConfig: LaunchConfig, userid: string, firebaseApp: FirebaseApp, sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>): Promise<MergedSources> => {
-  const sourcePromisesWithSpecs: TiddlerSourcePromiseWithSpec[] = launchConfig.sources.map(spec => ({ spec, source: getTiddlerSource(tiddlybaseClientConfig, spec, userid, firebaseApp, sandboxedAPIClient) }));
+export const readTiddlerSources = async (tiddlybaseClientConfig: TiddlybaseClientConfig, launchConfig: LaunchConfig, userid: string, lazyFirebaseApp:Lazy<FirebaseApp>, sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>): Promise<MergedSources> => {
+  const sourcePromisesWithSpecs: TiddlerSourcePromiseWithSpec[] = launchConfig.sources.map(spec => ({ spec, source: getTiddlerSource(tiddlybaseClientConfig, spec, userid, lazyFirebaseApp, sandboxedAPIClient) }));
   const collections = await Promise.all(sourcePromisesWithSpecs.map(async s => (await s.source).getAllTiddlers()));
   const sourcesWithSpecs: TiddlerSourceWithSpec[] = await Promise.all(sourcePromisesWithSpecs.map(async s => ({
     ...s,

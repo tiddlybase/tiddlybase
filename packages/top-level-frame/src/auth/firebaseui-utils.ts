@@ -4,9 +4,11 @@ import {FirebaseApp} from "@firebase/app"
 import * as firebaseui from 'firebaseui';
 import { FirestoreTiddlerStore } from "../tiddler-io/firestore-tiddler-store";
 import { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
+import { objFilter } from '@tiddlybase/shared/src/obj-filter';
+import { Lazy } from "@tiddlybase/shared/src/lazy";
 
-export const writeUserProfile = async (firebaseApp: FirebaseApp, user:TiddlyBaseUser) => {
-  const firestore = getFirestore(firebaseApp);
+export const writeUserProfile = async (lazyFirebaseApp:Lazy<FirebaseApp>, user:TiddlyBaseUser) => {
+  const firestore = getFirestore(lazyFirebaseApp());
     return await (new FirestoreTiddlerStore(
       firestore,
       "admin",
@@ -15,13 +17,22 @@ export const writeUserProfile = async (firebaseApp: FirebaseApp, user:TiddlyBase
         stripDocIDPrefix: "users/"
       }
     )).setTiddler({
-      ...user,
-      title: `users/${user.uid}`
+      // firestore can't write undefined values, so if any field is undefined,
+      // filter it out. TODO: this should happen in FirestoreTiddlerStore
+      ...objFilter((_k, v) => v !== undefined, (user as any)),
+      title: `users/${user.userId}`
     })
   }
 
-export const addFirebaseUI = (authProvider: FirebaseAuthProvider, domParentId:string, firebaseUIConfig:firebaseui.auth.Config) => {
+export const addFirebaseUI = (authProvider: FirebaseAuthProvider, domParentId:string, lazyFirebaseApp:Lazy<FirebaseApp>, firebaseUIConfig:firebaseui.auth.Config, writeToFirestore:boolean) => {
   const ui = new firebaseui.auth.AuthUI(authProvider.auth);
+  if (writeToFirestore) {
+    authProvider.onLogin((user, authDetails) => {
+      if (!authDetails.lastLogin) {
+        writeUserProfile(lazyFirebaseApp, user);
+      }
+    });
+  }
   authProvider.onLogout(() => {
     ui.start(domParentId, {
       ...firebaseUIConfig,

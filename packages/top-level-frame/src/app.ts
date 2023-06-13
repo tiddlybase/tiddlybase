@@ -5,6 +5,7 @@ import type { TiddlerStore } from "@tiddlybase/shared/src/tiddler-store";
 import type { LaunchConfig, TiddlybaseClientConfig } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import { makeRPC } from "@tiddlybase/rpc/src/make-rpc";
 import { ParsedSearchParams } from "@tiddlybase/shared/src/search-params";
+import { lazy, Lazy } from "@tiddlybase/shared/src/lazy";
 import { getNormalizedLaunchConfig } from './launch-config';
 import { createParentApi } from './top-level-api-impl';
 import { initializeApp } from '@firebase/app'
@@ -12,11 +13,10 @@ import { RPC } from './types';
 import type { } from '@tiddlybase/tw5-types/src/index'
 import { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
 import { toggleVisibleDOMSection } from "./dom-utils";
-import { addFirebaseUI, writeUserProfile } from "./auth/firebaseui-utils";
-import { FirebaseAuthProvider } from "./auth/firebase-auth-provider";
-import {FirebaseApp} from '@firebase/app'
+import { FirebaseApp } from '@firebase/app'
+import { getAuthProvider } from "./auth/get-auth-provider";
 
-const initRPC = (childIframe: Window):RPC => {
+const initRPC = (childIframe: Window): RPC => {
   const rpc = makeRPC();
   return {
     rpc,
@@ -38,7 +38,7 @@ export class TopLevelApp {
     this.launchConfig = getNormalizedLaunchConfig(this.searchParams, this.config);
   }
 
-  getIframeURL():string {
+  getIframeURL(): string {
     return `${this.launchConfig.build}${window.location.hash}`;
   }
 
@@ -57,30 +57,26 @@ export class TopLevelApp {
     return iframe.contentWindow!;
   };
 
-  loadWiki(user:TiddlyBaseUser, firebaseApp:FirebaseApp) {
+  loadWiki(user: TiddlyBaseUser, lazyFirebaseApp: Lazy<FirebaseApp>) {
     const iframe = this.createWikiIframe(this.getIframeURL());
     this.rpc = initRPC(iframe);
-    createParentApi(this.rpc, user, firebaseApp, this.config, this.launchConfig);
+    createParentApi(this.rpc, user, lazyFirebaseApp, this.config, this.launchConfig);
   }
 
 
-  initApp () {
+  initApp() {
     if (this.searchParams['signInFlow'] === 'popup') {
       this.config.authentication.firebaseui.signInFlow = 'popup';
       console.log('overriding sign in flow to be popup');
     }
     // TODO: depending on the launchConfig, we might not even need a
     // FirebaseApp instance in the future.
-    const firebaseApp = initializeApp(this.config.clientConfig);
-    const authProvider = new FirebaseAuthProvider(firebaseApp);
-    addFirebaseUI(authProvider, '#firebaseui-container', this.config.authentication.firebaseui)
+    const lazyFirebaseApp: Lazy<FirebaseApp> = lazy(() => initializeApp(this.config.clientConfig));
+    const authProvider = getAuthProvider(lazyFirebaseApp, this.launchConfig, this.config)
 
     authProvider.onLogin((user, authDetails) => {
       toggleVisibleDOMSection('user-signed-in');
-      if (!authDetails.lastLogin) {
-        writeUserProfile(firebaseApp, user);
-      }
-      this.loadWiki(user, firebaseApp);
+      this.loadWiki(user, lazyFirebaseApp);
     });
 
     authProvider.onLogout(() => {

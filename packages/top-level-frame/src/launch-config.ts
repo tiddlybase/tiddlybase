@@ -1,6 +1,6 @@
 
 import { ParsedSearchParams } from "packages/shared/src/search-params";
-import { DEFAULT_BUILD_NAME, DEFAULT_LAUNCH_CONFIG, SEARCH_PARAM_LAUNCH_CONFIG } from "@tiddlybase/shared/src/constants";
+import { DEFAULT_AUTH, DEFAULT_BUILD_NAME, DEFAULT_LAUNCH_CONFIG, SEARCH_PARAM_LAUNCH_CONFIG } from "@tiddlybase/shared/src/constants";
 import type { LaunchConfig, TiddlybaseClientConfig } from "packages/shared/src/tiddlybase-config-schema";
 
 export const getNormalizedLaunchConfig = (searchParams:ParsedSearchParams={}, config?: TiddlybaseClientConfig): LaunchConfig => {
@@ -15,7 +15,8 @@ export const getNormalizedLaunchConfig = (searchParams:ParsedSearchParams={}, co
   return {
     sources: launchConfig.sources ?? [],
     build: launchConfig.build ?? DEFAULT_BUILD_NAME,
-    settings: launchConfig?.settings ?? {},
-    isLocal: launchConfig.isLocal === true
+    wikiInfoConfig: launchConfig?.wikiInfoConfig ?? {},
+    isLocal: launchConfig.isLocal === true,
+    auth: launchConfig.auth ?? DEFAULT_AUTH
   }
 }

@@ -12,6 +12,7 @@ import { LaunchConfig, TiddlybaseClientConfig, getStorageConfig } from "@tiddlyb
 import { toggleVisibleDOMSection, replaceChildrenWithText } from "./dom-utils";
 import { MergedSources, readTiddlerSources } from "./tiddler-io/tiddler-source";
 import { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
+import { Lazy } from "@tiddlybase/shared/src/lazy";
 
 export const devSetup = (functions: Functions) => connectFunctionsEmulator(functions, "localhost", 5001);
 
@@ -68,10 +69,10 @@ const exposeObjectMethod = (def: APIDefiner<TopLevelAPIForSandboxedWiki>, fn: Pa
 
 const exposeCallable = (def: APIDefiner<TopLevelAPIForSandboxedWiki>, fn: Parameters<APIDefiner<TopLevelAPIForSandboxedWiki>>[0], functions: Functions) => def(fn, getStub(functions, fn))
 
-export const createParentApi = (rpc: RPC, user: TiddlyBaseUser, firebaseApp: FirebaseApp, config:TiddlybaseClientConfig, launchConfig: LaunchConfig) => {
+export const createParentApi = (rpc: RPC, user: TiddlyBaseUser, lazyFirebaseApp:Lazy<FirebaseApp>, config:TiddlybaseClientConfig, launchConfig: LaunchConfig) => {
 
   if (config.functions) {
-    const functions = getFunctions(firebaseApp, config.functions.location);
+    const functions = getFunctions(lazyFirebaseApp(), config.functions.location);
     if (launchConfig.isLocal) {
       devSetup(functions);
     }
@@ -80,9 +81,9 @@ export const createParentApi = (rpc: RPC, user: TiddlyBaseUser, firebaseApp: Fir
     exposeCallable(rpc.toplevelAPIDefiner, 'notifyAdmin', functions);
   }
 
-  const storage = getStorage(firebaseApp);
+  const storage = getStorage(lazyFirebaseApp());
 
-  const tiddlerSourcesPromise:Promise<MergedSources> = readTiddlerSources(config, launchConfig, user.uid, firebaseApp, rpc.sandboxedAPIClient);
+  const tiddlerSourcesPromise:Promise<MergedSources> = readTiddlerSources(config, launchConfig, user.userId, lazyFirebaseApp, rpc.sandboxedAPIClient);
 
   rpc.toplevelAPIDefiner('childIframeReady', async () => {
 
@@ -97,7 +98,7 @@ export const createParentApi = (rpc: RPC, user: TiddlyBaseUser, firebaseApp: Fir
     return {
       user,
       tiddlers: Object.values(tiddlers),
-      wikiInfoConfig: launchConfig.settings,
+      wikiInfoConfig: launchConfig.wikiInfoConfig,
       storageConfig: getStorageConfig(config),
       isLocal: launchConfig.isLocal,
       parentLocation: JSON.parse(JSON.stringify(window.location)),
@@ -105,7 +106,7 @@ export const createParentApi = (rpc: RPC, user: TiddlyBaseUser, firebaseApp: Fir
   });
 
   addStorageMethods(rpc.toplevelAPIDefiner, storage);
-  addAuthMethods(rpc.toplevelAPIDefiner, getAuth(firebaseApp));
+  addAuthMethods(rpc.toplevelAPIDefiner, getAuth(lazyFirebaseApp()));
   rpc.toplevelAPIDefiner('loadError', async (message: string) => {
     replaceChildrenWithText(document.getElementById("wiki-error-message"), message);
     toggleVisibleDOMSection('wiki-error');
