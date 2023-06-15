@@ -2,6 +2,8 @@ import type { } from '@tiddlybase/tw5-types/src/index'
 import type { TiddlerCollection, TiddlerStore } from "@tiddlybase/shared/src/tiddler-store";
 import { HttpTiddlerSource } from './http-tiddler-source';
 
+const DEFAULT_FILTER_EXPRESSION = "[is[tiddler]]";
+
 const dateFields = new Set<string>(["created", "modified"]);
 
 const knownFields = new Set<string>([
@@ -46,11 +48,11 @@ const convertTiddlerToTiddlyWebFormat = (tiddler:$tw.TiddlerFields):string => {
 
 export class TiddlyWebTiddlerStore implements TiddlerStore {
   urlPrefix: string | undefined;
-  filterExpression: string | undefined;
+  filterExpression: string;
 
-  constructor({urlPrefix, filterExpression}:{urlPrefix?:string, filterExpression?:string}) {
+  constructor({urlPrefix, filterExpression}:{urlPrefix?:string, filterExpression?:string}={}) {
     this.urlPrefix = urlPrefix;
-    this.filterExpression = filterExpression;
+    this.filterExpression = filterExpression ?? DEFAULT_FILTER_EXPRESSION;
   }
 
   async getTiddler (title: string): Promise<$tw.TiddlerFields | undefined> {
@@ -59,7 +61,7 @@ export class TiddlyWebTiddlerStore implements TiddlerStore {
   }
 
   private makeURL(suffix:string):string {
-    return (this.urlPrefix  || '') + suffix;
+    return (this.urlPrefix || '') + suffix;
   }
 
   async setTiddler (tiddler: $tw.TiddlerFields): Promise<$tw.TiddlerFields> {
@@ -90,10 +92,7 @@ export class TiddlyWebTiddlerStore implements TiddlerStore {
 
   async getAllTiddlers (): Promise<TiddlerCollection> {
     // exclude=, prevents 'text' field from being omitted
-    let urlSuffix = 'recipes/default/tiddlers.json?exclude=,'
-    if (this.filterExpression) {
-      urlSuffix += `&filter=${encodeURIComponent(this.filterExpression)}`;
-    }
+    let urlSuffix = `recipes/default/tiddlers.json?exclude=,&filter=${encodeURIComponent(this.filterExpression)}`;
     return new HttpTiddlerSource(this.makeURL(urlSuffix)).getAllTiddlers();
   }
 }

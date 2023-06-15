@@ -2,7 +2,7 @@
 /// <reference types="@tiddlybase/tw5-types/src/tiddlywiki-node" />
 import { Arguments, Argv, CommandModule } from 'yargs';
 import { basename, dirname } from 'path';
-import { getPluginPaths, getWikiInfoFilename, invokeTiddlyWiki, TIDDLYWIKI_CLI_OPTIONS } from './tw-utils';
+import { getPluginPaths, getWikiDirRelativePath, getWikiInfoFilename, invokeTiddlyWiki, TIDDLYWIKI_CLI_OPTIONS } from './tw-utils';
 
 type OutputType = 'html' | 'json';
 
@@ -124,7 +124,7 @@ const SAVE_JSON_COMMAND_TIDDLER: $tw.TiddlerFields = {
 };
 
 export const buildwiki: CommandModule = {
-  command: 'buildwiki <wikidir> [exportfilter]',
+  command: 'buildwiki [exportfilter]',
   describe: 'build a JSON wiki contents file',
   builder: (argv: Argv) =>
     argv
@@ -138,14 +138,12 @@ export const buildwiki: CommandModule = {
         ...TIDDLYWIKI_CLI_OPTIONS
       }),
   handler: async (args: Arguments) => {
-    const pluginPaths = getPluginPaths(args);
-    const wikidir = args.wikidir as string;
     const wikiInfoFilename = getWikiInfoFilename(args);
+    const pluginPaths = getPluginPaths(args, wikiInfoFilename);
     const outputType = args.t as OutputType;
-    const outputFilename = (args.output as string | undefined) ?? DEFAULT_OUTPUT_FILENAME[outputType];
+    const outputFilename = getWikiDirRelativePath((args.output as string | undefined) ?? DEFAULT_OUTPUT_FILENAME[outputType], wikiInfoFilename);
 
     await invokeTiddlyWiki(
-      wikidir,
       pluginPaths,
       outputType === 'json' ? [
         "--output", dirname(outputFilename),

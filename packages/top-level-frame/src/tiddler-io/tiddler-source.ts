@@ -45,9 +45,7 @@ const getTiddlerSource = async (tiddlybaseClientConfig: TiddlybaseClientConfig, 
     case "browser-storage":
       return new BrowserStorageTiddlerStore(spec.useLocalStorage === true ? window.localStorage : window.sessionStorage, tiddlybaseClientConfig.instanceName, spec.collection)
     case "tiddlyweb":
-      return new TiddlyWebTiddlerStore({
-        filterExpression: spec.filterExpression
-      });
+      return new TiddlyWebTiddlerStore();
     case "firestore":
       const firestore = getFirestore(lazyFirebaseApp());
       const firestoreTiddlerStore = new FirestoreTiddlerStore(
