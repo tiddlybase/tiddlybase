@@ -2,7 +2,7 @@
 /// <reference types="@tiddlybase/tw5-types/src/tiddlywiki-node" />
 import { bootprefix } from 'tiddlywiki/boot/bootprefix';
 import { TiddlyWiki } from 'tiddlywiki';
-import { delimiter } from 'path';
+import { delimiter, dirname, relative } from 'path';
 import { Arguments, Options } from 'yargs';
 
 export const TIDDLYWIKI_CLI_OPTIONS:Record<string, Options> = {
@@ -25,16 +25,16 @@ export const invokeTiddlyWiki = (
   preloadedTiddlers: $tw.TiddlerFields[] = [],
   wikiInfoFilename?: string
 ): Promise<typeof $tw> => {
+  let fixedPluginPaths = [...pluginPaths ?? []];
   const $twInstance = TiddlyWiki(bootprefix());
-  // setting the env var is the only way to include multiple plugin dirs, which is very useful
-  // if a tiddlybase instance has it's own plugins, but the builds also need standard tiddlybase plugins
-  process.env['TIDDLYWIKI_PLUGIN_PATH'] = (pluginPaths ?? []).join(delimiter)
-  $twInstance.boot.argv = [
-    wikiDir,
-    "--verbose"].concat(args)
-  $twInstance.preloadTiddlerArray(preloadedTiddlers);
   // this is a terrible hack!
   if (wikiInfoFilename) {
+    // change working dir to be same as tiddlywiki.info
+    // since tiddlywiki assumes that to be the case
+    const wikiInfoDir = dirname(wikiInfoFilename);
+    process.chdir(wikiInfoDir)
+    const newWikiInfoFilename = relative(wikiInfoDir, wikiInfoFilename);
+    fixedPluginPaths = fixedPluginPaths.map(p => relative(wikiInfoDir, p));
     let invocationCount = 0;
     $twInstance.config = {
       get wikiInfo() {
@@ -46,9 +46,16 @@ export const invokeTiddlyWiki = (
         // plus the top-level wiki itself. We only want to return the custom
         // wiki info filename for the top-level wiki (the first 3 accesses
         // during initStartup() don't actually matter).
-        return invocationCount < 5 ? wikiInfoFilename  : "./tiddlywiki.info";
+        return invocationCount < 5 ? newWikiInfoFilename  : "./tiddlywiki.info";
       }
     } as typeof $tw.config
   }
+  // setting the env var is the only way to include multiple plugin dirs, which is very useful
+  // if a tiddlybase instance has it's own plugins, but the builds also need standard tiddlybase plugins
+  process.env['TIDDLYWIKI_PLUGIN_PATH'] = fixedPluginPaths.join(delimiter)
+  $twInstance.boot.argv = [
+    wikiDir,
+    "--verbose"].concat(args)
+  $twInstance.preloadTiddlerArray(preloadedTiddlers);
   return new Promise((resolve) => $twInstance.boot.boot(() => resolve($twInstance)));
 }
