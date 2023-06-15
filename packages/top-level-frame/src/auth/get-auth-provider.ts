@@ -14,7 +14,9 @@ export const getAuthProvider = (lazyFirebaseApp: Lazy<FirebaseApp>, launchConfig
  switch (launchConfig.auth.type) {
   case 'firebase':
     const authProvider = new FirebaseAuthProvider(lazyFirebaseApp);
-    addFirebaseUI(authProvider, '#firebaseui-container', lazyFirebaseApp, config.authentication.firebaseui, launchConfig.auth.writeToFirestore === true)
+    if (config.authentication?.firebaseui) {
+      addFirebaseUI(authProvider, '#firebaseui-container', lazyFirebaseApp, config.authentication.firebaseui, launchConfig.auth.writeToFirestore === true)
+    }
     return authProvider;
   case 'trivial':
     return new TrivialAuthProvider(launchConfig.auth.user || ANONYMOUS_USER)

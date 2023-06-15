@@ -65,8 +65,8 @@ export interface TiddlybaseConfig {
   authentication: {
     // TODO: decomission jwt-based auth in favor of firestore-backed permissions
     jwtRoleClaim?: string,
-    firebaseui: firebaseui.auth.Config
-  },
+    firebaseui?: firebaseui.auth.Config
+  } | undefined,
   storage: Partial<$tw.StorageConfig> | undefined,
   functions: {
     location: string
@@ -82,7 +82,7 @@ export const TIDDLYBASE_CLIENT_CONFIG_KEYS = ['instanceName', 'clientConfig', 'a
 
 export type TiddlybaseClientConfig = Pick<TiddlybaseConfig, typeof TIDDLYBASE_CLIENT_CONFIG_KEYS[number]>;
 
-export const getJWTRoleClaim = (config: TiddlybaseClientConfig): string => config.authentication.jwtRoleClaim ?? config.instanceName;
+export const getJWTRoleClaim = (config: TiddlybaseClientConfig): string => config.authentication?.jwtRoleClaim ?? config.instanceName;
 export const getStorageConfig = (config: TiddlybaseClientConfig): $tw.StorageConfig => ({
   tiddlerCollectionsPath: config?.storage?.tiddlerCollectionsPath ?? joinPaths(config.instanceName, STORAGE_TIDDLER_COLLECTIONS_PATH_SUFFIX),
   filesPath: config?.storage?.filesPath ?? joinPaths(config.instanceName, STORAGE_FILES_PATH_SUFFIX)

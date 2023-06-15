@@ -65,10 +65,6 @@ export class TopLevelApp {
 
 
   initApp() {
-    if (this.searchParams['signInFlow'] === 'popup') {
-      this.config.authentication.firebaseui.signInFlow = 'popup';
-      console.log('overriding sign in flow to be popup');
-    }
     // TODO: depending on the launchConfig, we might not even need a
     // FirebaseApp instance in the future.
     const lazyFirebaseApp: Lazy<FirebaseApp> = lazy(() => initializeApp(this.config.clientConfig));
