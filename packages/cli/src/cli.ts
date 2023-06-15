@@ -1,6 +1,6 @@
 import yargs from 'yargs';
-import { getclaims, setrole, setclaimjson, getuser, listusers, adduser } from './users';
-import { cmdGenerateFirebaseJson, cmdGenerateStorageRules, cmdGenerateIndexHTML } from './generate';
+import { getclaims, setclaimjson, getuser, listusers, adduser } from './users';
+import { cmdGenerateFirebaseJson, cmdGenerateStorageRules, cmdGenerateFirestoreRules, cmdGenerateOuterHTML } from './generate';
 import { buildwiki } from './wikibuilder';
 import {runTWCommand} from './run-tw-command'
 
@@ -17,14 +17,15 @@ const main = async (argv:string[]) => {
   .describe('k', 'path to service account key JSON')
   .default('k', 'etc/service-account-key.json')
   .command(getclaims)
-  .command(setrole)
+  //.command(setrole)
   .command(setclaimjson)
   .command(getuser)
   .command(listusers)
   .command(adduser)
   .command(cmdGenerateFirebaseJson)
   .command(cmdGenerateStorageRules)
-  .command(cmdGenerateIndexHTML)
+  .command(cmdGenerateFirestoreRules)
+  .command(cmdGenerateOuterHTML)
   .command(buildwiki)
   .command(runTWCommand)
   //.command(importTiddlers)

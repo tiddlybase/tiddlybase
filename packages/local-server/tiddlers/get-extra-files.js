@@ -14,8 +14,10 @@ GET /:filename
 
 exports.method = "GET";
 
+const DEFAULT_INDEX_HTML_PATH = "public/outer.html";
+
 const mappings = {
-    "^\/(?:\\?.*)?$": globalThis.$tw.boot.wikiInfo.config['index-html-path'],
+    "^\/(?:\\?.*)?$": globalThis.$tw.boot.wikiInfo.config['index-html-path'] ?? DEFAULT_INDEX_HTML_PATH,
     "^\/([^\/]+)$": "public",
     "^\/tiddlybase_public\/(.+)$": "public/tiddlybase_public",
     "^\/sourcemaps\/(.+)$": "public/sourcemaps",

@@ -67,10 +67,10 @@ export class TopLevelApp {
   initApp() {
     // TODO: depending on the launchConfig, we might not even need a
     // FirebaseApp instance in the future.
-    const lazyFirebaseApp: Lazy<FirebaseApp> = lazy(() => initializeApp(this.config.clientConfig));
-    const authProvider = getAuthProvider(lazyFirebaseApp, this.launchConfig, this.config)
+    const lazyFirebaseApp: Lazy<FirebaseApp> = lazy(() => initializeApp(this.config.firebaseClientConfig));
+    const authProvider = getAuthProvider(lazyFirebaseApp, this.launchConfig)
 
-    authProvider.onLogin((user, authDetails) => {
+    authProvider.onLogin((user, _authDetails) => {
       toggleVisibleDOMSection('user-signed-in');
       this.loadWiki(user, lazyFirebaseApp);
     });

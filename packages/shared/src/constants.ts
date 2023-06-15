@@ -7,6 +7,13 @@ export const DEFAULT_LAUNCH_CONFIG = "default";
 
 export const TIDDLER_TITLE_WIKI_INFO_CONFIG = '$:/config/wikiInfoConfig';
 
-export const DEFAULT_AUTH:AuthProviderSpec = { type: 'firebase', writeToFirestore: true};
+export const DEFAULT_AUTH: AuthProviderSpec = {
+  type: 'firebase',
+  writeToFirestore: true,
+  firebaseui: {
+    "signInFlow": "redirect",
+    "signInOptions": [{ "provider": "google.com" }],
+  }
+};
 
 export const ANONYMOUS_USER_ID = "anonymous";

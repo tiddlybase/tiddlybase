@@ -2,16 +2,15 @@ import * as admin from 'firebase-admin';
 import { Argv, CommandModule } from 'yargs';
 import { inspect } from 'util';
 import { USER_ROLES } from '@tiddlybase/shared/src/users'
-import { requireSingleConfig } from './config';
-import { getJWTRoleClaim } from '@tiddlybase/shared/src/tiddlybase-config-schema';
 import { CLIContext, withCLIContext } from './cli-context';
 import * as crypto from "crypto";
-import { Auth } from 'firebase-admin/lib/auth/auth';
-import { UserRecord } from 'firebase-admin/lib/auth/user-record';
+// import { Auth } from 'firebase-admin/lib/auth/auth';
+// import { UserRecord } from 'firebase-admin/lib/auth/user-record';
 
 const RE_UID = /^[a-zA-Z0-9]+$/;
 const ROLE_CHOICES = Object.keys(USER_ROLES).map(s => s.toLowerCase());
 
+/*
 const doSetRole = async (auth: Auth, user: UserRecord, jwtRoleClaim: string, roleName: string): Promise<Record<string, any>> => {
   const roleNumber = USER_ROLES[roleName];
   const claims = {
@@ -21,6 +20,7 @@ const doSetRole = async (auth: Auth, user: UserRecord, jwtRoleClaim: string, rol
   await auth.setCustomUserClaims(user.uid, claims);
   return claims;
 }
+*/
 
 export const getUser = async (app: admin.app.App, uidOrEmail: string): Promise<admin.auth.UserRecord> => {
   let firebaseUser;
@@ -42,6 +42,8 @@ export const userRecordToJSON = (userRecord: admin.auth.UserRecord): any => {
   return result;
 }
 
+// TODO: migrate this to firestore-based ACL instead of custom JWT claims
+/*
 export const setrole: CommandModule = {
   command: 'setrole <userid|email> role',
   describe: 'set a custom claim on a user',
@@ -66,6 +68,7 @@ export const setrole: CommandModule = {
     console.log(inspect(claims));
   }),
 };
+*/
 
 export const adduser: CommandModule = {
   command: 'adduser email [role]',
@@ -89,9 +92,10 @@ export const adduser: CommandModule = {
     if (!(roleName in USER_ROLES)) {
       throw new Error('Unknown role ' + cliContext.args.role);
     }
-    const {config} = requireSingleConfig(cliContext.args);
-    const claims = await doSetRole(cliContext.app.auth(), user, getJWTRoleClaim(config), roleName);
-    console.log(inspect(claims));
+    // TODO: migrate this to firestore-based ACL instead of custom JWT claims
+    // const {config} = requireSingleConfig(cliContext.args);
+    // const claims = await doSetRole(cliContext.app.auth(), user, getJWTRoleClaim(config), roleName);
+    console.log(inspect(user));
   }),
 };
 

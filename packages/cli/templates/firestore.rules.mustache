@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+
+  // each user can edit their own user doc
+  match /databases/{database}/documents/tiddlybase-instances/admin/collections/users/tiddlers/{user} {
+    allow create, update, delete, read: if request.auth != null && request.auth.uid == user;
+  }
+
+  match /databases/{database}/documents/tiddlybase-instances/{instance}/collections/{collection}/{document=**} {
+
+    function hasMinAccess(minAccessLevel) {
+      let permissions = get(/databases/$(database)/documents/tiddlybase-instances/admin/collections/instances/tiddlers/$(instance)).data.tiddler.permissions;
+      return int(permissions[request.auth.uid]["collections"][collection]) >= minAccessLevel;
+    }
+
+    allow read, list: if request.auth != null && hasMinAccess(1);
+    allow create, update, delete: if request.auth != null && hasMinAccess(2);
+
+  }
+}

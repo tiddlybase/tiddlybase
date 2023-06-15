@@ -1,5 +1,4 @@
 import type { } from '@tiddlybase/tw5-types/src/index'
-import type * as firebaseui from 'firebaseui';
 import { joinPaths } from './join-paths';
 import { TiddlyBaseUser } from './users';
 
@@ -21,7 +20,14 @@ export type TiddlerSourceSpec =
   | ({ type: 'browser-storage', collection: string, useLocalStorage?: boolean } & BaseTiddlerStoreSpec)
 
 export type AuthProviderSpec =
-| { type: 'firebase', writeToFirestore?: boolean}
+| {
+    type: 'firebase',
+    writeToFirestore?: boolean,
+    // this would actually be the type
+    // import type * as firebaseui from 'firebaseui';
+    // firebaseui.auth.Config
+    // but that seems like an unnecessary dependency here
+    firebaseui?: any}
 | { type: 'trivial', user?: TiddlyBaseUser };
 
 export interface LaunchConfig {
@@ -42,16 +48,13 @@ const STORAGE_TIDDLER_COLLECTIONS_PATH_SUFFIX = 'tiddler-collections'
  * @tiddlybase/top-level-frame.
  */
 export interface TiddlybaseConfig {
-  // TODO: rename name to instanceName to make it obvious that this is the
-  // name of the tidldyspace instance (of which there can be several in a
-  // firebase project).
   instanceName: string,
   htmlGeneration?: {
     title?: string,
     // generated with eg: https://realfavicongenerator.net/
     faviconCode?: string
   }
-  clientConfig: {
+  firebaseClientConfig: {
     projectId: string,
     appId: string,
     databaseURL: string,
@@ -62,11 +65,6 @@ export interface TiddlybaseConfig {
     messagingSenderId: string,
     measurementId: string
   },
-  authentication: {
-    // TODO: decomission jwt-based auth in favor of firestore-backed permissions
-    jwtRoleClaim?: string,
-    firebaseui?: firebaseui.auth.Config
-  } | undefined,
   storage: Partial<$tw.StorageConfig> | undefined,
   functions: {
     location: string
@@ -78,11 +76,10 @@ export interface TiddlybaseConfig {
   launchConfigs: Record<string, Partial<LaunchConfig>>
 }
 
-export const TIDDLYBASE_CLIENT_CONFIG_KEYS = ['instanceName', 'clientConfig', 'authentication', 'storage', 'launchConfigs', 'functions'] as const;
+export const TIDDLYBASE_CLIENT_CONFIG_KEYS = ['instanceName', 'firebaseClientConfig', 'storage', 'launchConfigs', 'functions'] as const;
 
 export type TiddlybaseClientConfig = Pick<TiddlybaseConfig, typeof TIDDLYBASE_CLIENT_CONFIG_KEYS[number]>;
 
-export const getJWTRoleClaim = (config: TiddlybaseClientConfig): string => config.authentication?.jwtRoleClaim ?? config.instanceName;
 export const getStorageConfig = (config: TiddlybaseClientConfig): $tw.StorageConfig => ({
   tiddlerCollectionsPath: config?.storage?.tiddlerCollectionsPath ?? joinPaths(config.instanceName, STORAGE_TIDDLER_COLLECTIONS_PATH_SUFFIX),
   filesPath: config?.storage?.filesPath ?? joinPaths(config.instanceName, STORAGE_FILES_PATH_SUFFIX)
