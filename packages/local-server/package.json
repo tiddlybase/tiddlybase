@@ -1,0 +1,14 @@
+{
+    "name": "@tiddlybase/local-server",
+    "description": "TiddlyWiki tiddlers for a local nodejs server",
+    "version": "0.0.5",
+    "author": "Peter Neumark",
+    "license": "Apache-2.0",
+    "files": [
+        "tiddlywiki.info",
+        "tiddlers"
+    ],
+    "scripts": {
+        "publish": "yarn npm publish --access public"
+    }
+}

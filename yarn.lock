@@ -1965,6 +1965,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@tiddlybase/local-server@workspace:packages/local-server":
+  version: 0.0.0-use.local
+  resolution: "@tiddlybase/local-server@workspace:packages/local-server"
+  languageName: unknown
+  linkType: soft
+
 "@tiddlybase/plugin-browser-test-utils@workspace:*, @tiddlybase/plugin-browser-test-utils@workspace:packages/plugin-browser-test-utils":
   version: 0.0.0-use.local
   resolution: "@tiddlybase/plugin-browser-test-utils@workspace:packages/plugin-browser-test-utils"

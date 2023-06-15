@@ -1,0 +1,8 @@
+{
+    "description": "server",
+    "includeWikis": [],
+    "config": {},
+    "plugins": [],
+    "themes": [],
+    "build": {}
+}
