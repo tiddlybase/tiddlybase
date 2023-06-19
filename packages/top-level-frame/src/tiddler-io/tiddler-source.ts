@@ -15,6 +15,7 @@ import {FirebaseApp} from '@firebase/app'
 import { getStorage} from '@firebase/storage';
 import { getFirestore } from "firebase/firestore";
 import { Lazy } from "@tiddlybase/shared/src/lazy";
+import { substituteUserid } from "@tiddlybase/shared/src/users";
 
 export class ProxyToSandboxedIframeChangeListener implements TiddlerChangeListener {
   sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>;
@@ -31,7 +32,7 @@ export class ProxyToSandboxedIframeChangeListener implements TiddlerChangeListen
   }
 }
 
-const substituteUserid = (template: string, userid: string): string => template.replace("$USERID", () => userid);
+
 
 const getTiddlerSource = async (tiddlybaseClientConfig: TiddlybaseClientConfig, spec: TiddlerSourceSpec, userid: string, lazyFirebaseApp:Lazy<FirebaseApp>, sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>): Promise<TiddlerSource> => {
   switch (spec.type) {

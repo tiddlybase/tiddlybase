@@ -1,7 +1,8 @@
 export const USER_ROLES:Record<string, number> = {
   ANONYMOUS: 0,
   USER: 1,
-  ADMIN: 2
+  EDITOR: 2,
+  ADMIN: 3
 };
 
 export type TiddlyBaseUser = {
@@ -11,3 +12,5 @@ export type TiddlyBaseUser = {
   providerId?: string,
   userId: string
 }
+
+export const substituteUserid = (template: string, userid: string): string => template.replace("$USERID", () => userid);

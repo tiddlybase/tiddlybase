@@ -1,5 +1,5 @@
 import yargs from 'yargs';
-import { getclaims, setclaimjson, getuser, listusers, adduser } from './users';
+import { getuser, listusers, adduser, setCollectionRole, getCollectionRoles } from './users';
 import { cmdGenerateFirebaseJson, cmdGenerateStorageRules, cmdGenerateFirestoreRules, cmdGenerateOuterHTML } from './generate';
 import { buildwiki } from './wikibuilder';
 import {runTWCommand} from './run-tw-command'
@@ -11,14 +11,13 @@ const main = async (argv:string[]) => {
   .alias('c', 'config')
   .nargs('c', 1)
   .describe('c', 'location of tiddlybase-config.json')
-  .default('c', 'etc/tiddlybase-config.json')
+  .default('c', 'tiddlybase-config.json')
   .alias('k', 'service-account-key')
   .nargs('k', 1)
   .describe('k', 'path to service account key JSON')
   .default('k', 'etc/service-account-key.json')
-  .command(getclaims)
-  //.command(setrole)
-  .command(setclaimjson)
+  .command(setCollectionRole)
+  .command(getCollectionRoles)
   .command(getuser)
   .command(listusers)
   .command(adduser)
@@ -29,7 +28,7 @@ const main = async (argv:string[]) => {
   .command(buildwiki)
   .command(runTWCommand)
   //.command(importTiddlers)
-  .example('$0 setrole foo@bar.com admin', 'grant admin role to foo@bar.com on default wiki')
+  // .example('$0 setrole foo@bar.com admin', 'grant admin role to foo@bar.com on default wiki')
   //.example('$0 -w another-wiki getrole foo@bar.com', 'get role assigned to foo@bar.com on another-wiki')
   .help()
   .wrap(80)

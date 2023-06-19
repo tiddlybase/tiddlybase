@@ -1,26 +1,34 @@
 import * as admin from 'firebase-admin';
 import { Argv, CommandModule } from 'yargs';
 import { inspect } from 'util';
-import { USER_ROLES } from '@tiddlybase/shared/src/users'
+import { USER_ROLES, substituteUserid } from '@tiddlybase/shared/src/users'
 import { CLIContext, withCLIContext } from './cli-context';
 import * as crypto from "crypto";
+import { requireSingleConfig } from './config';
+import { InstanceResourceType, InstanceSpec, InstanceUserPermissions, UserId } from '@tiddlybase/shared/src/instance-spec-schema';
+import { addInstancePermissions, instanceSpecPath } from '@tiddlybase/shared/src/permissions';
 // import { Auth } from 'firebase-admin/lib/auth/auth';
 // import { UserRecord } from 'firebase-admin/lib/auth/user-record';
 
 const RE_UID = /^[a-zA-Z0-9]+$/;
 const ROLE_CHOICES = Object.keys(USER_ROLES).map(s => s.toLowerCase());
 
-/*
-const doSetRole = async (auth: Auth, user: UserRecord, jwtRoleClaim: string, roleName: string): Promise<Record<string, any>> => {
-  const roleNumber = USER_ROLES[roleName];
-  const claims = {
-    ...user.customClaims,
-    [jwtRoleClaim]: roleNumber
-  };
-  await auth.setCustomUserClaims(user.uid, claims);
-  return claims;
+// doSetRole(cliContext.app, user.uid, config.instanceName, cliContext.args.collection, roleNumber);
+const doSetRole = async (app: admin.app.App, userId: UserId, instanceName: string, resourceType: InstanceResourceType, collectionName: string, roleNumber: number): Promise<InstanceSpec> => {
+  const docPath = instanceSpecPath(instanceName);
+  const firestore = app.firestore();
+  const instanceSpec = (await firestore.doc(docPath).get()).data()?.tiddler ?? {};
+  addInstancePermissions(instanceSpec, resourceType, userId, collectionName, roleNumber);
+  await firestore.doc(docPath).set({
+    tiddler: {
+      ...instanceSpec,
+      modified: admin.firestore.FieldValue.serverTimestamp(),
+      created: instanceSpec.created ?? admin.firestore.FieldValue.serverTimestamp()
+    }
+  });
+  return instanceSpec;
 }
-*/
+
 
 export const getUser = async (app: admin.app.App, uidOrEmail: string): Promise<admin.auth.UserRecord> => {
   let firebaseUser;
@@ -42,33 +50,60 @@ export const userRecordToJSON = (userRecord: admin.auth.UserRecord): any => {
   return result;
 }
 
+const RESOURCE_TYPES:Array<keyof InstanceUserPermissions> = ['collections', 'files'];
+
 // TODO: migrate this to firestore-based ACL instead of custom JWT claims
-/*
-export const setrole: CommandModule = {
-  command: 'setrole <userid|email> role',
+export const getCollectionRoles: CommandModule = {
+  command: 'getcollectionroles instance',
   describe: 'set a custom claim on a user',
   builder: (argv: Argv) =>
     argv
+      .positional('instance', {
+        describe: 'Name of instance',
+        type: 'string',
+      }),
+  handler: withCLIContext(async (cliContext: CLIContext) => {
+    const docPath = instanceSpecPath(cliContext.args.instance as string);
+    const firestore = cliContext.app.firestore();
+    const instanceSpec = (await firestore.doc(docPath).get()).data()?.tiddler ?? {};
+    console.log(JSON.stringify(instanceSpec, null, 4));
+  }),
+};
+
+// TODO: migrate this to firestore-based ACL instead of custom JWT claims
+export const setCollectionRole: CommandModule = {
+  command: 'setcollectionrole <userid|email> collection role',
+  describe: 'set a custom claim on a user',
+  builder: (argv: Argv) =>
+    argv
+      .options({
+        t: {type: 'string', alias: 'resource-type', describe: 'Resource type (collections or files)', default: RESOURCE_TYPES[0], choices: RESOURCE_TYPES}
+      })
       .positional('userid', {
         describe: 'User id or email address',
         type: 'string',
       })
+      .positional('collection', {
+        describe: 'Collection name',
+        type: 'string',
+      })
       .positional('role', {
-        describe: 'role name',
+        describe: 'Role name',
         choices: ROLE_CHOICES
       }),
   handler: withCLIContext(async (cliContext: CLIContext) => {
     const user = await getUser(cliContext.app, cliContext.args.userid as string);
     const roleName = (cliContext.args.role as string).toUpperCase();
-    if (!(roleName in USER_ROLES)) {
+    const roleNumber = USER_ROLES[roleName];
+    if (!(roleName in USER_ROLES) || !(typeof roleNumber === 'number')) {
       throw new Error('Unknown role ' + cliContext.args.role);
     }
     const {config} = requireSingleConfig(cliContext.args);
-    const claims = await doSetRole(cliContext.app.auth(), user, getJWTRoleClaim(config), roleName);
-    console.log(inspect(claims));
+    const resourceType = cliContext.args['resource-type'] as InstanceResourceType;
+    const instanceSpec = await doSetRole(cliContext.app, user.uid, config.instanceName, resourceType, encodeURIComponent(substituteUserid(cliContext.args.collection as string, user.uid)), roleNumber);
+    console.log(JSON.stringify(instanceSpec, null, 4));
   }),
 };
-*/
 
 export const adduser: CommandModule = {
   command: 'adduser email [role]',
@@ -78,47 +113,16 @@ export const adduser: CommandModule = {
       .positional('email', {
         describe: 'Email address of new user',
         type: 'string',
-      })
-      .positional('role', {
-        describe: 'role name',
-        choices: ROLE_CHOICES
       }),
   handler: withCLIContext(async (cliContext: CLIContext) => {
     const user = await cliContext.app.auth().createUser({
       email: cliContext.args.email as string,
       password: crypto.randomBytes(20).toString('hex'),
     })
-    const roleName = (cliContext.args.role as string).toUpperCase();
-    if (!(roleName in USER_ROLES)) {
-      throw new Error('Unknown role ' + cliContext.args.role);
-    }
-    // TODO: migrate this to firestore-based ACL instead of custom JWT claims
-    // const {config} = requireSingleConfig(cliContext.args);
-    // const claims = await doSetRole(cliContext.app.auth(), user, getJWTRoleClaim(config), roleName);
     console.log(inspect(user));
   }),
 };
 
-export const setclaimjson: CommandModule = {
-  command: 'setclaimjson <userid|email> json',
-  describe: 'set all custom claims on a user',
-  builder: (argv: Argv) =>
-    argv
-      .positional('userid', {
-        describe: 'User id or email address',
-        type: 'string',
-      })
-      .positional('json', {
-        describe: 'Claim key',
-        type: 'string',
-      }),
-  handler: withCLIContext(async (cliContext: CLIContext) => {
-    const user = await getUser(cliContext.app, cliContext.args.userid as string);
-    const claims = JSON.parse(cliContext.args.json as string);
-    await cliContext.app.auth().setCustomUserClaims(user.uid, claims);
-    console.log(inspect(claims));
-  }),
-};
 
 export const getuser: CommandModule = {
   command: 'getuser <userid|email>',
@@ -149,19 +153,4 @@ export const listusers: CommandModule = {
           null,
           4));
   })
-};
-
-export const getclaims: CommandModule = {
-  command: 'getclaims <userid|email>',
-  describe: 'gets the assigned role for a user',
-  builder: (argv: Argv) => {
-    return argv.positional('userid', {
-      describe: 'User id or email address',
-      type: 'string',
-    });
-  },
-  handler: withCLIContext(async (cliContext: CLIContext) => {
-    const user = await getUser(cliContext.app, cliContext.args.userid as string);
-    console.log(inspect(user.customClaims));
-  }),
 };

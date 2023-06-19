@@ -17,3 +17,5 @@ export const DEFAULT_AUTH: AuthProviderSpec = {
 };
 
 export const ANONYMOUS_USER_ID = "anonymous";
+
+export const ADMIN_INSTANCE_NAME = "admin";
