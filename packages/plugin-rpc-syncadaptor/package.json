@@ -1,7 +1,7 @@
 {
     "name": "@tiddlybase/plugin-rpc-syncadaptor",
     "description": "TW5 Syncadaptor plugin which invokes parent frame functions via RPC",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "private": true,
     "author": "Peter Neumark",
     "license": "Apache-2.0",
