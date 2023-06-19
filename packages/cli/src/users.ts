@@ -23,7 +23,8 @@ const doSetRole = async (app: admin.app.App, userId: UserId, instanceName: strin
     tiddler: {
       ...instanceSpec,
       modified: admin.firestore.FieldValue.serverTimestamp(),
-      created: instanceSpec.created ?? admin.firestore.FieldValue.serverTimestamp()
+      created: instanceSpec.created ?? admin.firestore.FieldValue.serverTimestamp(),
+      title: instanceSpec.title ?? `instances/${instanceName}`
     }
   });
   return instanceSpec;
