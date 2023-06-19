@@ -1,7 +1,7 @@
 {
     "name": "@tiddlybase/cli",
     "description": "In-browser trusted code running outside the sandbox",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "author": "Peter Neumark",
     "license": "Apache-2.0",
     "bin": {

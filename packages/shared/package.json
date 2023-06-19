@@ -1,7 +1,7 @@
 {
     "name": "@tiddlybase/shared",
     "description": "minimal code shared by both top-level-frame and sandboxed wiki startup code",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "private": true,
     "author": "Peter Neumark",
     "license": "Apache-2.0",
