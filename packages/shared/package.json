@@ -6,7 +6,8 @@
     "author": "Peter Neumark",
     "license": "Apache-2.0",
     "dependencies": {
-        "@tiddlybase/tw5-types": "workspace:*"
+        "@tiddlybase/tw5-types": "workspace:*",
+        "lodash.merge": "^4.6.2"
     },
     "devDependencies": {
         "jest": "29.5",
