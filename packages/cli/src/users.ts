@@ -5,7 +5,7 @@ import { USER_ROLES, substituteUserid } from '@tiddlybase/shared/src/users'
 import { CLIContext, withCLIContext } from './cli-context';
 import * as crypto from "crypto";
 import { requireSingleConfig } from './config';
-import { InstanceResourceType, InstanceSpec, InstanceUserPermissions, UserId } from '@tiddlybase/shared/src/instance-spec-schema';
+import { PermissionedDataSource, InstanceSpec, UserId, PERMISSIONED_DATA_SOURCES } from '@tiddlybase/shared/src/instance-spec-schema';
 import { addInstancePermissions, instanceSpecPath } from '@tiddlybase/shared/src/permissions';
 // import { Auth } from 'firebase-admin/lib/auth/auth';
 // import { UserRecord } from 'firebase-admin/lib/auth/user-record';
@@ -14,7 +14,7 @@ const RE_UID = /^[a-zA-Z0-9]+$/;
 const ROLE_CHOICES = Object.keys(USER_ROLES).map(s => s.toLowerCase());
 
 // doSetRole(cliContext.app, user.uid, config.instanceName, cliContext.args.collection, roleNumber);
-const doSetRole = async (app: admin.app.App, userId: UserId, instanceName: string, resourceType: InstanceResourceType, collectionName: string, roleNumber: number): Promise<InstanceSpec> => {
+const doSetRole = async (app: admin.app.App, userId: UserId, instanceName: string, resourceType: PermissionedDataSource, collectionName: string, roleNumber: number): Promise<InstanceSpec> => {
   const docPath = instanceSpecPath(instanceName);
   const firestore = app.firestore();
   const instanceSpec = (await firestore.doc(docPath).get()).data()?.tiddler ?? {};
@@ -51,8 +51,6 @@ export const userRecordToJSON = (userRecord: admin.auth.UserRecord): any => {
   return result;
 }
 
-const RESOURCE_TYPES:Array<keyof InstanceUserPermissions> = ['collections', 'files'];
-
 // TODO: migrate this to firestore-based ACL instead of custom JWT claims
 export const getCollectionRoles: CommandModule = {
   command: 'getcollectionroles instance',
@@ -78,7 +76,7 @@ export const setCollectionRole: CommandModule = {
   builder: (argv: Argv) =>
     argv
       .options({
-        t: {type: 'string', alias: 'resource-type', describe: 'Resource type (collections or files)', default: RESOURCE_TYPES[0], choices: RESOURCE_TYPES}
+        t: {type: 'string', alias: 'resource-type', describe: 'Resource type (collections or files)', default: PERMISSIONED_DATA_SOURCES[0], choices: PERMISSIONED_DATA_SOURCES}
       })
       .positional('userid', {
         describe: 'User id or email address',
@@ -100,14 +98,14 @@ export const setCollectionRole: CommandModule = {
       throw new Error('Unknown role ' + cliContext.args.role);
     }
     const {config} = requireSingleConfig(cliContext.args);
-    const resourceType = cliContext.args['resource-type'] as InstanceResourceType;
+    const resourceType = cliContext.args['resource-type'] as PermissionedDataSource;
     const instanceSpec = await doSetRole(cliContext.app, user.uid, config.instanceName, resourceType, encodeURIComponent(substituteUserid(cliContext.args.collection as string, user.uid)), roleNumber);
     console.log(JSON.stringify(instanceSpec, null, 4));
   }),
 };
 
 export const adduser: CommandModule = {
-  command: 'adduser email [role]',
+  command: 'adduser email',
   describe: 'add a new user',
   builder: (argv: Argv) =>
     argv

@@ -1,6 +1,6 @@
 import { TiddlerCollection, TiddlerProvenance, TiddlerSource, TiddlerSourceWithSpec, TiddlerStore } from "@tiddlybase/shared/src/tiddler-store";
 import type { } from '@tiddlybase/tw5-types/src/index'
-import { TiddlerSourceSpec, TiddlerWriteCondition } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import { DataSourceSpec, TiddlerWriteCondition } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 
 type PredicateFn = (tiddler: $tw.TiddlerFields) => boolean
 const KNOWN_PRIVATE = new Set<string>(['$:/StoryList', '$:/HistoryList', '$:/DefaultTiddlers'])
@@ -16,15 +16,15 @@ const getConditionPredicate = (writeCondition: TiddlerWriteCondition): Predicate
   throw new Error("Cannot create PredicateFn for specified writeCondition");
 };
 
-const getPredicate = (spec: TiddlerSourceSpec) : PredicateFn => {
-  if ('storeType' in spec) {
-    switch (spec.storeType) {
-      case 'custom':
-        return getConditionPredicate(spec.writeCondition);
+const getPredicate = (spec: DataSourceSpec) : PredicateFn => {
+  if ('writeCondition' in spec) {
+    switch (spec.writeCondition) {
       case 'private':
         return PRIVATE;
-      case 'shared':
+      case 'always':
         return ALWAYS;
+      default:
+        getConditionPredicate(spec.writeCondition);
     }
   }
   throw new Error("Cannot create predicate for spec of type " + spec.type);
@@ -33,14 +33,14 @@ const getPredicate = (spec: TiddlerSourceSpec) : PredicateFn => {
 type CandidateStore = {
   predicate: PredicateFn;
   store: TiddlerStore;
-  spec: TiddlerSourceSpec;
+  spec: DataSourceSpec;
 };
 
 const isTiddlerStore = (s: TiddlerSource): s is TiddlerStore => {
   return 'setTiddler' in s;
 }
 
-const getCandidateStore = (store: TiddlerStore, spec: TiddlerSourceSpec): CandidateStore => {
+const getCandidateStore = (store: TiddlerStore, spec: DataSourceSpec): CandidateStore => {
   let predicate = ALWAYS;
   if ('storeType' in spec) {
     predicate = getPredicate(spec);

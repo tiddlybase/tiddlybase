@@ -109,7 +109,7 @@ export const cmdGenerateOuterHTML: CommandModule = {
   builder: (argv: Argv) => argv,
   handler: async (args: Arguments) => {
     const {config} = requireSingleConfig(args);
-    const clientConfig:TiddlybaseClientConfig = objFilter<keyof TiddlybaseClientConfig, any>((k) => TIDDLYBASE_CLIENT_CONFIG_KEYS.includes(k), config);
+    const clientConfig = objFilter<keyof TiddlybaseClientConfig, any>((k) => TIDDLYBASE_CLIENT_CONFIG_KEYS.includes(k), config) as TiddlybaseClientConfig;
     const stringifiedClientConfig = JSON.stringify(clientConfig);
     console.log(renderMustacheTemplate('index.html.mustache', {htmlGeneration: config.htmlGeneration, stringifiedClientConfig}));
   }

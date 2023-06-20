@@ -6,7 +6,7 @@ service firebase.storage {
 
         function hasMinAccess(minAccessLevel) {
           let permissions = firestore.get(/databases/(default)/documents/tiddlybase-instances/admin/collections/instances/tiddlers/$(instance)).data.tiddler.permissions;
-          return int(permissions[request.auth.uid]["files"][collection]) >= minAccessLevel;
+          return int(permissions[request.auth.uid]["firebase-storage"][collection]) >= minAccessLevel;
         }
         allow read: if request.auth != null && hasMinAccess(1);
         allow create, update, delete: if request.auth != null && hasMinAccess(2);

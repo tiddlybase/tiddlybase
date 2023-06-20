@@ -10,7 +10,7 @@ service cloud.firestore {
 
     function hasMinAccess(minAccessLevel) {
       let permissions = get(/databases/$(database)/documents/tiddlybase-instances/admin/collections/instances/tiddlers/$(instance)).data.tiddler.permissions;
-      return int(permissions[request.auth.uid]["collections"][collection]) >= minAccessLevel;
+      return int(permissions[request.auth.uid]["firestore"][collection]) >= minAccessLevel;
     }
 
     allow read, list: if request.auth != null && hasMinAccess(1);

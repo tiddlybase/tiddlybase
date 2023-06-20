@@ -1,6 +1,6 @@
 import { TiddlerChangeListener, TiddlerCollection, TiddlerProvenance, TiddlerSource, TiddlerSourceWithSpec, TiddlerStore } from "@tiddlybase/shared/src/tiddler-store";
 
-import { LaunchConfig, TiddlerSourceSpec, TiddlybaseClientConfig, getStorageConfig } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import { LaunchConfig, DataSourceSpec, TiddlybaseClientConfig, getStorageConfig } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import { joinPaths } from '@tiddlybase/shared/src/join-paths';
 import { DEFAULT_TIDDLER_COLLECTION_FILENAME } from "@tiddlybase/shared/src/constants";
 import { FirestoreTiddlerStore } from "./firestore-tiddler-store";
@@ -34,7 +34,7 @@ export class ProxyToSandboxedIframeChangeListener implements TiddlerChangeListen
 
 
 
-const getTiddlerSource = async (tiddlybaseClientConfig: TiddlybaseClientConfig, spec: TiddlerSourceSpec, userid: string, lazyFirebaseApp:Lazy<FirebaseApp>, sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>): Promise<TiddlerSource> => {
+const getTiddlerSource = async (tiddlybaseClientConfig: TiddlybaseClientConfig, spec: DataSourceSpec, userid: string, lazyFirebaseApp:Lazy<FirebaseApp>, sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>): Promise<TiddlerSource> => {
   switch (spec.type) {
     case "http":
       return new HttpTiddlerSource(spec.url);
@@ -70,7 +70,7 @@ export type MergedSources = {
 
 type TiddlerSourcePromiseWithSpec = {
   source: Promise<TiddlerSource>;
-  spec: TiddlerSourceSpec;
+  spec: DataSourceSpec;
 }
 
 export const readTiddlerSources = async (tiddlybaseClientConfig: TiddlybaseClientConfig, launchConfig: LaunchConfig, userid: string, lazyFirebaseApp:Lazy<FirebaseApp>, sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>): Promise<MergedSources> => {

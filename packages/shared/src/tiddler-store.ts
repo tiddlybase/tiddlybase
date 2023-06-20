@@ -1,5 +1,5 @@
 import type { } from "@tiddlybase/tw5-types/src/index";
-import { TiddlerSourceSpec } from "./tiddlybase-config-schema";
+import { DataSourceSpec } from "./tiddlybase-config-schema";
 
 export type TiddlerCollection = Record<string, $tw.TiddlerFields>;
 
@@ -18,5 +18,5 @@ export interface TiddlerChangeListener {
   onDeleteTiddler: (title: string) => void;
 }
 
-export type TiddlerSourceWithSpec = {source: TiddlerSource, spec: TiddlerSourceSpec};
+export type TiddlerSourceWithSpec = {source: TiddlerSource, spec: DataSourceSpec};
 export type TiddlerProvenance = Record<string, TiddlerSourceWithSpec>;
