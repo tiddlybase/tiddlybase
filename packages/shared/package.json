@@ -5,12 +5,17 @@
     "private": true,
     "author": "Peter Neumark",
     "license": "Apache-2.0",
+    "scripts": {
+        "build": "ts-json-schema-generator --no-type-check --path src/tiddlybase-config-schema.ts --type 'TiddlybaseConfig' -o src/generated/tiddlybase-config-schema.json",
+        "build:dev": "yarn build"
+    },
     "dependencies": {
         "@tiddlybase/tw5-types": "workspace:*",
         "lodash.merge": "^4.6.2"
     },
     "devDependencies": {
         "jest": "29.5",
-        "ts-jest": "29.1.0"
+        "ts-jest": "29.1.0",
+        "ts-json-schema-generator": "^1.2.0"
     }
 }

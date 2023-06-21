@@ -47,6 +47,9 @@ export interface FilesConfig {
   sources: FileDataSourceSpec[]
 }
 
+/**
+ * A launch configuration specifies how Tiddlybase should start tiddlywiki. It includes which data sources to load tiddlers from, which files are accessible, what user authentication mechanism to use, and optionally firebase functions settings.
+ */
 export interface LaunchConfig {
   // build is the relative path to the child iframe HTML, eg: 'tiddlybase_public/default-build.html'
   build: string,
@@ -59,26 +62,34 @@ export interface LaunchConfig {
 
 /**
  * This interface describes the schema of the `tiddlybase-config.json` file.
- * The contents of this file is meant to be consumed by the code in
- * @tiddlybase/top-level-frame.
  */
 export interface TiddlybaseConfig {
+  /**
+   * Name of the tiddlybase instance, usually the same as the name of a wiki.
+   */
   instanceName: string,
+  /**
+   * Settings related to the generation of the parent HTML (usually called outer.html)
+   */
   htmlGeneration?: {
     title?: string,
     // generated with eg: https://realfavicongenerator.net/
     faviconCode?: string
   }
+  /**
+   * These values can be copied from the Firebase console or
+   * from the command line via "yarn firebase apps:sdkconfig web"
+   */
   firebaseClientConfig: {
     projectId: string,
     appId: string,
-    databaseURL: string,
+    databaseURL?: string,
     storageBucket: string,
     locationId: string,
     apiKey: string,
     authDomain: string,
     messagingSenderId: string,
-    measurementId: string
+    measurementId?: string
   },
   hosting?: {
     site: string
