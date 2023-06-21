@@ -109,3 +109,4 @@ public/
 *.swp
 
 .firebase
+.DS_Store

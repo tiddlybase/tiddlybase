@@ -13,11 +13,7 @@
     "build": "MODE=production yarn workspaces foreach -p -t run build",
     "build:dev": "MODE=development yarn workspaces foreach -t run build:dev",
     "clean": "yarn workspaces foreach -t run clean && rm -rf dist/*",
-    "deploy:files": "gsutil -D -m rsync -r -d ../csaladi_naplo/files gs://peterneumark-com.appspot.com/csaladwiki/files",
-    "deploy:wiki": "gsutil cp dist/wiki.html gs://peterneumark-com.appspot.com/csaladwiki/",
-    "deploy:firebase": "firebase deploy --debug --only storage:rules,hosting:pn-wiki",
     "deploy:functions": "firebase deploy --only functions:addNumbers,functions:notifyAdmin,functions:onSignup",
-    "deploy": "yarn deploy:wiki && yarn deploy:firebase && yarn deploy:files",
     "version:bump": "yarn version -i patch && node scripts/set_version.js \"$(cat package.json | jq -r .version)\" \"$(yarn workspaces list --json)\""
   },
   "workspaces": {
