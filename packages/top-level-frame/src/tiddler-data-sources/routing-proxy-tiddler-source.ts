@@ -1,6 +1,6 @@
-import { TiddlerCollection, TiddlerProvenance, TiddlerSource, TiddlerSourceWithSpec, TiddlerStore } from "@tiddlybase/shared/src/tiddler-store";
+import { TiddlerCollection, TiddlerProvenance, TiddlerDataSource, TiddlerDataSourceWithSpec, WritableTiddlerDataSource } from "@tiddlybase/shared/src/tiddler-data-source";
 import type { } from '@tiddlybase/tw5-types/src/index'
-import { DataSourceSpec, TiddlerWriteCondition } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import { TiddlerDataSourceSpec, TiddlerWriteCondition } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 
 type PredicateFn = (tiddler: $tw.TiddlerFields) => boolean
 const KNOWN_PRIVATE = new Set<string>(['$:/StoryList', '$:/HistoryList', '$:/DefaultTiddlers'])
@@ -16,56 +16,47 @@ const getConditionPredicate = (writeCondition: TiddlerWriteCondition): Predicate
   throw new Error("Cannot create PredicateFn for specified writeCondition");
 };
 
-const getPredicate = (spec: DataSourceSpec) : PredicateFn => {
-  if ('writeCondition' in spec) {
-    switch (spec.writeCondition) {
+const getPredicate = (spec: TiddlerDataSourceSpec) : PredicateFn => {
+  if (!('writeCondition' in spec) || !spec.writeCondition) {
+    return ALWAYS;
+  }
+  switch (spec.writeCondition) {
       case 'private':
         return PRIVATE;
       case 'always':
         return ALWAYS;
       default:
-        getConditionPredicate(spec.writeCondition);
+        return getConditionPredicate(spec.writeCondition);
     }
-  }
-  throw new Error("Cannot create predicate for spec of type " + spec.type);
 }
 
-type CandidateStore = {
+type CandidateDataSource = {
   predicate: PredicateFn;
-  store: TiddlerStore;
-  spec: DataSourceSpec;
+  source: WritableTiddlerDataSource;
+  spec: TiddlerDataSourceSpec;
 };
 
-const isTiddlerStore = (s: TiddlerSource): s is TiddlerStore => {
+const isWritableTiddlerDataSource = (s: TiddlerDataSource): s is WritableTiddlerDataSource => {
   return 'setTiddler' in s;
 }
 
-const getCandidateStore = (store: TiddlerStore, spec: DataSourceSpec): CandidateStore => {
-  let predicate = ALWAYS;
-  if ('storeType' in spec) {
-    predicate = getPredicate(spec);
-  }
-  return {
-    spec,
-    store,
-    predicate
-  }
-}
-
-export class RoutingProxyTiddlerStore implements TiddlerStore {
+export class RoutingProxyTiddlerSource implements WritableTiddlerDataSource {
   provenance: TiddlerProvenance;
-  candidateStores: CandidateStore[] = [];
-  constructor(provenance: TiddlerProvenance, sourcesWithSpecs: TiddlerSourceWithSpec[]) {
+  candidateStores: CandidateDataSource[] = [];
+  constructor(provenance: TiddlerProvenance, sourcesWithSpecs: TiddlerDataSourceWithSpec[]) {
     this.provenance = provenance;
     for (let { source, spec } of sourcesWithSpecs) {
-      if (isTiddlerStore(source)) {
-        this.candidateStores.push(getCandidateStore(source, spec));
+      if (isWritableTiddlerDataSource(source)) {
+        this.candidateStores.push({
+          spec,
+          source: source,
+          predicate: getPredicate(spec)});
       }
     }
     // TODO: what happens if there are not candidateStores?
   }
 
-  private selectStoreForWrite(tiddler: $tw.TiddlerFields): CandidateStore {
+  private selectStoreForWrite(tiddler: $tw.TiddlerFields): CandidateDataSource {
     // Select first candidate with a passing predicate function.
     for (let candidate of this.candidateStores) {
       if (candidate.predicate(tiddler)) {
@@ -81,12 +72,12 @@ export class RoutingProxyTiddlerStore implements TiddlerStore {
   setTiddler(tiddler: $tw.TiddlerFields): Promise<$tw.TiddlerFields> {
     const candidateStore = this.selectStoreForWrite(tiddler);
     console.log(`RoutingProxyTiddlerStore setTiddler("${tiddler.title}")`, tiddler, candidateStore);
-    this.provenance[tiddler.title] = { source: candidateStore.store, spec: candidateStore.spec }
-    return candidateStore.store.setTiddler(tiddler);
+    this.provenance[tiddler.title] = { source: candidateStore.source, spec: candidateStore.spec }
+    return candidateStore.source.setTiddler(tiddler);
   }
   async deleteTiddler(title: string): Promise<void> {
     let store = this.provenance[title]?.source;
-    if (store && isTiddlerStore(store)) {
+    if (store && isWritableTiddlerDataSource(store)) {
       return store.deleteTiddler(title);
     } else {
       // TODO: better handle missing tiddler case

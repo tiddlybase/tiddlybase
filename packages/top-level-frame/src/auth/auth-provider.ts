@@ -13,4 +13,5 @@ export interface AuthProvider {
   onLogin: (loginHandler: OnLoginHandler)=>void;
   onLogout: (logoutHandler:OnLogoutHandler)=>void;
   getCurrentUser: () => TiddlyBaseUser | undefined;
+  signOut: () => Promise<void>;
 }

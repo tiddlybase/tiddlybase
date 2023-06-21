@@ -1,23 +1,26 @@
 import type { } from '@tiddlybase/tw5-types/src/index'
-import { joinPaths } from './join-paths';
 import type { TiddlyBaseUser } from './users';
 
 export type TiddlerWriteCondition = { titlePrefix: string }; // more options in the future
 
-export type WritableDataSourceSpec = { writeCondition: 'private' | 'always' | TiddlerWriteCondition };
+export type WritableTiddlerDataSourceSpec = { writeCondition?: 'private' | 'always' | TiddlerWriteCondition };
 
-export type FirestoreTiddlerStoreOptions = Partial<{
+export type FirestoreTiddlerDataSourceOptions = Partial<{
   stripDocIDPrefix: string
 }>
 
-export type DataSourceSpec =
+export type TiddlerDataSourceSpec =
   | { type: 'http', url: string }
-  | { type: 'firebase-storage', pathPostfix: string }
-  | ({ type: 'tiddlyweb' } & WritableDataSourceSpec)
+  | { type: 'firebase-storage', collection: string, filename: string }
+  | ({ type: 'tiddlyweb' } & WritableTiddlerDataSourceSpec)
   | ({
-    type: 'firestore', collection: string, options?: FirestoreTiddlerStoreOptions
-  } & WritableDataSourceSpec)
-  | ({ type: 'browser-storage', collection: string, useLocalStorage?: boolean } & WritableDataSourceSpec)
+    type: 'firestore', collection: string, options?: FirestoreTiddlerDataSourceOptions
+  } & WritableTiddlerDataSourceSpec)
+  | ({ type: 'browser-storage', collection: string, useLocalStorage?: boolean } & WritableTiddlerDataSourceSpec)
+
+export type FileDataSourceSpec =
+  | {type: 'http', urlPrefix: string}
+  | {type: 'firebase-storage', collection: string}
 
 export type AuthProviderSpec =
 | {
@@ -30,17 +33,29 @@ export type AuthProviderSpec =
     firebaseui?: any}
 | { type: 'trivial', user?: TiddlyBaseUser };
 
+export type FunctionsEndpoint = {type: "production", region: string} | {type: "development", emulatorHost: string, emulatorPort: number};
+
+export interface FunctionsConfig {
+  endpoint: FunctionsEndpoint
+}
+
+export interface TiddlersConfig {
+  sources: TiddlerDataSourceSpec[]
+}
+
+export interface FilesConfig {
+  sources: FileDataSourceSpec[]
+}
+
 export interface LaunchConfig {
   // build is the relative path to the child iframe HTML, eg: 'tiddlybase_public/default-build.html'
   build: string,
-  sources: DataSourceSpec[],
+  tiddlers: TiddlersConfig,
+  files: FilesConfig,
   auth: AuthProviderSpec,
   wikiInfoConfig: Partial<$tw.WikiInfoConfig>,
-  isLocal: boolean
+  functions?: FunctionsConfig
 }
-
-const STORAGE_FILES_PATH_SUFFIX = 'files'
-const STORAGE_TIDDLER_COLLECTIONS_PATH_SUFFIX = 'tiddler-collections'
 
 /**
  * This interface describes the schema of the `tiddlybase-config.json` file.
@@ -65,10 +80,6 @@ export interface TiddlybaseConfig {
     messagingSenderId: string,
     measurementId: string
   },
-  storage?: Partial<$tw.StorageConfig>,
-  functions?: {
-    location: string
-  },
   hosting?: {
     site: string
     pathPrefix?: string
@@ -78,11 +89,6 @@ export interface TiddlybaseConfig {
 
 // The client config is written to outer.html.
 // It only needs certain parts of the full tiddlybase-config.json.
-export const TIDDLYBASE_CLIENT_CONFIG_KEYS:Readonly<Array<keyof TiddlybaseConfig>> = ['instanceName', 'firebaseClientConfig', 'storage', 'launchConfigs', 'functions'] as const;
+export const TIDDLYBASE_CLIENT_CONFIG_KEYS:Readonly<Array<keyof TiddlybaseConfig>> = ['instanceName', 'firebaseClientConfig', 'launchConfigs'] as const;
 
 export type TiddlybaseClientConfig = Pick<TiddlybaseConfig, typeof TIDDLYBASE_CLIENT_CONFIG_KEYS[number]>;
-
-export const getStorageConfig = (config: TiddlybaseClientConfig): $tw.StorageConfig => ({
-  tiddlerCollectionsPath: config?.storage?.tiddlerCollectionsPath ?? joinPaths(config.instanceName, STORAGE_TIDDLER_COLLECTIONS_PATH_SUFFIX),
-  filesPath: config?.storage?.filesPath ?? joinPaths(config.instanceName, STORAGE_FILES_PATH_SUFFIX)
-});

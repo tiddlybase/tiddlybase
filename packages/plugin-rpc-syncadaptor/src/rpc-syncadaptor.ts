@@ -1,9 +1,9 @@
 import type { } from "@tiddlybase/tw5-types/src/index";
 import { apiDefiner } from "@tiddlybase/rpc/src";
 import type { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
-import { TiddlerChangeListener } from "packages/shared/src/tiddler-store";
+import { TiddlerDataSourceChangeListener } from "@tiddlybase/shared/src/tiddler-data-source";
 
-export class RPCSyncadaptor implements $tw.SyncAdaptor, TiddlerChangeListener {
+export class RPCSyncadaptor implements $tw.SyncAdaptor, TiddlerDataSourceChangeListener {
 
   name = "RPCSyncadaptor";
   supportsLazyLoading = false;

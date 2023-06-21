@@ -1,4 +1,4 @@
-import type { TiddlerCollection } from "@tiddlybase/shared/src/tiddler-store";
+import type { TiddlerCollection } from "@tiddlybase/shared/src/tiddler-data-source";
 
 const FIRESTORE_SEPARATOR = "/"
 

@@ -1,13 +1,13 @@
-import type { TiddlerChangeListener, TiddlerCollection, TiddlerStore } from "@tiddlybase/shared/src/tiddler-store";
+import type { TiddlerDataSourceChangeListener, TiddlerCollection, WritableTiddlerDataSource } from "@tiddlybase/shared/src/tiddler-data-source";
 import type { Firestore } from '@firebase/firestore';
 import { setDoc, doc, DocumentReference, DocumentData, collection, onSnapshot, Unsubscribe, getDoc, deleteDoc, Timestamp, serverTimestamp } from "firebase/firestore";
 import type { } from '@tiddlybase/tw5-types/src/index'
 import { getFirestoreCollectionPath } from "./tiddler-store-utils";
-import type { FirestoreTiddlerStoreOptions } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import type { FirestoreTiddlerDataSourceOptions } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 
 const SENTINEL_DOC_ID = "\uffffsentinel"
 
-const maybeTrimPrefix = (title: string, options: FirestoreTiddlerStoreOptions | undefined): string => {
+const maybeTrimPrefix = (title: string, options: FirestoreTiddlerDataSourceOptions | undefined): string => {
   if (options?.stripDocIDPrefix && title.startsWith(options.stripDocIDPrefix)) {
     return title.substring(options.stripDocIDPrefix.length);
   }
@@ -56,13 +56,13 @@ type InitialReadState = {
   completePromiseResolved: boolean;
 }
 
-export class FirestoreTiddlerStore implements TiddlerStore {
+export class FirestoreDataSource implements WritableTiddlerDataSource {
 
   firestore: Firestore;
   tiddlybaseInstanceName: string;
   tiddlerCollectionName: string;
-  options: FirestoreTiddlerStoreOptions | undefined;
-  changeListener: TiddlerChangeListener | undefined;
+  options: FirestoreTiddlerDataSourceOptions | undefined;
+  changeListener: TiddlerDataSourceChangeListener | undefined;
   initialReadState: InitialReadState;
   unsubscribe: Unsubscribe | undefined;
 
@@ -83,8 +83,8 @@ export class FirestoreTiddlerStore implements TiddlerStore {
     firestore: Firestore,
     tiddlybaseInstanceName: string,
     tiddlerCollectionName: string,
-    options?: FirestoreTiddlerStoreOptions,
-    changeListener?: TiddlerChangeListener) {
+    options?: FirestoreTiddlerDataSourceOptions,
+    changeListener?: TiddlerDataSourceChangeListener) {
     this.firestore = firestore;
     this.tiddlybaseInstanceName = tiddlybaseInstanceName;
     this.tiddlerCollectionName = tiddlerCollectionName;

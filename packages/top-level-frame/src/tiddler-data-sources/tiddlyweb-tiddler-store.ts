@@ -1,6 +1,7 @@
 import type { } from '@tiddlybase/tw5-types/src/index'
-import type { TiddlerCollection, TiddlerStore } from "@tiddlybase/shared/src/tiddler-store";
-import { HttpTiddlerSource } from './http-tiddler-source';
+import type { TiddlerCollection, WritableTiddlerDataSource } from "@tiddlybase/shared/src/tiddler-data-source";
+import { FileDataSourceTiddlerSource } from './file-storage-tiddler-source';
+import { HttpFileDataSource } from '../file-data-sources/http-file-source';
 
 const DEFAULT_FILTER_EXPRESSION = "[is[tiddler]]";
 
@@ -46,12 +47,12 @@ const convertTiddlerToTiddlyWebFormat = (tiddler:$tw.TiddlerFields):string => {
   return JSON.stringify(result,null,4);
 };
 
-export class TiddlyWebTiddlerStore implements TiddlerStore {
-  urlPrefix: string | undefined;
+export class TiddlyWebTiddlerStore implements WritableTiddlerDataSource {
+  urlPrefix: string;
   filterExpression: string;
 
   constructor({urlPrefix, filterExpression}:{urlPrefix?:string, filterExpression?:string}={}) {
-    this.urlPrefix = urlPrefix;
+    this.urlPrefix = urlPrefix ?? '';
     this.filterExpression = filterExpression ?? DEFAULT_FILTER_EXPRESSION;
   }
 
@@ -61,7 +62,7 @@ export class TiddlyWebTiddlerStore implements TiddlerStore {
   }
 
   private makeURL(suffix:string):string {
-    return (this.urlPrefix || '') + suffix;
+    return (this.urlPrefix) + suffix;
   }
 
   async setTiddler (tiddler: $tw.TiddlerFields): Promise<$tw.TiddlerFields> {
@@ -93,6 +94,8 @@ export class TiddlyWebTiddlerStore implements TiddlerStore {
   async getAllTiddlers (): Promise<TiddlerCollection> {
     // exclude=, prevents 'text' field from being omitted
     let urlSuffix = `recipes/default/tiddlers.json?exclude=,&filter=${encodeURIComponent(this.filterExpression)}`;
-    return new HttpTiddlerSource(this.makeURL(urlSuffix)).getAllTiddlers();
+    return new FileDataSourceTiddlerSource(
+      new HttpFileDataSource(this.makeURL(urlSuffix)),
+      '').getAllTiddlers();
   }
 }

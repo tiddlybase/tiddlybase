@@ -48,19 +48,15 @@ import { PatchedModules } from "./patched-modules";
       const {
         user,
         tiddlers,
-        storageConfig,
         parentLocation,
         wikiInfoConfig,
-        isLocal
       } = topLevelResponse;
       console.log('child iframe received user info', topLevelResponse);
       window.$tw.tiddlybase = {
         topLevelClient,
         parentLocation,
         user,
-        storageConfig,
         rpc,
-        isLocal
       };
       try {
         tiddlers.push(createWikiInfoConfig(wikiInfoConfig))

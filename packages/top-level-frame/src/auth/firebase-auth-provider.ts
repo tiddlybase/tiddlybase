@@ -63,4 +63,8 @@ export class FirebaseAuthProvider implements AuthProvider {
     return user ? convertUser(user) : undefined;
   }
 
+  async signOut () {
+    this.auth.signOut();
+  }
+
 }

@@ -17,4 +17,8 @@ export class TrivialAuthProvider implements AuthProvider {
     return this.user;
   }
 
+  async signOut () {
+    // noop
+  }
+
 }

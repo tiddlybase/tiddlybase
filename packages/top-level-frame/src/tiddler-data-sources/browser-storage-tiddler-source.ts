@@ -1,4 +1,4 @@
-import { TiddlerCollection, TiddlerStore } from "@tiddlybase/shared/src/tiddler-store";
+import { TiddlerCollection, WritableTiddlerDataSource } from "@tiddlybase/shared/src/tiddler-data-source";
 
 const KEY_SEPARATOR = "/";
 const KEY_PREFIX = "tiddlybase";
@@ -24,7 +24,7 @@ const parseKey = (key:string):KeyParts|undefined => {
   return undefined;
 }
 
-export class BrowserStorageTiddlerStore implements TiddlerStore {
+export class BrowserStorageDataSource implements WritableTiddlerDataSource {
   storage: Storage;
   tiddlybaseInstanceName: string;
   tiddlerCollectionName: string;

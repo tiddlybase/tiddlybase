@@ -28,10 +28,12 @@ const generateFirebaseJson = (
     "firestore": {
       "rules": joinPaths(configDir, FILENAME_FIRESTORE_RULES)
     },
-    "functions": configs.some(c => c.config.functions) ? {
-      "source": "dist/functions",
-      "ignore": ["**/.runtimeconfig.json", "**/node_modules/**"]
-    } : undefined,
+    // TODO: functions!
+    //
+    //"functions": configs.some(c => c.config.functions) ? {
+    //  "source": "dist/functions",
+    //  "ignore": ["**/.runtimeconfig.json", "**/node_modules/**"]
+    //} : undefined,
     // list all sites with `yarn firebase hosting:sites:list`
     // TODO: generating hosting setu pis currently broken
     "hosting": configs.map(({ config }) => ({

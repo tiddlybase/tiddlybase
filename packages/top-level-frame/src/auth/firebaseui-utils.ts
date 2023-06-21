@@ -2,14 +2,14 @@ import { FirebaseAuthProvider } from "./firebase-auth-provider";
 import {getFirestore} from "@firebase/firestore"
 import {FirebaseApp} from "@firebase/app"
 import * as firebaseui from 'firebaseui';
-import { FirestoreTiddlerStore } from "../tiddler-io/firestore-tiddler-store";
+import { FirestoreDataSource } from "../tiddler-data-sources/firestore-tiddler-source";
 import { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
 import { objFilter } from '@tiddlybase/shared/src/obj-filter';
 import { Lazy } from "@tiddlybase/shared/src/lazy";
 
 export const writeUserProfile = async (lazyFirebaseApp:Lazy<FirebaseApp>, user:TiddlyBaseUser) => {
   const firestore = getFirestore(lazyFirebaseApp());
-    return await (new FirestoreTiddlerStore(
+    return await (new FirestoreDataSource(
       firestore,
       "admin",
       "users",

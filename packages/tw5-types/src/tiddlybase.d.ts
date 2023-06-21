@@ -2,17 +2,11 @@
 
 declare namespace $tw {
 
-  export interface StorageConfig {
-    filesPath: string,
-    tiddlerCollectionsPath: string
-  }
-
   export type TWTiddlybase = Partial<{
     topLevelClient: import("@tiddlybase/rpc").APIClient<import("@tiddlybase/rpc/src/top-level-api").TopLevelAPIForSandboxedWiki>
     rpc: import("mini-iframe-rpc").MiniIframeRPC;
-    user: import("@tiddlybase/rpc/src/top-level-api").TiddlyBaseUser,
+    user: import("@tiddlybase/shared/src/users").TiddlyBaseUser,
     parentLocation: Partial<Location>,
-    storageConfig: StorageConfig,
     isLocal: boolean
   }>;
 

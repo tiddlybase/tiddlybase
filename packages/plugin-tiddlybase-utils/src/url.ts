@@ -2,7 +2,6 @@
 import type {} from '@tiddlybase/tw5-types/src/index'
 import { getWikiInfoConfigValue } from "./wiki-info-config";
 import { joinPaths } from '@tiddlybase/shared/src/join-paths'
-import type { StorageFileMetadata } from "packages/rpc/src/top-level-api";
 
 const FILES_URL_PREFIX = getWikiInfoConfigValue("external-url-path-prefix");
 const LOCAL_FILE_PREFIX = getWikiInfoConfigValue("default-local-file-location");
@@ -50,27 +49,23 @@ const desktopPrefix = getDesktopPathPrefix();
 // Simply return relative path, but add the local file prefix
 const localFileRelativePath = (path: string) => joinPaths(LOCAL_FILE_PREFIX, path);
 
-const getFullStoragePath = (relativePath: string, tw:typeof $tw=globalThis.$tw) => joinPaths(tw?.tiddlybase?.storageConfig?.filesPath ?? '', relativePath)
-
 const getTiddlyDesktopUrl = (path: string): string => `file:///${joinPaths(desktopPrefix, path)}`;
 
-const shouldCache = (metadata: StorageFileMetadata) => !!metadata.contentType?.startsWith('image/')
+// try to cache anything except videos
+const HTTP_CACHE_EXTENSION_BLACKLIST = new Set<string>(['mpg', 'mpeg', 'mov', 'avi', 'mkv', 'mp4'])
+const shouldCache = (url: string) => !HTTP_CACHE_EXTENSION_BLACKLIST.has(getExtension(url) ?? '')
+
+const blobToUrl = (blob:Blob):string => {
+  var urlCreator = window.URL || window.webkitURL;
+  return urlCreator.createObjectURL(blob);
+}
 
 const resolveStorageBucketPath = async (path: string, tw:typeof $tw=globalThis.$tw): Promise<string> => {
-  const fullStoragePath = getFullStoragePath(path);
-  const metadata = await tw.tiddlybase!.topLevelClient!('getStorageFileMetadata', [fullStoragePath]);
-  // caching isn't possible within sandboxed iframes without `allow-same-origin`, as the origin is
-  // a unique origin which isn't equal even to itself, so the browser cache will never be consulted
-  // when a file needs to be retrieved.
-  // as a result, the fetch() should happen in the parent iframe for assets which need to be cached.
-  if (shouldCache(metadata)) {
-    const blob = await tw.tiddlybase!.topLevelClient!('getStorageFileAsBlob', [fullStoragePath]);
-    var urlCreator = window.URL || window.webkitURL;
-    return urlCreator.createObjectURL(blob);
-  } else {
-    // no caching required
-    return await tw.tiddlybase!.topLevelClient!('getStorageFileDownloadUrl', [fullStoragePath]);
+  const fileRef = await tw.tiddlybase!.topLevelClient!('readFile', [path, shouldCache(path) ? "blob" : "url"]);
+  if (fileRef.type === 'blob') {
+    return blobToUrl(fileRef.blob)
   }
+  return fileRef.url
 }
 
 export const cleanupURL = (url:string) => {
