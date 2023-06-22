@@ -150,8 +150,7 @@ export const buildwiki: CommandModule = {
         "--savejson", basename(outputFilename), (args.exportfilter as string | undefined) ?? ""
       ] : [
         "--output", dirname(outputFilename),
-        "--rendertiddler", "$:/core/save/all",
-        basename(outputFilename),
+        "--render", (args.exportfilter as string | undefined) ?? "$:/core/save/all", basename(outputFilename),
         "text/plain"
       ],
       outputType === 'json' ? [SAVE_JSON_COMMAND_TIDDLER] : [SAVE_WIKI_INFO_TIDDLER],

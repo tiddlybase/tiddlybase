@@ -1,0 +1,14 @@
+{
+    "includeWikis": [
+    ],
+    "config": {
+    },
+    "plugins": [
+        "tiddlybase/react",
+        "tiddlybase/tiddlybase-utils",
+        "tiddlybase/calendar"
+    ],
+    "themes": [
+    ],
+    "build": {}
+}

@@ -1,0 +1,26 @@
+created: 20220101000000000
+modified: 20230615101854971
+revision: 0
+title: ExportFilter
+type: text/vnd.tiddlywiki
+
+\import [[$:/core/ui/PageMacros]] [all[shadows+tiddlers]tag[$:/tags/Macro]!has[draft.of]]
+\define saveTiddlerFilter()
+[is[tiddler]]
+-[prefix[$:/state/popup/]]
+-[prefix[$:/status]]
+-[prefix[$:/temp/]]
+-[has[draft.of]]
+-[status[pending]plugin-type[import]]
+-[type[application/javascript]library[yes]]
+-[[$:/tiddlybase/wikibuilder/save-wiki-info.js]]
+-[[$:/HistoryList]]
+-[[$:/StoryList]]
+-[[$:/boot/boot.css]]
+-[[$:/boot/boot.js]]
+-[[$:/boot/bootprefix.js]]
+-[[ExportFilter]]
+-[[$:/isEncrypted]]
++[sort[title]]
+\end
+{{$:/core/templates/tiddlywiki5.html}}

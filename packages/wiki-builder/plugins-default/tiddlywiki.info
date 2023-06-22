@@ -1,0 +1,15 @@
+{
+    "includeWikis": [
+    ],
+    "config": {
+    },
+    "plugins": [
+        "tiddlybase/tiddlybase-utils",
+        "tiddlybase/react",
+        "tiddlybase/embed-media",
+        "tiddlybase/mdx"
+    ],
+    "themes": [
+    ],
+    "build": {}
+}

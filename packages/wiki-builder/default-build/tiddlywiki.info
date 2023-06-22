@@ -1,15 +1,9 @@
 {
-    "includeWikis": [
-        {"path": "../minimal", "read-only": true}
-    ],
-    "config": {
-    },
+    "description": "minimal config necessary for tiddlybase to load wiki in iframe",
+    "config": {},
     "plugins": [
-        "tiddlybase/tiddlybase-utils",
-        "tiddlybase/react",
-        "tiddlybase/embed-media",
-        "tiddlybase/mdx",
-        "tiddlybase/calendar",
+        "tiddlybase/init",
+        "tiddlybase/rpc-syncadaptor",
         "tiddlywiki/codemirror"
     ],
     "themes": [
