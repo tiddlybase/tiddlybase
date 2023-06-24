@@ -96,7 +96,8 @@ export interface TiddlybaseConfig {
   },
   hosting?: {
     site: string
-    pathPrefix?: string
+    publicPath?: string
+    outerHTML?: string
   }
   launchConfigs: Record<string, Partial<LaunchConfig>>
 }
