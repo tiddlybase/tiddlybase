@@ -1,7 +1,7 @@
 {
     "name": "@tiddlybase/functions",
     "description": "firebase functions",
-    "version": "0.0.7",
+    "version": "0.0.11",
     "private": true,
     "author": "Peter Neumark",
     "license": "Apache-2.0",
