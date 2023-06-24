@@ -47,7 +47,7 @@ export class TopLevelApp {
     this.launchConfig = getNormalizedLaunchConfig(this.searchParams, this.config);
     // Note: depending on the launchConfig, we might not even need a FirebaseApp instance in the future.
     // This might be good for static websites.
-    this.lazyFirebaseApp = lazy(() => initializeApp(this.config.firebaseClientConfig));
+    this.lazyFirebaseApp = lazy(() => initializeApp(this.config.firebase.clientConfig));
     this.authProvider = getAuthProvider(this.lazyFirebaseApp, this.launchConfig)
   }
 

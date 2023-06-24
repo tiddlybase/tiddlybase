@@ -19,21 +19,22 @@ export type TiddlerDataSourceSpec =
   | ({ type: 'browser-storage', collection: string, useLocalStorage?: boolean } & WritableTiddlerDataSourceSpec)
 
 export type FileDataSourceSpec =
-  | {type: 'http', urlPrefix: string}
-  | {type: 'firebase-storage', collection: string}
+  | { type: 'http', urlPrefix: string }
+  | { type: 'firebase-storage', collection: string }
 
 export type AuthProviderSpec =
-| {
+  | {
     type: 'firebase',
     writeToFirestore?: boolean,
     // this would actually be the type
     // import type * as firebaseui from 'firebaseui';
     // firebaseui.auth.Config
     // but that seems like an unnecessary dependency here
-    firebaseui?: any}
-| { type: 'trivial', user?: TiddlyBaseUser };
+    firebaseui?: any
+  }
+  | { type: 'trivial', user?: TiddlyBaseUser };
 
-export type FunctionsEndpoint = {type: "production", region: string} | {type: "development", emulatorHost: string, emulatorPort: number};
+export type FunctionsEndpoint = { type: "production", region: string } | { type: "development", emulatorHost: string, emulatorPort: number };
 
 export interface FunctionsConfig {
   endpoint: FunctionsEndpoint
@@ -80,16 +81,18 @@ export interface TiddlybaseConfig {
    * These values can be copied from the Firebase console or
    * from the command line via "yarn firebase apps:sdkconfig web"
    */
-  firebaseClientConfig: {
-    projectId: string,
-    appId: string,
-    databaseURL?: string,
-    storageBucket: string,
-    locationId: string,
-    apiKey: string,
-    authDomain: string,
-    messagingSenderId: string,
-    measurementId?: string
+  firebase: {
+    clientConfig: {
+      projectId: string,
+      appId: string,
+      databaseURL?: string,
+      storageBucket: string,
+      locationId: string,
+      apiKey: string,
+      authDomain: string,
+      messagingSenderId: string,
+      measurementId?: string
+    }
   },
   hosting?: {
     site: string
@@ -100,6 +103,6 @@ export interface TiddlybaseConfig {
 
 // The client config is written to outer.html.
 // It only needs certain parts of the full tiddlybase-config.json.
-export const TIDDLYBASE_CLIENT_CONFIG_KEYS:Readonly<Array<keyof TiddlybaseConfig>> = ['instanceName', 'firebaseClientConfig', 'launchConfigs'] as const;
+export const TIDDLYBASE_CLIENT_CONFIG_KEYS: Readonly<Array<keyof TiddlybaseConfig>> = ['instanceName', 'firebase', 'launchConfigs'] as const;
 
 export type TiddlybaseClientConfig = Pick<TiddlybaseConfig, typeof TIDDLYBASE_CLIENT_CONFIG_KEYS[number]>;
