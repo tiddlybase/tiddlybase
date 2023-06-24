@@ -1,0 +1,12 @@
+{
+    "name": "@tiddlybase/tiddlybase-public",
+    "description": "Static web assets for hosting Tiddlybase",
+    "version": "0.0.8",
+    "author": "Peter Neumark",
+    "license": "Apache-2.0",
+    "files": [
+        "tiddlybase_public"
+    ],
+    "scripts": {
+    }
+}
