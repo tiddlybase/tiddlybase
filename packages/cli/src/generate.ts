@@ -1,10 +1,11 @@
-import { TIDDLYBASE_CLIENT_CONFIG_KEYS, TiddlybaseClientConfig, TiddlybaseConfig } from '@tiddlybase/shared/src/tiddlybase-config-schema';
+import { LaunchConfig, TIDDLYBASE_CLIENT_CONFIG_KEYS, TiddlybaseClientConfig, TiddlybaseConfig } from '@tiddlybase/shared/src/tiddlybase-config-schema';
 import { objFilter } from '@tiddlybase/shared/src/obj-filter';
 import { Arguments, Argv, CommandModule, Options } from 'yargs';
 import { ParsedConfig, readConfig, requireSingleConfig } from './config';
 import { dirname, resolve, join } from 'path';
 import { render } from 'mustache';
 import { mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { runCommand } from './run-child-process';
 // import { render } from 'mustache';
 
 const FIREBASE_RULES_FILENAMES = {
@@ -24,6 +25,12 @@ export const OUTPUT_FILENAME_CLI_OPTION: Record<string, Options> = {
 export const CONFIG_DIR_CLI_OPTION: Record<string, Options> = {
   d: {
     type: 'string', alias: 'config-dir', default: "etc", describe: "directory containing config files such as firebase rules"
+  }
+};
+
+export const FIREBASE_PROJECT_CLI_OPTION: Record<string, Options> = {
+  project: {
+    type: 'string', describe: "firebase project to use"
   }
 };
 
@@ -89,7 +96,9 @@ const FIREBASE_JSON_EMULATORS = {
 
 const generateHostingConfig = (config: TiddlybaseConfig) => (
   {
-    site: config.hosting?.site, // TODO: fallback if no hosting field in config?
+    // NOTE: "site" field is omitted from output if not set in tiddlybase config
+    // since JSON serialization ignores undefined fields.
+    site: config.hosting?.site,
     "public": config.hosting?.publicPath ?? join(config.instanceName, DIRECTORY_PUBLIC),
     "rewrites": [{
       "source": "**",
@@ -148,6 +157,70 @@ export const cmdGenerateFirestoreRules: CommandModule = {
   }),
   handler: async (args: Arguments) => {
     writeFirebaseRule(args, "FIRESTORE");
+  },
+};
+
+const getFirebaseClientConfig = async (project?:string):Promise<TiddlybaseConfig["firebase"]["clientConfig"]> => {
+  // TODO: optionally pass a project flag to firebase-tools
+  const {stdout} = await runCommand(`yarn firebase ${project ? `--project ${project} ` : ''} apps:sdkconfig web`);
+  const sdkOutput = stdout.trim();
+  const prefix = 'firebase.initializeApp('
+  const suffix = ');';
+  return JSON.parse(sdkOutput.substring(sdkOutput.indexOf(prefix) + prefix.length, sdkOutput.length - suffix.length));
+}
+
+const DEFAULT_LAUNCH_CONFIG:Partial<LaunchConfig> = {
+    "auth": {
+        "type": "firebase",
+        "writeToFirestore": true,
+        "firebaseui": {
+            "signInFlow": "redirect",
+            "signInOptions": [ { "provider": "google.com" } ],
+            "tosUrl": "/tos.html",
+            "privacyPolicyUrl": "/privacy.html",
+            "credentialHelper": "googleyolo"
+        }
+    },
+    tiddlers: {
+      "sources": [
+        {"type": "firestore", "collection": "user:$USERID", "writeCondition": "private"},
+        {"type": "firestore", "collection": "shared"}
+    ]
+    },
+
+}
+
+export const cmdGenerateTiddlybaseConfigJson: CommandModule = {
+  command: 'generate:tiddlybase-config.json instance',
+  describe: 'generate tiddlybase configuration',
+  builder: (argv: Argv) => argv
+    .options({
+      ...OUTPUT_FILENAME_CLI_OPTION,
+      ...FIREBASE_PROJECT_CLI_OPTION
+    })
+    .positional('instance', {
+      describe: 'Instance name used for Tiddlybase config',
+      type: 'string',
+    }),
+  handler: async (args: Arguments) => {
+    const outputFilename = getOutputFilename(args, 'tiddlybase-config.json');
+    const instanceName = args.instance as string;
+    const tiddlybaseConfig:TiddlybaseConfig = {
+      instanceName,
+      htmlGeneration: {
+        title: instanceName
+      },
+      firebase: {
+        clientConfig: await getFirebaseClientConfig(args.project as string | undefined)
+      },
+      launchConfigs: {
+        default: DEFAULT_LAUNCH_CONFIG
+      }
+    }
+    writeJSON(
+      outputFilename,
+      tiddlybaseConfig);
+    console.log(`Output written to ${outputFilename}`)
   },
 };
 

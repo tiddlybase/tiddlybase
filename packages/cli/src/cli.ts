@@ -1,6 +1,6 @@
 import yargs from 'yargs';
 import { getuser, listusers, adduser, setCollectionRole, getCollectionRoles } from './users';
-import { cmdGenerateFirebaseJson, cmdGenerateStorageRules, cmdGenerateFirestoreRules, cmdGenerateOuterHTML } from './generate';
+import { cmdGenerateFirebaseJson, cmdGenerateStorageRules, cmdGenerateFirestoreRules, cmdGenerateOuterHTML, cmdGenerateTiddlybaseConfigJson } from './generate';
 import { buildwiki } from './wikibuilder';
 import {runTWCommand} from './run-tw-command'
 
@@ -25,6 +25,7 @@ const main = async (argv:string[]) => {
   .command(cmdGenerateStorageRules)
   .command(cmdGenerateFirestoreRules)
   .command(cmdGenerateOuterHTML)
+  .command(cmdGenerateTiddlybaseConfigJson)
   .command(buildwiki)
   .command(runTWCommand)
   //.command(importTiddlers)
