@@ -96,9 +96,8 @@ const FIREBASE_JSON_EMULATORS = {
 
 const generateHostingConfig = (config: TiddlybaseConfig) => (
   {
-    // NOTE: "site" field is omitted from output if not set in tiddlybase config
-    // since JSON serialization ignores undefined fields.
-    site: config.hosting?.site,
+    // by default, the site is the same as the projectid
+    site: config.hosting?.site ?? config.firebase.clientConfig.projectId,
     "public": config.hosting?.publicPath ?? join(config.instanceName, DIRECTORY_PUBLIC),
     "rewrites": [{
       "source": "**",
@@ -160,33 +159,35 @@ export const cmdGenerateFirestoreRules: CommandModule = {
   },
 };
 
-const getFirebaseClientConfig = async (project?:string):Promise<TiddlybaseConfig["firebase"]["clientConfig"]> => {
-  // TODO: optionally pass a project flag to firebase-tools
-  const {stdout} = await runCommand(`yarn firebase ${project ? `--project ${project} ` : ''} apps:sdkconfig web`);
+const getFirebaseClientConfig = async (project?: string): Promise<TiddlybaseConfig["firebase"]["clientConfig"]> => {
+  const firebaseCLIPath = join(dirname(__non_webpack_require__.resolve('firebase-tools')), "bin", "firebase.js")
+  console.log("Invoking firebase binary at " + firebaseCLIPath);
+  const { stdout } = await runCommand(`${firebaseCLIPath} ${project ? `--project ${project} ` : ''} apps:sdkconfig web`);
   const sdkOutput = stdout.trim();
   const prefix = 'firebase.initializeApp('
   const suffix = ');';
   return JSON.parse(sdkOutput.substring(sdkOutput.indexOf(prefix) + prefix.length, sdkOutput.length - suffix.length));
 }
 
-const DEFAULT_LAUNCH_CONFIG:Partial<LaunchConfig> = {
-    "auth": {
-        "type": "firebase",
-        "writeToFirestore": true,
-        "firebaseui": {
-            "signInFlow": "redirect",
-            "signInOptions": [ { "provider": "google.com" } ],
-            "tosUrl": "/tos.html",
-            "privacyPolicyUrl": "/privacy.html",
-            "credentialHelper": "googleyolo"
-        }
-    },
-    tiddlers: {
-      "sources": [
-        {"type": "firestore", "collection": "user:$USERID", "writeCondition": "private"},
-        {"type": "firestore", "collection": "shared"}
+const DEFAULT_LAUNCH_CONFIG: Partial<LaunchConfig> = {
+  "auth": {
+    "type": "firebase",
+    "writeToFirestore": true,
+    "firebaseui": {
+      "signInFlow": "redirect",
+      "signInOptions": [{ "provider": "google.com" }],
+      "tosUrl": "/tos.html",
+      "privacyPolicyUrl": "/privacy.html",
+      "credentialHelper": "googleyolo"
+    }
+  },
+  tiddlers: {
+    "sources": [
+      { "type": "http", "url": "/tiddlybase_public/plugins/plugins-default.json" },
+      { "type": "firestore", "collection": "user:$USERID", "writeCondition": "private" },
+      { "type": "firestore", "collection": "shared" }
     ]
-    },
+  },
 
 }
 
@@ -205,7 +206,7 @@ export const cmdGenerateTiddlybaseConfigJson: CommandModule = {
   handler: async (args: Arguments) => {
     const outputFilename = getOutputFilename(args, 'tiddlybase-config.json');
     const instanceName = args.instance as string;
-    const tiddlybaseConfig:TiddlybaseConfig = {
+    const tiddlybaseConfig: TiddlybaseConfig = {
       instanceName,
       htmlGeneration: {
         title: instanceName
