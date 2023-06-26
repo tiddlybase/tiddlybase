@@ -1,6 +1,6 @@
 {
   "name": "@tiddlybase/root",
-  "version": "0.0.11",
+  "version": "0.0.15",
   "description": "",
   "author": "neumark.peter@gmail.com",
   "license": "Apache-2.0",
@@ -22,7 +22,7 @@
     ]
   },
   "devDependencies": {
-    "firebase-tools": "^10.2.0",
+    "firebase-tools": "^12.4.0",
     "glob": "^8.0.3"
   }
 }

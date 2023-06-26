@@ -1,7 +1,7 @@
 {
     "name": "@tiddlybase/cli",
     "description": "In-browser trusted code running outside the sandbox",
-    "version": "0.0.11",
+    "version": "0.0.15",
     "author": "Peter Neumark",
     "license": "Apache-2.0",
     "bin": {
@@ -24,6 +24,7 @@
         "@tiddlybase/webpack-config": "workspace:*",
         "@types/mustache": "^4.2.1",
         "@types/node": "^17.0.23",
+        "@types/webpack-env": "^1.18.1",
         "@types/yargs": "^17.0.8",
         "ajv": "^8.12.0",
         "firebase": "^9.6.6",

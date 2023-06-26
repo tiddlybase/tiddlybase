@@ -1,7 +1,7 @@
 {
     "name": "@tiddlybase/rpc",
     "description": "In-browser trusted code running outside the sandbox",
-    "version": "0.0.11",
+    "version": "0.0.15",
     "main": "src/index.ts",
     "private": true,
     "author": "Peter Neumark",

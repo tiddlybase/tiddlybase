@@ -1,7 +1,7 @@
 {
     "name": "@tiddlybase/plugin-react",
     "description": "React UMD modules packaged as a tiddlywiki plugin",
-    "version": "0.0.11",
+    "version": "0.0.15",
     "private": true,
     "author": "Peter Neumark",
     "license": "Apache-2.0",
