@@ -5,6 +5,7 @@ declare namespace $tw {
   export type TWTiddlybase = Partial<{
     topLevelClient: import("@tiddlybase/rpc").APIClient<import("@tiddlybase/rpc/src/top-level-api").TopLevelAPIForSandboxedWiki>
     rpc: import("mini-iframe-rpc").MiniIframeRPC;
+    rpcCallbackManager: import("@tiddlybase/rpc/src/rpc-callback-manager").RPCCallbackManager;
     user: import("@tiddlybase/shared/src/users").TiddlyBaseUser,
     parentLocation: Partial<Location>,
     isLocal: boolean
