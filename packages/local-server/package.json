@@ -1,7 +1,7 @@
 {
     "name": "@tiddlybase/local-server",
     "description": "TiddlyWiki tiddlers for a local nodejs server",
-    "version": "0.0.15",
+    "version": "0.0.16",
     "author": "Peter Neumark",
     "license": "Apache-2.0",
     "files": [

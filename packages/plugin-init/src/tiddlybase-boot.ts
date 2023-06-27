@@ -5,6 +5,7 @@ import type { TopLevelAPIForSandboxedWiki } from "@tiddlybase/rpc/src/top-level-
 import type { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
 import { createWikiInfoConfig } from "@tiddlybase/shared/src/wiki-info";
 import { PatchedModules } from "./patched-modules";
+import { RPCCallbackManager } from "packages/rpc/src/rpc-callback-manager";
 
 (() => {
 
@@ -57,6 +58,7 @@ import { PatchedModules } from "./patched-modules";
         parentLocation,
         user,
         rpc,
+        rpcCallbackManager: new RPCCallbackManager(rpc)
       };
       try {
         tiddlers.push(createWikiInfoConfig(wikiInfoConfig))

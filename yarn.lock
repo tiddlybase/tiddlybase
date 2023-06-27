@@ -2225,6 +2225,26 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@tiddlybase/plugin-upload-file@workspace:packages/plugin-upload-file":
+  version: 0.0.0-use.local
+  resolution: "@tiddlybase/plugin-upload-file@workspace:packages/plugin-upload-file"
+  dependencies:
+    "@tiddlybase/plugin-browser-test-utils": "workspace:*"
+    "@tiddlybase/plugin-tiddlybase-utils": "workspace:*"
+    "@tiddlybase/tw5-types": "workspace:*"
+    "@tiddlybase/webpack-config": "workspace:*"
+    jest: 29.5
+    ts-jest: 29.1.0
+    tslib: ^2.3.1
+    typescript: 5.0.4
+    webpack: 5.81.0
+    webpack-cli: ^4.9.2
+  peerDependencies:
+    react: ^18.0.0
+    react-dom: ^18.0.0
+  languageName: unknown
+  linkType: soft
+
 "@tiddlybase/root@workspace:.":
   version: 0.0.0-use.local
   resolution: "@tiddlybase/root@workspace:."
