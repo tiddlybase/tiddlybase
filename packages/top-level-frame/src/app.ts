@@ -5,7 +5,7 @@ import { apiClient, apiDefiner } from "@tiddlybase/rpc/src";
 import { makeRPC } from "@tiddlybase/rpc/src/make-rpc";
 import type { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
 import type { TopLevelAPIForSandboxedWiki } from "@tiddlybase/rpc/src/top-level-api";
-import { FileDataSource } from "@tiddlybase/shared/src/file-data-source";
+import { FileDataSource, WritableFileDataSource } from "@tiddlybase/shared/src/file-data-source";
 import { Lazy, lazy } from "@tiddlybase/shared/src/lazy";
 import { ParsedSearchParams } from "@tiddlybase/shared/src/search-params";
 import type { WritableTiddlerDataSource } from "@tiddlybase/shared/src/tiddler-data-source";
@@ -39,7 +39,7 @@ export class TopLevelApp {
   lazyFirebaseApp: Lazy<FirebaseApp>;
   authProvider: AuthProvider;
   firebaseFunctions?: Functions
-  fileDataSource: FileDataSource | undefined;
+  fileDataSource: FileDataSource | WritableFileDataSource | undefined;
 
   constructor(config: TiddlybaseClientConfig, searchParams: ParsedSearchParams) {
     this.config = config;
@@ -108,6 +108,9 @@ export class TopLevelApp {
     // expose file data source interface functions
     if (this.fileDataSource) {
       exposeObjectMethod(rpc.toplevelAPIDefiner, 'readFile', this.fileDataSource);
+      if ('writeFile' in this.fileDataSource) {
+        exposeObjectMethod(rpc.toplevelAPIDefiner, 'writeFile', this.fileDataSource);
+      }
     }
   }
 

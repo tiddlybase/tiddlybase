@@ -1,7 +1,7 @@
-import { FileDataSource, FileReference, FileReferenceType } from "@tiddlybase/shared/src/file-data-source";
-import { FirebaseStorage, getBlob, getDownloadURL, ref } from '@firebase/storage';
+import { FileReference, FileReferenceType, WritableFileDataSource } from "@tiddlybase/shared/src/file-data-source";
+import { FirebaseStorage, getBlob, getDownloadURL, ref, uploadBytes } from '@firebase/storage';
 
-export class FirebaseStorageDataSource implements FileDataSource {
+export class FirebaseStorageDataSource implements WritableFileDataSource {
   storage: FirebaseStorage;
   instanceName: string;
   collection: string;
@@ -26,5 +26,11 @@ export class FirebaseStorageDataSource implements FileDataSource {
     } catch (e) {
       throw { type: "file-read-error", filename, reason: String(e) }
     }
+  }
+
+  async writeFile(filename: string, contents: Blob, metadata?: Record<string, string> | undefined): Promise<number> {
+    const fileRef = ref(this.storage, this.getFullPath(filename));
+    const result = await uploadBytes(fileRef, contents, metadata);
+    return result.metadata.size
   }
 }

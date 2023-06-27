@@ -8,3 +8,4 @@ type: text/vnd.tiddlywiki
 [[$:/plugins/tiddlybase/mdx]]
 [[$:/plugins/tiddlybase/react]]
 [[$:/plugins/tiddlybase/tiddlybase-utils]]
+[[$:/plugins/tiddlybase/upload-file]]

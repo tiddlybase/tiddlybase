@@ -9,3 +9,8 @@ export interface FileDataSource {
   // full filename relative to the collection dir
   readFile: (filename:string, referenceType?:FileReferenceType) => Promise<FileReference>;
 }
+
+export interface WritableFileDataSource extends FileDataSource {
+  // returns the number of bytes written
+  writeFile: (filename: string, contents: Blob, metadata?: Record<string, string>) => Promise<number>;
+}

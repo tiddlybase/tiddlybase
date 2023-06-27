@@ -1,12 +1,12 @@
 import type { FileDataSourceSpec, FilesConfig } from "@tiddlybase/shared/src/tiddlybase-config-schema";
-import type { FileDataSource } from "@tiddlybase/shared/src/file-data-source";
+import type { FileDataSource, WritableFileDataSource } from "@tiddlybase/shared/src/file-data-source";
 import { Lazy } from "@tiddlybase/shared/src/lazy";
 import type { FirebaseApp } from '@firebase/app'
 import  { getStorage } from '@firebase/storage'
 import { FirebaseStorageDataSource } from "./firebase-storage-file-source";
 import { HttpFileDataSource } from "./http-file-source";
 
-export const makeFileDataSource = (lazyFirebaseApp: Lazy<FirebaseApp>, instanceName: string, filesConfig:FilesConfig):FileDataSource|undefined => {
+export const makeFileDataSource = (lazyFirebaseApp: Lazy<FirebaseApp>, instanceName: string, filesConfig:FilesConfig):FileDataSource|WritableFileDataSource|undefined => {
   // Eventually, this function should return a routing proxy similar to
   // RoutingProxyTiddlerSource for tiddlers.
   // For now, just return the first FileDataSource defined in the config.

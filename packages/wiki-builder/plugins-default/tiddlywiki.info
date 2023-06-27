@@ -7,7 +7,8 @@
         "tiddlybase/tiddlybase-utils",
         "tiddlybase/react",
         "tiddlybase/embed-media",
-        "tiddlybase/mdx"
+        "tiddlybase/mdx",
+        "tiddlybase/upload-file"
     ],
     "themes": [
     ],
