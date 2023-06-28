@@ -1,5 +1,5 @@
 import { FileReference, FileReferenceType, WritableFileDataSource } from "@tiddlybase/shared/src/file-data-source";
-import { FirebaseStorage, getBlob, getDownloadURL, ref, uploadBytes } from '@firebase/storage';
+import { FirebaseStorage, getBlob, getDownloadURL, ref, uploadBytes, deleteObject } from '@firebase/storage';
 
 export class FirebaseStorageDataSource implements WritableFileDataSource {
   storage: FirebaseStorage;
@@ -11,6 +11,7 @@ export class FirebaseStorageDataSource implements WritableFileDataSource {
     this.instanceName = instanceName;
     this.collection = collection;
   }
+
   getFullPath(filename: string): string {
     return `${this.instanceName}/${this.collection}/${filename}`;
   }
@@ -23,8 +24,13 @@ export class FirebaseStorageDataSource implements WritableFileDataSource {
         }
       }
       return { type: 'blob', blob: await getBlob(fileRef) };
-    } catch (e) {
-      throw { type: "file-read-error", filename, reason: String(e) }
+    } catch (e: any) {
+      throw {
+        message: `Error reading instance ${this.instanceName} firebase storage collection ${this.collection}: ${e.message}`,
+        code: e.code,
+        stack: e.stack,
+        name: e.name
+      }
     }
   }
 
@@ -32,5 +38,10 @@ export class FirebaseStorageDataSource implements WritableFileDataSource {
     const fileRef = ref(this.storage, this.getFullPath(filename));
     const result = await uploadBytes(fileRef, contents, metadata);
     return result.metadata.size
+  }
+
+  async deleteFile(filename: string):Promise<void> {
+    const fileRef = ref(this.storage, this.getFullPath(filename));
+    return deleteObject(fileRef);
   }
 }

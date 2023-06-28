@@ -94,40 +94,49 @@ export class FirestoreDataSource implements WritableTiddlerDataSource {
   }
 
   async startListening() {
-    await createCollectionSentinel(this.firestore, this.tiddlybaseInstanceName, this.tiddlerCollectionName);
-    this.unsubscribe = onSnapshot(collection(this.firestore, getFirestoreCollectionPath(this.tiddlybaseInstanceName, this.tiddlerCollectionName)), (snapshot) => {
-      // from: https://firebase.google.com/docs/firestore/query-data/listen#view_changes_between_snapshots
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === "added" || change.type === "modified") {
-          if (this.initialReadState.completePromiseResolved) {
-            // if the initial read of firestore documents in the collection is complete,
-            // only pass on the change event to the listener (when provided)
-            if (this.changeListener && change.doc.data().tiddler.modified) {
-              // firestore triggers the update twice: once when it's updated locally
-              // (then server side timestamp is null), and once more when the write
-              // goes through. We can safely ignore the first one.
-              // see: https://stackoverflow.com/questions/63123697/while-updating-firestore-data-timestamp-is-null
-              this.changeListener.onSetTiddler(convertTimestamps(change.doc.data().tiddler));
-            }
-          } else {
-            // The first time the sentinel doc is encountered signals the end of the tiddler documents in the collection.
-            if (change.doc.id === SENTINEL_DOC_ID) {
-              if (this.initialReadState.completePromiseResolver) {
-                this.initialReadState.completePromiseResolver(this.initialReadState.tiddlers);
+    try {
+      await createCollectionSentinel(this.firestore, this.tiddlybaseInstanceName, this.tiddlerCollectionName);
+      this.unsubscribe = onSnapshot(collection(this.firestore, getFirestoreCollectionPath(this.tiddlybaseInstanceName, this.tiddlerCollectionName)), (snapshot) => {
+        // from: https://firebase.google.com/docs/firestore/query-data/listen#view_changes_between_snapshots
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === "added" || change.type === "modified") {
+            if (this.initialReadState.completePromiseResolved) {
+              // if the initial read of firestore documents in the collection is complete,
+              // only pass on the change event to the listener (when provided)
+              if (this.changeListener && change.doc.data().tiddler.modified) {
+                // firestore triggers the update twice: once when it's updated locally
+                // (then server side timestamp is null), and once more when the write
+                // goes through. We can safely ignore the first one.
+                // see: https://stackoverflow.com/questions/63123697/while-updating-firestore-data-timestamp-is-null
+                this.changeListener.onSetTiddler(convertTimestamps(change.doc.data().tiddler));
               }
-              this.initialReadState.completePromiseResolved = true;
             } else {
-              // The document being read is not the last one (not the sentinel), so just store it for now.
-              const tiddler = convertTimestamps(change.doc.data().tiddler);
-              this.initialReadState.tiddlers[tiddler.title] = tiddler;
+              // The first time the sentinel doc is encountered signals the end of the tiddler documents in the collection.
+              if (change.doc.id === SENTINEL_DOC_ID) {
+                if (this.initialReadState.completePromiseResolver) {
+                  this.initialReadState.completePromiseResolver(this.initialReadState.tiddlers);
+                }
+                this.initialReadState.completePromiseResolved = true;
+              } else {
+                // The document being read is not the last one (not the sentinel), so just store it for now.
+                const tiddler = convertTimestamps(change.doc.data().tiddler);
+                this.initialReadState.tiddlers[tiddler.title] = tiddler;
+              }
             }
           }
-        }
-        if (change.type === "removed") {
-          this.changeListener?.onDeleteTiddler(change.doc.data().tiddler.title);
-        }
+          if (change.type === "removed") {
+            this.changeListener?.onDeleteTiddler(change.doc.data().tiddler.title);
+          }
+        });
       });
-    });
+    } catch (e: any) {
+      throw {
+        message: `Error reading instance ${this.tiddlybaseInstanceName} firestore collection ${this.tiddlerCollectionName}: ${e.message}`,
+        code: e.code,
+        stack: e.stack,
+        name: e.name
+      }
+    }
   }
 
   async stopListening() {
