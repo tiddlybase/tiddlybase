@@ -10,10 +10,12 @@ export const synchronous = true;
 
 const shouldUploadToStorage = (info: $tw.ImportFileInfo) => info.isBinary || info.file.size > MAX_SIZE;
 
-const getMetadata = (info: $tw.ImportFileInfo):Record<string, string> => ({
-  uploader: $tw.tiddlybase?.user?.userId ?? '',
+const getMetadata = (info: $tw.ImportFileInfo):Record<string, any> => ({
   contentType: info.type,
-  cacheControl: 'max-age=31536000, immutable'
+  cacheControl: 'public, max-age=31536000',
+  customMetadata: {
+    uploader: $tw.tiddlybase?.user?.userId,
+  }
 });
 
 export const startup = function () {
