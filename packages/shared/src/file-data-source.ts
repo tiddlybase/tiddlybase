@@ -13,4 +13,5 @@ export interface FileDataSource {
 export interface WritableFileDataSource extends FileDataSource {
   // returns the number of bytes written
   writeFile: (filename: string, contents: Blob, metadata?: Record<string, string>) => Promise<number>;
+  deleteFile: (filename: string) => Promise<void>;
 }

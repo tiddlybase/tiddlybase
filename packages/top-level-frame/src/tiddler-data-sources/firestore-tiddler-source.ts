@@ -4,6 +4,7 @@ import { setDoc, doc, DocumentReference, DocumentData, collection, onSnapshot, U
 import type { } from '@tiddlybase/tw5-types/src/index'
 import { getFirestoreCollectionPath } from "./tiddler-store-utils";
 import type { FirestoreTiddlerDataSourceOptions } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import { normalizeFirebaseReadError } from "../firebase-utils";
 
 const SENTINEL_DOC_ID = "\uffffsentinel"
 
@@ -59,8 +60,8 @@ type InitialReadState = {
 export class FirestoreDataSource implements WritableTiddlerDataSource {
 
   firestore: Firestore;
-  tiddlybaseInstanceName: string;
-  tiddlerCollectionName: string;
+  instance: string;
+  collection: string;
   options: FirestoreTiddlerDataSourceOptions | undefined;
   changeListener: TiddlerDataSourceChangeListener | undefined;
   initialReadState: InitialReadState;
@@ -81,13 +82,13 @@ export class FirestoreDataSource implements WritableTiddlerDataSource {
 
   constructor(
     firestore: Firestore,
-    tiddlybaseInstanceName: string,
-    tiddlerCollectionName: string,
+    instance: string,
+    collection: string,
     options?: FirestoreTiddlerDataSourceOptions,
     changeListener?: TiddlerDataSourceChangeListener) {
     this.firestore = firestore;
-    this.tiddlybaseInstanceName = tiddlybaseInstanceName;
-    this.tiddlerCollectionName = tiddlerCollectionName;
+    this.instance = instance;
+    this.collection = collection;
     this.options = options;
     this.changeListener = changeListener;
     this.initialReadState = this.getInitialReadState();
@@ -95,8 +96,8 @@ export class FirestoreDataSource implements WritableTiddlerDataSource {
 
   async startListening() {
     try {
-      await createCollectionSentinel(this.firestore, this.tiddlybaseInstanceName, this.tiddlerCollectionName);
-      this.unsubscribe = onSnapshot(collection(this.firestore, getFirestoreCollectionPath(this.tiddlybaseInstanceName, this.tiddlerCollectionName)), (snapshot) => {
+      await createCollectionSentinel(this.firestore, this.instance, this.collection);
+      this.unsubscribe = onSnapshot(collection(this.firestore, getFirestoreCollectionPath(this.instance, this.collection)), (snapshot) => {
         // from: https://firebase.google.com/docs/firestore/query-data/listen#view_changes_between_snapshots
         snapshot.docChanges().forEach((change) => {
           if (change.type === "added" || change.type === "modified") {
@@ -130,12 +131,7 @@ export class FirestoreDataSource implements WritableTiddlerDataSource {
         });
       });
     } catch (e: any) {
-      throw {
-        message: `Error reading instance ${this.tiddlybaseInstanceName} firestore collection ${this.tiddlerCollectionName}: ${e.message}`,
-        code: e.code,
-        stack: e.stack,
-        name: e.name
-      }
+      throw normalizeFirebaseReadError(e, this.instance, this.collection, 'firestore');
     }
   }
 
@@ -158,13 +154,13 @@ export class FirestoreDataSource implements WritableTiddlerDataSource {
   }
   async setTiddler(tiddler: $tw.TiddlerFields): Promise<$tw.TiddlerFields> {
     const docId = this.getDocId(tiddler.title);
-    const result = writeTiddler(this.firestore, getFirestoreCollectionPath(this.tiddlybaseInstanceName, this.tiddlerCollectionName), tiddler, docId);
+    const result = writeTiddler(this.firestore, getFirestoreCollectionPath(this.instance, this.collection), tiddler, docId);
     console.log('setTiddler (outer)', tiddler, result);
     return tiddler;
   }
   async deleteTiddler(title: string): Promise<void> {
     console.log('deleteTiddler (outer)', title);
-    const docRef = doc(this.firestore, getFirestoreCollectionPath(this.tiddlybaseInstanceName, this.tiddlerCollectionName), this.getDocId(title));
+    const docRef = doc(this.firestore, getFirestoreCollectionPath(this.instance, this.collection), this.getDocId(title));
     return await deleteDoc(docRef);
   }
   async getAllTiddlers(): Promise<TiddlerCollection> {

@@ -111,32 +111,42 @@ export class TopLevelApp {
       if ('writeFile' in this.fileDataSource) {
         exposeObjectMethod(rpc.toplevelAPIDefiner, 'writeFile', this.fileDataSource);
       }
+      if ('deleteFile' in this.fileDataSource) {
+        exposeObjectMethod(rpc.toplevelAPIDefiner, 'deleteFile', this.fileDataSource);
+      }
     }
   }
 
   async createParentAPI(rpc: RPC, user: TiddlyBaseUser) {
 
+    const loadError = async (message: string) => {
+      replaceChildrenWithText(document.getElementById("wiki-error-message"), message);
+      toggleVisibleDOMSection('wiki-error');
+    }
+
     // tiddler and file data sources are initialized in childIframeReady() so the parent frame can
     // listen to the child iframe's RPC request as soon as possible.
     rpc.toplevelAPIDefiner('childIframeReady', async () => {
-      const { tiddlers, writeStore } = await readTiddlerSources(this.config.instanceName, this.launchConfig, user.userId, this.lazyFirebaseApp, rpc.sandboxedAPIClient);
-      this.tiddlerDataSource = writeStore;
-      this.fileDataSource = makeFileDataSource(this.lazyFirebaseApp, this.config.instanceName, this.launchConfig.files);
-      this.exposeDataSourceAPIs(rpc);
-      return {
-        user,
-        tiddlers: Object.values(tiddlers),
-        wikiInfoConfig: this.launchConfig.wikiInfoConfig,
-        parentLocation: JSON.parse(JSON.stringify(window.location))
+      try {
+        const { tiddlers, writeStore } = await readTiddlerSources(this.config.instanceName, this.launchConfig, user.userId, this.lazyFirebaseApp, rpc.sandboxedAPIClient);
+        this.tiddlerDataSource = writeStore;
+        this.fileDataSource = makeFileDataSource(this.lazyFirebaseApp, this.config.instanceName, this.launchConfig.files);
+        this.exposeDataSourceAPIs(rpc);
+        return {
+          user,
+          tiddlers: Object.values(tiddlers),
+          wikiInfoConfig: this.launchConfig.wikiInfoConfig,
+          parentLocation: JSON.parse(JSON.stringify(window.location))
+        }
+      } catch (e: any) {
+        loadError(e?.message ?? e?.toString() ?? "load error");
+        throw e;
       }
     });
 
     exposeObjectMethod(rpc.toplevelAPIDefiner, 'signOut', this.authProvider);
 
-    rpc.toplevelAPIDefiner('loadError', async (message: string) => {
-      replaceChildrenWithText(document.getElementById("wiki-error-message"), message);
-      toggleVisibleDOMSection('wiki-error');
-    });
+    rpc.toplevelAPIDefiner('loadError', loadError);
   }
 
 
