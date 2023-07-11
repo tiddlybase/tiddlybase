@@ -10,6 +10,8 @@ import { CompilationResult, MDXContext, MDXModuleLoader, ModuleSet } from "./mdx
 import { wrapMDXComponent } from "./mdx-util";
 import { getTransitiveMDXModuleDependencies } from "./module-utils";
 
+const MIME_TYPE = "text/x-markdown";
+
 export type MDXFactoryProps = WrappedPropsBase & {
   mdx: string;
   title?: string;
@@ -65,11 +67,28 @@ export const MDXFactory = async ({
   let definingTiddlerTitle = title;
   if (definingTiddlerTitle === PARSER_TITLE_PLACEHOLDER) {
     if (!parentWidget) {
-      throw new Error(
-        "Needs to get title from parent widget, but no parentWidget prop set"
-      );
+      // the tiddler title is a placeholder, but the real value could not
+      // be read from parentWidget, so unsetting it
+      definingTiddlerTitle = undefined;
     }
-    definingTiddlerTitle = parentWidget.getVariable("currentTiddler");
+    else if (mdx) {
+      // Due to transclusion (eg: in the Import popup when clicking the chevron next to an imported item),
+      // it's possible that the tiddler title will be a non-MDX tiddler's title, in the above example $:/Import.
+      // In such a case, MDXFactory should try to compile to mdx as passed in the prop, not what is read from
+      // the wiki.
+      // NOTE: In the Import case, transclusion is a problem because the MDX is within a subtiddler.
+      // this could be loaded from the wiki with, eg: $tw.wiki.getSubTiddler("$:/Import", "PHOTO-2023-04-23-18-29-59.jpg")
+      // parentWidget.transcludeSubTiddler and parentWidget.transcludeTitle contain these values.
+      // Since the MDX is passed as a prop directly, not implementing special subtiddler transclusion support for now.
+      const titleCandidate = parentWidget.getVariable("currentTiddler");
+      if (titleCandidate && loader.wiki.getTiddler(titleCandidate)?.fields.type === MIME_TYPE) {
+        // compile mdx from tiddler text field
+        definingTiddlerTitle = titleCandidate
+      } else {
+        // compile mdx from prop, don't read any tiddlers' text fields.
+        definingTiddlerTitle = undefined;
+      }
+    }
   }
   if (children) {
     console.warn("MDX widget ignoring children", children);
@@ -98,6 +117,9 @@ export const MDXFactory = async ({
       );
     }
   } else {
+    if (!mdx) {
+      throw Error("Setting the 'title' prop is mandatory if the 'mdx' is not set");
+    }
     compilationResult = await loader.evaluateMDX({
       mdx,
       context: makeMDXContext(loader, undefined),

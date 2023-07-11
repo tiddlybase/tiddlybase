@@ -1,13 +1,17 @@
-import { FileReference, FileReferenceType, WritableFileDataSource } from "@tiddlybase/shared/src/file-data-source";
-import { FirebaseStorage, getBlob, getDownloadURL, ref, uploadBytes, deleteObject } from '@firebase/storage';
+import { FileReference, FileReferenceType, UploadController, UploadEventHandler, WritableFileDataSource } from "@tiddlybase/shared/src/file-data-source";
+import { FirebaseStorage, getBlob, getDownloadURL, ref, uploadBytesResumable, deleteObject } from '@firebase/storage';
 import { normalizeFirebaseReadError } from "../firebase-utils";
+import { CallbackMap } from "@tiddlybase/rpc/src/types";
+import { RPCCallbackManager } from "@tiddlybase/rpc/src/rpc-callback-manager";
 
 export class FirebaseStorageDataSource implements WritableFileDataSource {
   storage: FirebaseStorage;
   instance: string;
   collection: string;
+  rpcCallbackManager: RPCCallbackManager;
 
-  constructor(storage: FirebaseStorage, instance: string, collection: string) {
+  constructor(rpcCallbackManager: RPCCallbackManager, storage: FirebaseStorage, instance: string, collection: string) {
+    this.rpcCallbackManager = rpcCallbackManager;
     this.storage = storage;
     this.instance = instance;
     this.collection = collection;
@@ -30,10 +34,49 @@ export class FirebaseStorageDataSource implements WritableFileDataSource {
     }
   }
 
-  async writeFile(filename: string, contents: Blob, metadata?: Record<string, string> | undefined): Promise<number> {
+  async writeFile (
+    filename: string,
+    contents: Blob,
+    metadata?: Record<string, string>,
+    uploadEventHandlerCallbackMap?: CallbackMap<UploadEventHandler>): Promise<CallbackMap<UploadController>> {
+    const uploadEventHandler = uploadEventHandlerCallbackMap ? this.rpcCallbackManager.makeStubObject(uploadEventHandlerCallbackMap) : undefined;
     const fileRef = ref(this.storage, this.getFullPath(filename));
-    const result = await uploadBytes(fileRef, contents, metadata);
-    return result.metadata.size
+    const uploadTask = uploadBytesResumable(fileRef, contents, metadata);
+    let uploadControllerCallbackMap:CallbackMap<UploadController>|undefined = undefined;
+    uploadTask.on(
+      'state_changed',
+      // next (aka progress)
+      snapshot => {
+        if (uploadEventHandler && ('onProgress' in uploadEventHandler)) {
+          uploadEventHandler.onProgress!(snapshot.bytesTransferred);
+        }
+      },
+      // error
+      error => {
+        if (uploadEventHandler && ('onError' in uploadEventHandler)) {
+          // TODO: provide error message containing instance and collection
+          // to help debug tiddlybase-config.json issues
+          uploadEventHandler.onError!({
+            message: error.message,
+            name: error.name,
+            code: error.code
+          });
+          uploadEventHandler?.cleanupRPC();
+        }
+      },
+      // complete
+      () => {
+        if (uploadControllerCallbackMap) {
+          this.rpcCallbackManager.unregisterObject(uploadControllerCallbackMap);
+        }
+        if (uploadEventHandler && ('onComplete' in uploadEventHandler)) {
+          uploadEventHandler.onComplete!();
+        }
+        uploadEventHandler?.cleanupRPC();
+      }
+    );
+    uploadControllerCallbackMap = this.rpcCallbackManager.registerObject(uploadTask, ['pause', 'cancel', 'resume']);
+    return uploadControllerCallbackMap;
   }
 
   async deleteFile(filename: string):Promise<void> {

@@ -1,13 +1,14 @@
 {
     "name": "@tiddlybase/shared",
     "description": "minimal code shared by both top-level-frame and sandboxed wiki startup code",
-    "version": "0.0.16",
+    "version": "0.0.18",
     "private": true,
     "author": "Peter Neumark",
     "license": "Apache-2.0",
     "scripts": {
         "build": "ts-json-schema-generator --no-type-check --path src/tiddlybase-config-schema.ts --type 'TiddlybaseConfig' -o src/generated/tiddlybase-config-schema.json",
-        "build:dev": "yarn build"
+        "build:dev": "yarn build",
+        "test": "yarn jest"
     },
     "dependencies": {
         "@tiddlybase/tw5-types": "workspace:*",

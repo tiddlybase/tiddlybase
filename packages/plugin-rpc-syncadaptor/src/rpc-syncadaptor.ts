@@ -1,5 +1,5 @@
 import type { } from "@tiddlybase/tw5-types/src/index";
-import { apiDefiner } from "@tiddlybase/rpc/src";
+import { apiDefiner } from "@tiddlybase/rpc/src/types";
 import type { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
 import { TiddlerDataSourceChangeListener } from "@tiddlybase/shared/src/tiddler-data-source";
 

@@ -58,7 +58,7 @@ import { RPCCallbackManager } from "packages/rpc/src/rpc-callback-manager";
         parentLocation,
         user,
         rpc,
-        rpcCallbackManager: new RPCCallbackManager(rpc)
+        rpcCallbackManager: new RPCCallbackManager(rpc, window.parent)
       };
       try {
         tiddlers.push(createWikiInfoConfig(wikiInfoConfig))

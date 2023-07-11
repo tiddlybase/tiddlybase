@@ -1,6 +1,9 @@
 import type {} from "@tiddlybase/tw5-types/src/index"
+import { UploadEventHandler } from "@tiddlybase/shared/src/file-data-source";
+import { makeInvocationObserver } from "@tiddlybase/shared/src/invocation-observer";
 
 const MAX_SIZE = 1048487; // max size of firestore document field in bytes, according to https://firebase.google.com/docs/firestore/quotas#collections_documents_and_fields
+const UPLOAD_MODAL_TIDDLER = "$:/plugins/tiddlybase/upload-file/upload-modal";
 
 // Export name and synchronous status
 export const name = 'upload-file';
@@ -9,6 +12,13 @@ export const after = ['startup'];
 export const synchronous = true;
 
 const shouldUploadToStorage = (info: $tw.ImportFileInfo) => info.isBinary || info.file.size > MAX_SIZE;
+
+const openModal = (tiddler: string, variables:any) => {
+  $tw.rootWidget.dispatchEvent({
+    param: tiddler,
+    paramObject: variables ?? {},
+    type: "tm-modal"})
+}
 
 const getMetadata = (info: $tw.ImportFileInfo):Record<string, any> => ({
   contentType: info.type,
@@ -20,24 +30,30 @@ const getMetadata = (info: $tw.ImportFileInfo):Record<string, any> => ({
 
 export const startup = function () {
   $tw.hooks.addHook('th-importing-file', (info: $tw.ImportFileInfo) => {
+    const filename = info.file.name;
+    const filesize = info.file.size;
+    const tiddler:$tw.TiddlerFields = {
+      title: filename,
+      // TODO: support wikitext as well instead of only supporting markdown
+      type: 'text/x-markdown',
+      // TODO: make the collection name configurable instead of hardcoding 'files'
+      text: `![${filename}](files/${encodeURIComponent(filename)})`,
+      tags: ['fileUpload'],
+      mimeType: info.type,
+      size: filesize
+    }
     if (shouldUploadToStorage(info)) {
-      window.$tw.tiddlybase!.topLevelClient!('writeFile', [info.file.name, info.file, getMetadata(info)]).then(
-        size => {
-          info.callback([
-            {
-              title: info.file.name,
-              // TODO: support wikitext as well instead of only supporting markdown
-              type: 'text/x-markdown',
-              // TODO: make the collection name configurable instead of hardcoding 'files'
-              text: `![info.file.name](files/${info.file.name})`,
-              tags: ['fileUpload'],
-              mimeType: info.type,
-              size
-            },
-          ]);
-        }
-        // todo: on error
-      )
+      const uploadObserver = makeInvocationObserver<UploadEventHandler>({properties: ['onComplete', 'onProgress', 'onError']});
+      const uploadObserverCallbackMap = $tw.tiddlybase?.rpcCallbackManager?.registerObject<UploadEventHandler>(uploadObserver);
+      const uploadController = window.$tw.tiddlybase!.topLevelClient!('writeFile', [encodeURIComponent(filename), info.file, getMetadata(info), uploadObserverCallbackMap]).then(
+        uploadControllerCallbackMap => $tw.tiddlybase?.rpcCallbackManager?.makeStubObject(uploadControllerCallbackMap));
+      openModal(UPLOAD_MODAL_TIDDLER, {
+        uploadObserver, uploadController, filename, filesize
+      })
+      uploadObserver.subscribe('onComplete', () => {
+        info.callback([tiddler]);
+        return undefined;
+      });
       return true;
     } else {
       return false;

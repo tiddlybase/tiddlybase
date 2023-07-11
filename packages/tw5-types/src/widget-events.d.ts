@@ -216,11 +216,18 @@ declare namespace $tw {
      tiddlerTitle: string;
    }
 
+   export interface OpenModalEvent extends TW5EventBase {
+    type: 'tm-modal';
+    param: string; // tiddler title
+    paramObject: any; // dictionary of variables
+  }
+
    export type WidgetEvent =
      | NavigateEvent
      | CloseTiddlerEvent
      | CloseAllTiddlersEvent
      | CloseOtherTiddlersEvent
+     | OpenModalEvent
 
    export type WidgetEventHandler<T extends WidgetEvent> = (event:T)=>boolean|undefined
 

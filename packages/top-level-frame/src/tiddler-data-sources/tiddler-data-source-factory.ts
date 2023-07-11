@@ -1,7 +1,7 @@
 import { TiddlerDataSourceChangeListener, TiddlerCollection, TiddlerProvenance, TiddlerDataSource, TiddlerDataSourceWithSpec, WritableTiddlerDataSource } from "@tiddlybase/shared/src/tiddler-data-source";
 import { LaunchConfig, TiddlerDataSourceSpec } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import { FirestoreDataSource } from "./firestore-tiddler-source";
-import { APIClient } from "@tiddlybase/rpc/src";
+import { APIClient } from "@tiddlybase/rpc/src/types";
 import { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
 import { RoutingProxyTiddlerSource } from "./routing-proxy-tiddler-source";
 import { BrowserStorageDataSource } from "./browser-storage-tiddler-source";
@@ -14,6 +14,7 @@ import { substituteUserid } from "@tiddlybase/shared/src/users";
 import { HttpFileDataSource } from "../file-data-sources/http-file-source";
 import { FileDataSourceTiddlerSource } from "./file-storage-tiddler-source";
 import { FirebaseStorageDataSource } from "../file-data-sources/firebase-storage-file-source";
+import { RPC } from "../types";
 
 export class ProxyToSandboxedIframeChangeListener implements TiddlerDataSourceChangeListener {
   sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>;
@@ -30,7 +31,7 @@ export class ProxyToSandboxedIframeChangeListener implements TiddlerDataSourceCh
   }
 }
 
-const getTiddlerSource = async (instanceName:string, spec: TiddlerDataSourceSpec, userid: string, lazyFirebaseApp: Lazy<FirebaseApp>, sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>): Promise<TiddlerDataSource> => {
+const getTiddlerSource = async (instanceName:string, spec: TiddlerDataSourceSpec, userid: string, lazyFirebaseApp: Lazy<FirebaseApp>, rpc:RPC): Promise<TiddlerDataSource> => {
   switch (spec.type) {
     case "http":
       return new FileDataSourceTiddlerSource(
@@ -39,6 +40,7 @@ const getTiddlerSource = async (instanceName:string, spec: TiddlerDataSourceSpec
       const storage = getStorage(lazyFirebaseApp());
       return new FileDataSourceTiddlerSource(
         new FirebaseStorageDataSource(
+          rpc.rpcCallbackManager,
           storage,
           instanceName,
           spec.collection
@@ -57,7 +59,7 @@ const getTiddlerSource = async (instanceName:string, spec: TiddlerDataSourceSpec
         spec.options,
         // TODO: only notify the client if the affected tiddler is not overridden
         // by another TiddlerDataSource according to tiddler provenance.
-        new ProxyToSandboxedIframeChangeListener(sandboxedAPIClient));
+        new ProxyToSandboxedIframeChangeListener(rpc.sandboxedAPIClient));
       await firestoreTiddlerStore.startListening();
       return firestoreTiddlerStore;
     default:
@@ -76,8 +78,8 @@ type TiddlerSourcePromiseWithSpec = {
   spec: TiddlerDataSourceSpec;
 }
 
-export const readTiddlerSources = async (instanceName:string, launchConfig: LaunchConfig, userid: string, lazyFirebaseApp: Lazy<FirebaseApp>, sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>): Promise<MergedSources> => {
-  const sourcePromisesWithSpecs: TiddlerSourcePromiseWithSpec[] = launchConfig.tiddlers.sources.map(spec => ({ spec, source: getTiddlerSource(instanceName, spec, userid, lazyFirebaseApp, sandboxedAPIClient) }));
+export const readTiddlerSources = async (instanceName:string, launchConfig: LaunchConfig, userid: string, lazyFirebaseApp: Lazy<FirebaseApp>, rpc:RPC): Promise<MergedSources> => {
+  const sourcePromisesWithSpecs: TiddlerSourcePromiseWithSpec[] = launchConfig.tiddlers.sources.map(spec => ({ spec, source: getTiddlerSource(instanceName, spec, userid, lazyFirebaseApp, rpc) }));
   const collections = await Promise.all(sourcePromisesWithSpecs.map(async s => (await s.source).getAllTiddlers()));
   const sourcesWithSpecs: TiddlerDataSourceWithSpec[] = await Promise.all(sourcePromisesWithSpecs.map(async s => ({
     ...s,

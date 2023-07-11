@@ -1,0 +1,42 @@
+title: $:/plugins/tiddlybase/upload-file/upload-modal
+type: text/x-markdown
+
+import { useEffect, useContext, useState } from "$:/plugins/tiddlybase/react/react.js";
+import { TW5ReactContext } from "$:/plugins/tiddlybase/react/components/TW5ReactContext.js";
+
+
+export const UploadComponent = () => {
+  const parentWidget = useContext(TW5ReactContext).parentWidget;
+  const close = () => {
+    parentWidget.dispatchEvent({
+      type: "tm-close-tiddler",
+      tiddlerTitle: tiddlybase.currentTiddlerTitle
+    });
+  };
+  const uploadObserver = parentWidget.getVariable('uploadObserver');
+  let [uploadController, setUploadController] = useState(null);
+  let [uploadedBytes, setUploadedBytes] = useState(0);
+
+  useEffect(() => {
+    uploadObserver?.subscribe('onProgress', bytes => {
+      setUploadedBytes(bytes);
+    });
+    uploadObserver?.subscribe('onComplete', close);
+    parentWidget.getVariable('uploadController')?.then(uc => setUploadController(uc));
+    // TODO: unsubscribe
+  }, []);
+
+  return (<>
+    <h3>{parentWidget.getVariable('filename')}</h3>
+    <div>
+      Uploaded {uploadedBytes} bytes of {parentWidget.getVariable('filesize')}
+    </div>
+    {uploadController && <button onClick={() => {
+      uploadController.cancel();
+      close();
+    }}>cancel</button>}
+  </>);
+}
+
+<UploadComponent />
+

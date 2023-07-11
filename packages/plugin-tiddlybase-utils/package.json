@@ -1,7 +1,7 @@
 {
     "name": "@tiddlybase/plugin-tiddlybase-utils",
     "description": "Small js libs which can be overridden in different environments",
-    "version": "0.0.16",
+    "version": "0.0.18",
     "private": true,
     "author": "Peter Neumark",
     "license": "Apache-2.0",

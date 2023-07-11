@@ -1,0 +1,18 @@
+created: 20230710184857851
+modified: 20230710185314346
+module-type: startup
+revision: 0
+tags: 
+title: $:/forcecodemirror
+type: application/javascript
+
+exports.name = 'force-codemirror';
+exports.after = ['load-modules'];
+exports.synchronous = true;
+exports.platforms = ['browser'];
+const {edit} = require('$:/core/modules/widgets/edit.js');
+const originalFn = edit.prototype.getEditorType;
+edit.prototype.getEditorType = function() {
+	const type = originalFn.apply(this, []);
+	return type === 'text' ? 'codemirror' : type;
+}

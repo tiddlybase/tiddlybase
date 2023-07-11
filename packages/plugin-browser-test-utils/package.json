@@ -1,7 +1,7 @@
 {
     "name": "@tiddlybase/plugin-browser-test-utils",
     "description": "Utilities to make testing easier",
-    "version": "0.0.16",
+    "version": "0.0.18",
     "private": true,
     "author": "Peter Neumark",
     "license": "Apache-2.0",

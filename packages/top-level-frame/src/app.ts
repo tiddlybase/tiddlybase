@@ -1,7 +1,7 @@
 import type { FirebaseApp } from '@firebase/app';
 import { initializeApp } from '@firebase/app';
 import { Functions, getFunctions } from "@firebase/functions";
-import { apiClient, apiDefiner } from "@tiddlybase/rpc/src";
+import { apiClient, apiDefiner } from "@tiddlybase/rpc/src/types";
 import { makeRPC } from "@tiddlybase/rpc/src/make-rpc";
 import type { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
 import type { TopLevelAPIForSandboxedWiki } from "@tiddlybase/rpc/src/top-level-api";
@@ -20,13 +20,15 @@ import { makeFileDataSource } from "./file-data-sources/file-data-source-factory
 import { getNormalizedLaunchConfig } from './launch-config';
 import { readTiddlerSources } from "./tiddler-data-sources/tiddler-data-source-factory";
 import { RPC } from './types';
+import { RPCCallbackManager } from 'packages/rpc/src/rpc-callback-manager';
 
 const initRPC = (childIframe: Window): RPC => {
   const rpc = makeRPC();
   return {
     rpc,
     toplevelAPIDefiner: apiDefiner<TopLevelAPIForSandboxedWiki>(rpc),
-    sandboxedAPIClient: apiClient<SandboxedWikiAPIForTopLevel>(rpc, childIframe)
+    sandboxedAPIClient: apiClient<SandboxedWikiAPIForTopLevel>(rpc, childIframe),
+    rpcCallbackManager: new RPCCallbackManager(rpc, childIframe)
   };
 }
 
@@ -128,9 +130,9 @@ export class TopLevelApp {
     // listen to the child iframe's RPC request as soon as possible.
     rpc.toplevelAPIDefiner('childIframeReady', async () => {
       try {
-        const { tiddlers, writeStore } = await readTiddlerSources(this.config.instanceName, this.launchConfig, user.userId, this.lazyFirebaseApp, rpc.sandboxedAPIClient);
+        const { tiddlers, writeStore } = await readTiddlerSources(this.config.instanceName, this.launchConfig, user.userId, this.lazyFirebaseApp, rpc);
         this.tiddlerDataSource = writeStore;
-        this.fileDataSource = makeFileDataSource(this.lazyFirebaseApp, this.config.instanceName, this.launchConfig.files);
+        this.fileDataSource = makeFileDataSource(rpc, this.lazyFirebaseApp, this.config.instanceName, this.launchConfig.files);
         this.exposeDataSourceAPIs(rpc);
         return {
           user,
