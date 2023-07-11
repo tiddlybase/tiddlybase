@@ -1,7 +1,7 @@
 {
     "name": "@tiddlybase/plugin-init",
     "description": "Initialization code for tiddlybase hosted wikis",
-    "version": "0.0.18",
+    "version": "0.0.19",
     "private": true,
     "author": "Peter Neumark",
     "license": "Apache-2.0",
