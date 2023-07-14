@@ -6,12 +6,17 @@ import { TW5ReactContext } from "$:/plugins/tiddlybase/react/components/TW5React
 
 
 export const UploadComponent = () => {
+  // Ensure the upload modal is visible for at least 4 seconds even if the file upload
+  // takes less time.
+  let [minimalOverlayTimeout, _setMinimalOverlayTimeout] = useState(new Promise(resolve => setTimeout(resolve, 4 * 1000)));
   const parentWidget = useContext(TW5ReactContext).parentWidget;
   const close = () => {
-    parentWidget.dispatchEvent({
-      type: "tm-close-tiddler",
-      tiddlerTitle: tiddlybase.currentTiddlerTitle
-    });
+    minimalOverlayTimeout.then(() => {
+      parentWidget.dispatchEvent({
+        type: "tm-close-tiddler",
+        tiddlerTitle: tiddlybase.currentTiddlerTitle
+      });
+    })
   };
   const uploadObserver = parentWidget.getVariable('uploadObserver');
   let [uploadController, setUploadController] = useState(null);

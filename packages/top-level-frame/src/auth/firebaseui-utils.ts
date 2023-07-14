@@ -11,6 +11,7 @@ export const writeUserProfile = async (lazyFirebaseApp:Lazy<FirebaseApp>, user:T
   const firestore = getFirestore(lazyFirebaseApp());
     return await (new FirestoreDataSource(
       firestore,
+      user.userId,
       "admin",
       "users",
       {

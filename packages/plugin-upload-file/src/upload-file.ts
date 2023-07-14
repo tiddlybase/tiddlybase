@@ -31,16 +31,19 @@ const getMetadata = (info: $tw.ImportFileInfo):Record<string, any> => ({
 export const startup = function () {
   $tw.hooks.addHook('th-importing-file', (info: $tw.ImportFileInfo) => {
     const filename = info.file.name;
+    // TODO: make the collection name configurable instead of hardcoding 'files'
+    const path =  `files/${encodeURIComponent(filename)}`;
     const filesize = info.file.size;
     const tiddler:$tw.TiddlerFields = {
       title: filename,
       // TODO: support wikitext as well instead of only supporting markdown
       type: 'text/x-markdown',
       // TODO: make the collection name configurable instead of hardcoding 'files'
-      text: `![${filename}](files/${encodeURIComponent(filename)})`,
-      tags: ['fileUpload'],
-      mimeType: info.type,
-      size: filesize
+      text: `![${filename}](${path})`,
+      tags: ['file-upload'],
+      "file-upload:mime-type": info.type,
+      "file-upload:path": path,
+      "file-upload:size": filesize
     }
     if (shouldUploadToStorage(info)) {
       const uploadObserver = makeInvocationObserver<UploadEventHandler>({properties: ['onComplete', 'onProgress', 'onError']});

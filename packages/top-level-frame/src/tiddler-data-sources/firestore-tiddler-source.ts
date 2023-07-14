@@ -26,12 +26,14 @@ const convertTimestamps = (tiddler: $tw.TiddlerFields): $tw.TiddlerFields => {
   return tiddler
 }
 
-const writeTiddler = async (firestore: Firestore, path: string, tiddler: $tw.TiddlerFields, docId: string): Promise<DocumentReference<DocumentData>> => {
+const writeTiddler = async (firestore: Firestore, userid: string, path: string, tiddler: $tw.TiddlerFields, docId: string): Promise<DocumentReference<DocumentData>> => {
   const docRef = doc(firestore, path, docId);
   await setDoc(docRef, {
     tiddler: {
       ...tiddler,
       created: tiddler.created || serverTimestamp(),
+      creator: tiddler.creator || userid,
+      modifier: userid,
       modified: serverTimestamp(),
     }
   });
@@ -60,12 +62,14 @@ type InitialReadState = {
 export class FirestoreDataSource implements WritableTiddlerDataSource {
 
   firestore: Firestore;
+  userid: string;
   instance: string;
   collection: string;
   options: FirestoreTiddlerDataSourceOptions | undefined;
   changeListener: TiddlerDataSourceChangeListener | undefined;
   initialReadState: InitialReadState;
   unsubscribe: Unsubscribe | undefined;
+
 
   private getInitialReadState(): InitialReadState {
     let completePromiseResolver = undefined;
@@ -82,11 +86,13 @@ export class FirestoreDataSource implements WritableTiddlerDataSource {
 
   constructor(
     firestore: Firestore,
+    userid: string,
     instance: string,
     collection: string,
     options?: FirestoreTiddlerDataSourceOptions,
     changeListener?: TiddlerDataSourceChangeListener) {
     this.firestore = firestore;
+    this.userid = userid;
     this.instance = instance;
     this.collection = collection;
     this.options = options;
@@ -104,10 +110,9 @@ export class FirestoreDataSource implements WritableTiddlerDataSource {
             if (this.initialReadState.completePromiseResolved) {
               // if the initial read of firestore documents in the collection is complete,
               // only pass on the change event to the listener (when provided)
-              if (this.changeListener && change.doc.data().tiddler.modified) {
+              if (this.changeListener && !change.doc.metadata.hasPendingWrites) {
                 // firestore triggers the update twice: once when it's updated locally
-                // (then server side timestamp is null), and once more when the write
-                // goes through. We can safely ignore the first one.
+                // and once more when the write goes through. We can safely ignore the first one.
                 // see: https://stackoverflow.com/questions/63123697/while-updating-firestore-data-timestamp-is-null
                 this.changeListener.onSetTiddler(convertTimestamps(change.doc.data().tiddler));
               }
@@ -154,7 +159,7 @@ export class FirestoreDataSource implements WritableTiddlerDataSource {
   }
   async setTiddler(tiddler: $tw.TiddlerFields): Promise<$tw.TiddlerFields> {
     const docId = this.getDocId(tiddler.title);
-    const result = writeTiddler(this.firestore, getFirestoreCollectionPath(this.instance, this.collection), tiddler, docId);
+    const result = writeTiddler(this.firestore, this.userid, getFirestoreCollectionPath(this.instance, this.collection), tiddler, docId);
     console.log('setTiddler (outer)', tiddler, result);
     return tiddler;
   }

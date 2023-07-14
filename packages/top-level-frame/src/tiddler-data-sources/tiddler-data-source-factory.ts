@@ -54,6 +54,7 @@ const getTiddlerSource = async (instanceName:string, spec: TiddlerDataSourceSpec
       const firestore = getFirestore(lazyFirebaseApp());
       const firestoreTiddlerStore = new FirestoreDataSource(
         firestore,
+        userid,
         instanceName,
         substituteUserid(spec.collection, userid),
         spec.options,
