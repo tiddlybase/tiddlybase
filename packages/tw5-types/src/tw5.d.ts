@@ -187,7 +187,7 @@ declare namespace $tw {
     // generateDraftTitle: (title)  => void;
     // generateNewTitle: (baseTitle,options)  => void;
     // getCacheForTiddler: (title,cacheName,initializer)  => void;
-    // getChangeCount: (title)  => void;
+    getChangeCount: (title:string) => number;
     getCreationFields: ()  => Partial<TiddlerFields>;
     // getFilterOperators: ()  => void;
     // getFilterRunPrefixes: ()  => void;
@@ -382,6 +382,15 @@ declare namespace $tw {
     requires?: Set<string>
   }
 
+  export type Syncer = {
+    // TODO: lots of methods missing
+    tiddlerInfo: Record<string, {
+      adaptorInfo: SyncAdaptorTiddlerInfo,
+      revision?: string,
+      changeCount: number
+    }>
+  } // defined in core/modules/syncer.js
+
   export type ClassConstructor = (new () => any);
 
   export interface TW5Modules {
@@ -468,5 +477,6 @@ declare namespace $tw {
     languagesEnvVar: string,
     editionsEnvVar: string
   }
+  export const syncer: Syncer;
 }
 

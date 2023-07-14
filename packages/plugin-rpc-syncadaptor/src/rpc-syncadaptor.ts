@@ -24,10 +24,11 @@ export class RPCSyncadaptor implements $tw.SyncAdaptor, TiddlerDataSourceChangeL
   }
 
   onSetTiddler(tiddler: $tw.TiddlerFields): void {
-    // don't increment the changeCount
-    const changeCount = this.wiki.changeCount[tiddler.title];
     this.wiki.addTiddler(tiddler);
-    this.wiki.changeCount[tiddler.title] = changeCount;
+    // update syncer change count to wiki change count, since this change is coming from the server, so the tiddler isn't 'dirty'.
+    if (tiddler.title in globalThis.$tw.syncer.tiddlerInfo) {
+      globalThis.$tw.syncer.tiddlerInfo[tiddler.title].changeCount = globalThis.$tw.wiki.getChangeCount(tiddler.title);
+    }
   }
 
   onDeleteTiddler(title: string): void {
