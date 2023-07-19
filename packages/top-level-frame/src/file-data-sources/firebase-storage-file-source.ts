@@ -4,6 +4,9 @@ import { normalizeFirebaseReadError } from "../firebase-utils";
 import { CallbackMap } from "@tiddlybase/rpc/src/types";
 import { RPCCallbackManager } from "@tiddlybase/rpc/src/rpc-callback-manager";
 
+// TODO: this files prefix should be configurable in the future!
+const FILES_PREFIX = "files/"
+
 export class FirebaseStorageDataSource implements WritableFileDataSource {
   storage: FirebaseStorage;
   instance: string;
@@ -18,7 +21,12 @@ export class FirebaseStorageDataSource implements WritableFileDataSource {
   }
 
   getFullPath(filename: string): string {
-    return `${this.instance}/${this.collection}/${filename}`;
+    let normalizedFilename = filename;
+    // strip "files/" prefix if present
+    if (normalizedFilename.startsWith(FILES_PREFIX)) {
+      normalizedFilename = normalizedFilename.substring(FILES_PREFIX.length);
+    }
+    return `${this.instance}/${this.collection}/${normalizedFilename}`;
   }
   async readFile(filename: string, referenceType?: FileReferenceType): Promise<FileReference> {
     try {
