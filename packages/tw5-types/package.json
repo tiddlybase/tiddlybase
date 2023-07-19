@@ -1,7 +1,7 @@
 {
     "name": "@tiddlybase/tw5-types",
     "description": "In-browser trusted code running outside the sandbox",
-    "version": "0.0.20",
+    "version": "0.0.21",
     "private": true,
     "main": "./src/index.ts",
     "types": "./src/index.d.ts",
