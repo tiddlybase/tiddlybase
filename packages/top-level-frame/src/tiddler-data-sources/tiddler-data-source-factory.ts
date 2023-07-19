@@ -81,7 +81,15 @@ type TiddlerSourcePromiseWithSpec = {
 
 export const readTiddlerSources = async (instanceName:string, launchConfig: LaunchConfig, userid: string, lazyFirebaseApp: Lazy<FirebaseApp>, rpc:RPC): Promise<MergedSources> => {
   const sourcePromisesWithSpecs: TiddlerSourcePromiseWithSpec[] = launchConfig.tiddlers.sources.map(spec => ({ spec, source: getTiddlerSource(instanceName, spec, userid, lazyFirebaseApp, rpc) }));
-  const collections = await Promise.all(sourcePromisesWithSpecs.map(async s => (await s.source).getAllTiddlers()));
+  const collections = await Promise.all(sourcePromisesWithSpecs.map(async s => {
+    try {
+      return await (await s.source).getAllTiddlers();
+    } catch (e:any) {
+      // attach spec which failed to load to the exception for debugging purposes.
+      e.spec = s.spec;
+      throw(e);
+    }
+  }));
   const sourcesWithSpecs: TiddlerDataSourceWithSpec[] = await Promise.all(sourcePromisesWithSpecs.map(async s => ({
     ...s,
     source: await s.source

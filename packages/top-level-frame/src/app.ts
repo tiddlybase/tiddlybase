@@ -9,7 +9,7 @@ import { FileDataSource, WritableFileDataSource } from "@tiddlybase/shared/src/f
 import { Lazy, lazy } from "@tiddlybase/shared/src/lazy";
 import { ParsedSearchParams } from "@tiddlybase/shared/src/search-params";
 import type { WritableTiddlerDataSource } from "@tiddlybase/shared/src/tiddler-data-source";
-import type { LaunchConfig, TiddlybaseClientConfig } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import type { LaunchConfig, TiddlerDataSourceSpec, TiddlybaseClientConfig } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
 import type { } from '@tiddlybase/tw5-types/src/index';
 import { exposeFirebaseFunction, exposeObjectMethod, functionsDevSetup } from './api-utils';
@@ -20,7 +20,7 @@ import { makeFileDataSource } from "./file-data-sources/file-data-source-factory
 import { getNormalizedLaunchConfig } from './launch-config';
 import { readTiddlerSources } from "./tiddler-data-sources/tiddler-data-source-factory";
 import { RPC } from './types';
-import { RPCCallbackManager } from 'packages/rpc/src/rpc-callback-manager';
+import { RPCCallbackManager } from '@tiddlybase/rpc/src/rpc-callback-manager';
 
 const initRPC = (childIframe: Window): RPC => {
   const rpc = makeRPC();
@@ -141,7 +141,12 @@ export class TopLevelApp {
           parentLocation: JSON.parse(JSON.stringify(window.location))
         }
       } catch (e: any) {
-        loadError(e?.message ?? e?.toString() ?? "load error");
+        let message = e?.message ?? e?.toString() ?? "load error";
+        if ('spec' in e) {
+          const spec = e.spec as TiddlerDataSourceSpec;
+          message += `\nCould not load tiddlers from the following source: ${JSON.stringify(spec)}`;
+        }
+        loadError(message);
         throw e;
       }
     });
