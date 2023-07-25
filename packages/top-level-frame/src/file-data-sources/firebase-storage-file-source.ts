@@ -1,5 +1,5 @@
 import { FileReference, FileReferenceType, UploadController, UploadEventHandler, WritableFileDataSource } from "@tiddlybase/shared/src/file-data-source";
-import { FirebaseStorage, getBlob, getDownloadURL, ref, uploadBytesResumable, deleteObject } from '@firebase/storage';
+import { FirebaseStorage, getDownloadURL, ref, uploadBytesResumable, deleteObject } from '@firebase/storage';
 import { normalizeFirebaseReadError } from "../firebase-utils";
 import { CallbackMap } from "@tiddlybase/rpc/src/types";
 import { RPCCallbackManager } from "@tiddlybase/rpc/src/rpc-callback-manager";
@@ -31,18 +31,17 @@ export class FirebaseStorageDataSource implements WritableFileDataSource {
   async readFile(filename: string, referenceType?: FileReferenceType): Promise<FileReference> {
     try {
       const fileRef = ref(this.storage, this.getFullPath(filename));
+      const url = await getDownloadURL(fileRef)
       if (referenceType === 'url') {
-        return {
-          type: 'url', url: await getDownloadURL(fileRef)
-        }
+        return { type: 'url', url }
       }
-      return { type: 'blob', blob: await getBlob(fileRef) };
+      return { type: 'blob', blob: await (await fetch(url)).blob() };
     } catch (e: any) {
       throw normalizeFirebaseReadError(e, this.instance, this.collection, 'firebase-storage');
     }
   }
 
-  async writeFile (
+  async writeFile(
     filename: string,
     contents: Blob,
     metadata?: Record<string, string>,
@@ -50,7 +49,7 @@ export class FirebaseStorageDataSource implements WritableFileDataSource {
     const uploadEventHandler = uploadEventHandlerCallbackMap ? this.rpcCallbackManager.makeStubObject(uploadEventHandlerCallbackMap) : undefined;
     const fileRef = ref(this.storage, this.getFullPath(filename));
     const uploadTask = uploadBytesResumable(fileRef, contents, metadata);
-    let uploadControllerCallbackMap:CallbackMap<UploadController>|undefined = undefined;
+    let uploadControllerCallbackMap: CallbackMap<UploadController> | undefined = undefined;
     uploadTask.on(
       'state_changed',
       // next (aka progress)
@@ -87,7 +86,7 @@ export class FirebaseStorageDataSource implements WritableFileDataSource {
     return uploadControllerCallbackMap;
   }
 
-  async deleteFile(filename: string):Promise<void> {
+  async deleteFile(filename: string): Promise<void> {
     const fileRef = ref(this.storage, this.getFullPath(filename));
     return deleteObject(fileRef);
   }
