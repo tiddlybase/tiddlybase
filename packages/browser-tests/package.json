@@ -1,7 +1,7 @@
 {
     "name": "@tiddlybase/browser-tests",
     "description": "In-browser trusted code running outside the sandbox",
-    "version": "0.0.21",
+    "version": "0.0.22",
     "private": true,
     "author": "Peter Neumark",
     "license": "Apache-2.0",
