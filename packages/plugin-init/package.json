@@ -14,8 +14,8 @@
         "@tiddlybase/shared": "workspace:*",
         "@tiddlybase/tw5-types": "workspace:*",
         "@tiddlybase/webpack-config": "workspace:*",
-        "typescript": "5.0.4",
-        "webpack": "5.81.0",
-        "webpack-cli": "^4.9.2"
+        "typescript": "^5.1.6",
+        "webpack": "^5.88.2",
+        "webpack-cli": "^5.1.4"
     }
 }
