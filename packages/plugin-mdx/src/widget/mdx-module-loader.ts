@@ -89,8 +89,8 @@ export class MDXModuleLoader {
   private invalidatedModules: Set<string> = new Set([]);
 
   constructor({
-    wiki = globalThis.$tw.wiki,
-    modules = globalThis.$tw.modules,
+    wiki = $tw.wiki,
+    modules = $tw.modules,
   }: {
     wiki?: $tw.Wiki,
     modules?: $tw.TW5Modules,

@@ -47,7 +47,7 @@ export class RPCSyncadaptor implements $tw.SyncAdaptor, TiddlerDataSourceChangeL
     return true;
   }
   loadTiddler(title: string, callback: $tw.Callback): void {
-
+    // TODO: unimplemented
   }
   saveTiddler(tiddler: $tw.Tiddler, callback: $tw.Callback): void {
     console.log("saveTiddler (sandboxed)", tiddler);
@@ -70,4 +70,4 @@ export class RPCSyncadaptor implements $tw.SyncAdaptor, TiddlerDataSourceChangeL
 
 
 // conditionally enable syncadaptor if running in browser
-export const adaptorClass = globalThis.$tw.browser ? RPCSyncadaptor : undefined;
+export const adaptorClass = $tw.browser ? RPCSyncadaptor : undefined;
