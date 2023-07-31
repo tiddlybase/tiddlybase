@@ -26,6 +26,12 @@ export class MDXTiddlybaseAPIImpl implements MDXTiddlybaseAPI {
   constructor(wiki:$tw.Wiki) {
     this.wiki = wiki;
   }
+  deleteTiddler (title: string): boolean {
+    const exists = this.wiki.tiddlerExists(title);
+    this.wiki.deleteTiddler(title);
+    return exists;
+  }
+
   setTiddler (tiddler: $tw.TiddlerFields): $tw.TiddlerFields {
     const previousVersion = this.getTiddler(tiddler.title);
     return createMergedTiddler(this.wiki, previousVersion, tiddler, false);

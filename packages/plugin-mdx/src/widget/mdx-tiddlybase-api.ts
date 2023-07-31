@@ -6,5 +6,6 @@ export interface MDXTiddlybaseAPI {
   setTiddler(tiddler: $tw.TiddlerFields): $tw.TiddlerFields;
   getTiddler(title: string): $tw.TiddlerFields | undefined;
   updateTiddler: (tiddler: $tw.TiddlerFields) => $tw.TiddlerFields;
+  deleteTiddler: (title: string) => boolean;
   filterTiddlers: (filterExpression: string) => $tw.TiddlerFields[];
 }

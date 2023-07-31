@@ -7,6 +7,8 @@ import { createWikiInfoConfig } from "@tiddlybase/shared/src/wiki-info";
 import { PatchedModules } from "./patched-modules";
 import { RPCCallbackManager } from "packages/rpc/src/rpc-callback-manager";
 
+export const TIDDLYBASE_INIT_SINGLETONS_TITLE = "$:/plugins/tiddlybase/init/singletons";
+
 (() => {
 
   // from: https://stackoverflow.com/a/37178303
@@ -60,6 +62,9 @@ import { RPCCallbackManager } from "packages/rpc/src/rpc-callback-manager";
         rpc,
         rpcCallbackManager: new RPCCallbackManager(rpc, window.parent)
       };
+      // Register window.$tw.tiddlybase as a module as well so it can be imported
+      // by MDX tiddlers
+      window.$tw.modules.define(TIDDLYBASE_INIT_SINGLETONS_TITLE, "library", window.$tw.tiddlybase);
       try {
         tiddlers.push(createWikiInfoConfig(wikiInfoConfig))
         $tw.preloadTiddlerArray(tiddlers);

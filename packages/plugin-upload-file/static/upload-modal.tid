@@ -3,13 +3,16 @@ type: text/x-markdown
 
 import { useEffect, useContext, useState } from "$:/plugins/tiddlybase/react/react.js";
 import { TW5ReactContext } from "$:/plugins/tiddlybase/react/components/TW5ReactContext.js";
+import { getSession } from "$:/plugins/tiddlybase/upload-file/upload-sessions.js";
 
 
 export const UploadComponent = () => {
   // Ensure the upload modal is visible for at least 4 seconds even if the file upload
   // takes less time.
-  let [minimalOverlayTimeout, _setMinimalOverlayTimeout] = useState(new Promise(resolve => setTimeout(resolve, 4 * 1000)));
   const parentWidget = useContext(TW5ReactContext).parentWidget;
+  const [minimalOverlayTimeout, _setMinimalOverlayTimeout] = useState(new Promise(resolve => setTimeout(resolve, 4 * 1000)));
+  const [uploadedBytes, setUploadedBytes] = useState(0);
+  const [uploadSession, _setUploadSession] = useState(() => getSession(parseInt(parentWidget.getVariable('sessionId'), 10)));
   const close = () => {
     minimalOverlayTimeout.then(() => {
       parentWidget.dispatchEvent({
@@ -18,26 +21,22 @@ export const UploadComponent = () => {
       });
     })
   };
-  const uploadObserver = parentWidget.getVariable('uploadObserver');
-  let [uploadController, setUploadController] = useState(null);
-  let [uploadedBytes, setUploadedBytes] = useState(0);
 
   useEffect(() => {
-    uploadObserver?.subscribe('onProgress', bytes => {
+    uploadSession.uploadObserver?.subscribe('onProgress', bytes => {
       setUploadedBytes(bytes);
     });
-    uploadObserver?.subscribe('onComplete', close);
-    parentWidget.getVariable('uploadController')?.then(uc => setUploadController(uc));
+    uploadSession.uploadObserver?.subscribe('onComplete', close);
     // TODO: unsubscribe
   }, []);
 
   return (<>
-    <h3>{parentWidget.getVariable('filename')}</h3>
+    <h3>{uploadSession.filename}</h3>
     <div>
-      Uploaded {uploadedBytes} bytes of {parentWidget.getVariable('filesize')}
+      Uploaded {uploadedBytes} bytes of {uploadSession.filesize}
     </div>
-    {uploadController && <button onClick={() => {
-      uploadController.cancel();
+    {uploadSession.uploadController && <button onClick={async () => {
+      (await uploadSession.uploadController).cancel();
       close();
     }}>cancel</button>}
   </>);

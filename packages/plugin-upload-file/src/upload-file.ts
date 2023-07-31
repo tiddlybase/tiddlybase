@@ -1,6 +1,7 @@
 import type {} from "@tiddlybase/tw5-types/src/index"
 import { UploadEventHandler } from "@tiddlybase/shared/src/file-data-source";
 import { makeInvocationObserver } from "@tiddlybase/shared/src/invocation-observer";
+import {createSession, destroySession} from "./upload-sessions"
 
 const MAX_SIZE = 1048487; // max size of firestore document field in bytes, according to https://firebase.google.com/docs/firestore/quotas#collections_documents_and_fields
 const UPLOAD_MODAL_TIDDLER = "$:/plugins/tiddlybase/upload-file/upload-modal";
@@ -47,12 +48,16 @@ export const startup = function () {
     if (shouldUploadToStorage(info)) {
       const uploadObserver = makeInvocationObserver<UploadEventHandler>({properties: ['onComplete', 'onProgress', 'onError']});
       const uploadObserverCallbackMap = $tw.tiddlybase?.rpcCallbackManager?.registerObject<UploadEventHandler>(uploadObserver);
-      const uploadController = window.$tw.tiddlybase!.topLevelClient!('writeFile', [path, info.file, getMetadata(info), uploadObserverCallbackMap]).then(
+      const uploadController = $tw.tiddlybase!.topLevelClient!('writeFile', [path, info.file, getMetadata(info), uploadObserverCallbackMap]).then(
         uploadControllerCallbackMap => $tw.tiddlybase?.rpcCallbackManager?.makeStubObject(uploadControllerCallbackMap));
+      const sessionId = createSession({
+        uploadObserver, uploadController, filename, filesize, path
+      })
       openModal(UPLOAD_MODAL_TIDDLER, {
-        uploadObserver, uploadController, filename, filesize
+        sessionId
       })
       uploadObserver.subscribe('onComplete', () => {
+        destroySession(sessionId);
         if (!createWikiTextTiddlers) {
           tiddler.text = `![${filename}](${path})`;
           info.callback([tiddler]);
@@ -67,7 +72,6 @@ export const startup = function () {
             info.callback([tiddler]);
           }, info.callback);
         }
-
         return undefined;
       });
       return true;
