@@ -1,5 +1,5 @@
 import yargs from 'yargs';
-import { getuser, listusers, adduser, setCollectionRole, getCollectionRoles } from './users';
+import { getuser, listusers, adduser, setCollectionRole, getCollectionRoles, updateUserProfile } from './users';
 import { cmdGenerateFirebaseJson, cmdGenerateStorageRules, cmdGenerateFirestoreRules, cmdGenerateOuterHTML, cmdGenerateTiddlybaseConfigJson } from './generate';
 import { buildwiki } from './wikibuilder';
 import {runTWCommand} from './run-tw-command'
@@ -21,6 +21,7 @@ const main = async (argv:string[]) => {
   .command(getuser)
   .command(listusers)
   .command(adduser)
+  .command(updateUserProfile)
   .command(cmdGenerateFirebaseJson)
   .command(cmdGenerateStorageRules)
   .command(cmdGenerateFirestoreRules)
@@ -32,7 +33,7 @@ const main = async (argv:string[]) => {
   // .example('$0 setrole foo@bar.com admin', 'grant admin role to foo@bar.com on default wiki')
   //.example('$0 -w another-wiki getrole foo@bar.com', 'get role assigned to foo@bar.com on another-wiki')
   .help()
-  .wrap(80)
+  .wrap(100)
   .alias('h', 'help')
   .epilog('Find more help at https://tiddlybase.com/')
   .demandCommand().argv;

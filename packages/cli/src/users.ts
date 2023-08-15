@@ -1,14 +1,14 @@
-import * as admin from 'firebase-admin';
-import { Argv, CommandModule } from 'yargs';
-import { inspect } from 'util';
-import { USER_ROLES, substituteUserid } from '@tiddlybase/shared/src/users'
-import { CLIContext, withCLIContext } from './cli-context';
-import * as crypto from "crypto";
-import { requireSingleConfig } from './config';
-import { PermissionedDataSource, InstanceSpec, UserId, PERMISSIONED_DATA_SOURCES } from '@tiddlybase/shared/src/instance-spec-schema';
+import { InstanceSpec, PERMISSIONED_DATA_SOURCES, PermissionedDataSource, UserId } from '@tiddlybase/shared/src/instance-spec-schema';
+import { objFilter } from '@tiddlybase/shared/src/obj-filter';
 import { addInstancePermissions, instanceSpecPath } from '@tiddlybase/shared/src/permissions';
-// import { Auth } from 'firebase-admin/lib/auth/auth';
-// import { UserRecord } from 'firebase-admin/lib/auth/user-record';
+import { TiddlyBaseUser, USER_ROLES, substituteUserid } from '@tiddlybase/shared/src/users';
+import * as crypto from "crypto";
+import * as admin from 'firebase-admin';
+import { UserRecord } from 'firebase-admin/lib/auth/user-record';
+import { inspect } from 'util';
+import { Argv, CommandModule } from 'yargs';
+import { CLIContext, withCLIContext } from './cli-context';
+import { requireSingleConfig } from './config';
 
 const RE_UID = /^[a-zA-Z0-9]+$/;
 const ROLE_CHOICES = Object.keys(USER_ROLES).map(s => s.toLowerCase());
@@ -76,7 +76,7 @@ export const setCollectionRole: CommandModule = {
   builder: (argv: Argv) =>
     argv
       .options({
-        t: {type: 'string', alias: 'resource-type', describe: 'Resource type (collections or files)', default: PERMISSIONED_DATA_SOURCES[0], choices: PERMISSIONED_DATA_SOURCES}
+        t: { type: 'string', alias: 'resource-type', describe: 'Resource type (collections or files)', default: PERMISSIONED_DATA_SOURCES[0], choices: PERMISSIONED_DATA_SOURCES }
       })
       .positional('userid', {
         describe: 'User id or email address',
@@ -97,12 +97,37 @@ export const setCollectionRole: CommandModule = {
     if (!(roleName in USER_ROLES) || !(typeof roleNumber === 'number')) {
       throw new Error('Unknown role ' + cliContext.args.role);
     }
-    const {config} = requireSingleConfig(cliContext.args);
+    const { config } = requireSingleConfig(cliContext.args);
     const resourceType = cliContext.args['resource-type'] as PermissionedDataSource;
     const instanceSpec = await doSetRole(cliContext.app, user.uid, config.instanceName, resourceType, encodeURIComponent(substituteUserid(cliContext.args.collection as string, user.uid)), roleNumber);
     console.log(JSON.stringify(instanceSpec, null, 4));
   }),
 };
+
+const removeUndefined = (obj: Record<string, any>): Record<string, any> => objFilter((_k, v) => v !== undefined, (obj as any))
+
+const convertUser = (firebaseUser: UserRecord): TiddlyBaseUser => ({
+  emailVerified: firebaseUser.emailVerified,
+  displayName: firebaseUser.displayName || undefined,
+  photoURL: firebaseUser.photoURL || undefined,
+  providerId: firebaseUser.providerData[0].providerId,
+  userId: firebaseUser.uid
+});
+
+const writeUserProfileToFirestore = async (app: admin.app.App, userProfile: TiddlyBaseUser): Promise<void> => {
+  const docPath = `/tiddlybase-instances/admin/collections/users/tiddlers/${userProfile.userId}`;
+  const firestore = app.firestore();
+  const existingProfile = (await firestore.doc(docPath).get()).data()?.tiddler ?? {};
+  await firestore.doc(docPath).set({
+    tiddler: removeUndefined({
+      ...existingProfile,
+      ...userProfile,
+      modified: admin.firestore.FieldValue.serverTimestamp(),
+      created: existingProfile.created ?? admin.firestore.FieldValue.serverTimestamp(),
+      title: existingProfile.title ?? `users/${userProfile.userId}`
+    })
+  });
+}
 
 export const adduser: CommandModule = {
   command: 'adduser email',
@@ -141,6 +166,24 @@ export const getuser: CommandModule = {
         4));
   })
 };
+
+export const updateUserProfile: CommandModule = {
+  command: 'updateuserprofile <userid|email>',
+  describe: 'Update user profile in Firestore',
+  builder: (argv: Argv) => {
+    return argv.positional('userid', {
+      describe: 'User id or email address',
+      type: 'string',
+    });
+  },
+  handler: withCLIContext(async (cliContext: CLIContext) => {
+
+    const user = await getUser(cliContext.app, cliContext.args.userid as string);
+    await writeUserProfileToFirestore(cliContext.app, convertUser(user));
+
+  })
+};
+
 export const listusers: CommandModule = {
   command: 'listusers',
   describe: 'list all users of the system',
@@ -148,8 +191,8 @@ export const listusers: CommandModule = {
   handler: withCLIContext(async (cliContext: CLIContext) => {
     console.log(
       JSON.stringify(
-          (await cliContext.app.auth().listUsers()).users.map(userRecordToJSON),
-          null,
-          4));
+        (await cliContext.app.auth().listUsers()).users.map(userRecordToJSON),
+        null,
+        4));
   })
 };
