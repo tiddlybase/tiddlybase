@@ -108,7 +108,7 @@ const removeUndefined = (obj: Record<string, any>): Record<string, any> => objFi
 
 const convertUser = (firebaseUser: UserRecord): TiddlyBaseUser => ({
   emailVerified: firebaseUser.emailVerified,
-  displayName: firebaseUser.displayName || undefined,
+  displayName: firebaseUser.displayName || firebaseUser.email || firebaseUser.phoneNumber || undefined,
   photoURL: firebaseUser.photoURL || undefined,
   providerId: firebaseUser.providerData[0].providerId,
   userId: firebaseUser.uid
@@ -143,6 +143,7 @@ export const adduser: CommandModule = {
       email: cliContext.args.email as string,
       password: crypto.randomBytes(20).toString('hex'),
     })
+    await writeUserProfileToFirestore(cliContext.app, convertUser(user));
     console.log(inspect(user));
   }),
 };
