@@ -1,11 +1,10 @@
 const { getTW5PluginConfig } = require('@tiddlybase/webpack-config');
-const { getOutputForSourceFile, findPluginSources, removePluginPrefix, writePluginInfo } = require('@tiddlybase/webpack-config/src/plugin-utils');
+const { getOutputForSourceFile, findPluginSources, writePluginInfo } = require('@tiddlybase/webpack-config/src/plugin-utils');
 const path = require('path');
 const pkg = require(path.join(__dirname, 'package.json'));
 
 const sources = findPluginSources();
 const tsConfig = path.resolve(__dirname, 'tsconfig.json');
-const pluginName = removePluginPrefix(path.basename(process.cwd()));
 
 writePluginInfo(pkg);
 
