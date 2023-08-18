@@ -8,6 +8,7 @@
         "tiddlybase/react",
         "tiddlybase/embed-media",
         "tiddlybase/mdx",
+        "tiddlybase/mui",
         "tiddlybase/upload-file"
     ],
     "themes": [

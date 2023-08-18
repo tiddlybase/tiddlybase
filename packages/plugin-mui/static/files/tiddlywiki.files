@@ -1,0 +1,14 @@
+{
+	"tiddlers": [
+		{
+			"file": "material-ui.js",
+			"fields": {
+				"type": "application/javascript",
+				"title": "$:/plugins/tiddlybase/mui/material-ui.js",
+				"module-type": "library"
+			},
+            "prefix": "(function(realRequire) {var require = function(m) {if(m===\"react\"){m = \"$:/plugins/tiddlybase/react/react.js\"};if(m===\"react-dom/client\" || m===\"react-dom\"){m = \"$:/plugins/tiddlybase/react/react-dom.js\"};if(m===\"react/jsx-runtime\"){m = \"$:/plugins/tiddlybase/react/react-jsx-runtime.js\"};return realRequire(m);};",
+			"suffix": "})(require);\n"
+		}
+	]
+}

@@ -1,0 +1,32 @@
+title: $:/plugins/tiddlybase/mui/add-mui-css.js
+type: application/javascript
+module-type: startup
+
+// install tiddler-removal-detector if not installed yet, because this is the
+// mechanism react-base-widget relies on for the react root to be unmounted.
+// NOTE: this is a .tid file because webpack erronously tried to compile it when
+// it was .js.
+
+(function () {
+  /*global $tw: false */
+  'use strict';
+
+  // Export name and synchronous status
+  exports.name = 'react-init-tiddler-removal-detector';
+  exports.after = ['load-modules'];
+  exports.synchronous = true;
+  exports.platforms = ['browser'];
+
+  exports.startup = function () {
+    const addStylesheet = url => {
+        var linkElement=document.createElement("link")
+        linkElement.setAttribute("rel", "stylesheet")
+        linkElement.setAttribute("type", "text/css")
+        linkElement.setAttribute("href", url)
+        document.getElementsByTagName("head")[0].appendChild(linkElement)
+    };
+    addStylesheet("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap");
+    addStylesheet("https://fonts.googleapis.com/icon?family=Material+Icons");
+  };
+
+})();

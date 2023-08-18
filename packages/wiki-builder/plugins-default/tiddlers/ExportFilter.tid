@@ -6,6 +6,7 @@ type: text/vnd.tiddlywiki
 
 [[$:/plugins/tiddlybase/embed-media]]
 [[$:/plugins/tiddlybase/mdx]]
+[[$:/plugins/tiddlybase/mui]]
 [[$:/plugins/tiddlybase/react]]
 [[$:/plugins/tiddlybase/tiddlybase-utils]]
 [[$:/plugins/tiddlybase/upload-file]]
