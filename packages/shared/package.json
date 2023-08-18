@@ -11,8 +11,7 @@
         "test": "yarn jest"
     },
     "dependencies": {
-        "@tiddlybase/tw5-types": "workspace:*",
-        "lodash.merge": "^4.6.2"
+        "@tiddlybase/tw5-types": "workspace:*"
     },
     "devDependencies": {
         "jest": "29.5",

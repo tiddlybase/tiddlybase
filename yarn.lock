@@ -1864,6 +1864,7 @@ __metadata:
   dependencies:
     "@tiddlybase/shared": "workspace:*"
     "@tiddlybase/webpack-config": "workspace:*"
+    "@types/lodash.merge": ^4.6.7
     "@types/mustache": ^4.2.1
     "@types/node": ^17.0.23
     "@types/webpack-env": ^1.18.1
@@ -1871,6 +1872,7 @@ __metadata:
     ajv: ^8.12.0
     firebase: ^10.1.0
     firebase-admin: ^11.10.1
+    lodash.merge: ^4.6.2
     mustache: ^4.2.0
     tiddlywiki: ^5.3.0
     ts-node: ^10.5.0
@@ -2037,6 +2039,23 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@tiddlybase/plugin-mui@workspace:*, @tiddlybase/plugin-mui@workspace:packages/plugin-mui":
+  version: 0.0.0-use.local
+  resolution: "@tiddlybase/plugin-mui@workspace:packages/plugin-mui"
+  dependencies:
+    "@tiddlybase/plugin-react": "workspace:*"
+    "@tiddlybase/webpack-config": "workspace:*"
+    "@types/jest": ^27.4.1
+    cross-env: ^7.0.3
+    jest: 29.5
+    react: ^18.2.0
+    react-dom: ^18.2.0
+    ts-jest: 29.1.0
+    webpack: ^5.88.2
+    webpack-cli: ^5.1.4
+  languageName: unknown
+  linkType: soft
+
 "@tiddlybase/plugin-react@workspace:*, @tiddlybase/plugin-react@workspace:packages/plugin-react":
   version: 0.0.0-use.local
   resolution: "@tiddlybase/plugin-react@workspace:packages/plugin-react"
@@ -2086,6 +2105,7 @@ __metadata:
     cross-env: ^7.0.3
     jest: 29.5
     lodash.debounce: ^4.0.8
+    lodash.merge: ^4.6.2
     ts-jest: 29.1.0
     typescript: ^5.1.6
     webpack: ^5.88.2
@@ -2135,7 +2155,6 @@ __metadata:
   dependencies:
     "@tiddlybase/tw5-types": "workspace:*"
     jest: 29.5
-    lodash.merge: ^4.6.2
     ts-jest: 29.1.0
     ts-json-schema-generator: ^1.2.0
   languageName: unknown
@@ -2192,6 +2211,7 @@ __metadata:
     "@tiddlybase/plugin-embed-media": "workspace:*"
     "@tiddlybase/plugin-init": "workspace:*"
     "@tiddlybase/plugin-mdx": "workspace:*"
+    "@tiddlybase/plugin-mui": "workspace:*"
     "@tiddlybase/plugin-react": "workspace:*"
     "@tiddlybase/plugin-tiddlybase-utils": "workspace:*"
   languageName: unknown
@@ -2560,6 +2580,15 @@ __metadata:
   dependencies:
     "@types/lodash": "*"
   checksum: e873b2d77f89010876baba3437ef826b17221b98948e00b5590828334a481dea1c8f9d28543210e564adc53199584f42c3cb171f8b6c3614fefc0b4e0888679c
+  languageName: node
+  linkType: hard
+
+"@types/lodash.merge@npm:^4.6.7":
+  version: 4.6.7
+  resolution: "@types/lodash.merge@npm:4.6.7"
+  dependencies:
+    "@types/lodash": "*"
+  checksum: 94cd6fb8e606756a28f45d63c658aacfbce11a151f7fa322c4a3e87aa50d8bf26e0ae8cba0250070a7c5a6792fc51f79abf4c648bbb1850692be386cd76cd0ca
   languageName: node
   linkType: hard
 

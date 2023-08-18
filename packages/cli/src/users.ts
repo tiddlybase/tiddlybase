@@ -1,6 +1,6 @@
 import { InstanceSpec, PERMISSIONED_DATA_SOURCES, PermissionedDataSource, UserId } from '@tiddlybase/shared/src/instance-spec-schema';
 import { objFilter } from '@tiddlybase/shared/src/obj-filter';
-import { addInstancePermissions, instanceSpecPath } from '@tiddlybase/shared/src/permissions';
+import { makeInstancePermissionsUpdate, instanceSpecPath } from '@tiddlybase/shared/src/permissions';
 import { TiddlyBaseUser, USER_ROLES, substituteUserid } from '@tiddlybase/shared/src/users';
 import * as crypto from "crypto";
 import * as admin from 'firebase-admin';
@@ -9,6 +9,7 @@ import { inspect } from 'util';
 import { Argv, CommandModule } from 'yargs';
 import { CLIContext, withCLIContext } from './cli-context';
 import { requireSingleConfig } from './config';
+import {default as merge} from 'lodash.merge';
 
 const RE_UID = /^[a-zA-Z0-9]+$/;
 const ROLE_CHOICES = Object.keys(USER_ROLES).map(s => s.toLowerCase());
@@ -18,7 +19,7 @@ const doSetRole = async (app: admin.app.App, userId: UserId, instanceName: strin
   const docPath = instanceSpecPath(instanceName);
   const firestore = app.firestore();
   const instanceSpec = (await firestore.doc(docPath).get()).data()?.tiddler ?? {};
-  addInstancePermissions(instanceSpec, resourceType, userId, collectionName, roleNumber);
+  merge(instanceSpec, makeInstancePermissionsUpdate(instanceSpec, resourceType, userId, collectionName, roleNumber));
   await firestore.doc(docPath).set({
     tiddler: {
       ...instanceSpec,
