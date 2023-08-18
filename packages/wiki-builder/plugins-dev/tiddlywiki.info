@@ -14,7 +14,8 @@
         "tiddlywiki/codemirror-mode-css",
         "tiddlywiki/codemirror-mode-x-tiddlywiki",
         "tiddlywiki/codemirror-mode-markdown",
-        "tiddlywiki/internals"
+        "tiddlywiki/internals",
+        "tiddlywiki/highlight"
     ],
     "themes": [
     ],
