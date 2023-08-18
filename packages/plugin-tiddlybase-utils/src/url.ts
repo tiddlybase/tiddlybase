@@ -1,7 +1,7 @@
 // use full package path so the import is externalized
 import type {} from '@tiddlybase/tw5-types/src/index'
 import { getWikiInfoConfigValue } from "./wiki-info-config";
-import { joinPaths } from '@tiddlybase/shared/src/join-paths'
+import { joinPaths } from './join-paths'
 
 const FILES_URL_PREFIX = getWikiInfoConfigValue("external-url-path-prefix");
 const LOCAL_FILE_PREFIX = getWikiInfoConfigValue("default-local-file-location");
