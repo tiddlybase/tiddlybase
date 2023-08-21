@@ -12,6 +12,7 @@
     },
     "devDependencies": {
         "@tiddlybase/plugin-react": "workspace:*",
+        "@tiddlybase/plugin-tiddlybase-utils": "workspace:*",
         "@tiddlybase/webpack-config": "workspace:*",
         "@types/jest": "^27.4.1",
         "cross-env": "^7.0.3",
@@ -21,6 +22,7 @@
         "webpack-cli": "^5.1.4"
     },
     "dependencies": {
+        "@mui/material": "5.14.5",
         "react": "^18.2.0",
         "react-dom": "^18.2.0"
     }

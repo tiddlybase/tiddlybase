@@ -59,7 +59,7 @@ export const reducerMerge: TiddlerReducerFn<Partial<$tw.TiddlerFields>> = (prevS
 
 const getTiddlerFields = (title: string): $tw.TiddlerFields | undefined => $tw.wiki.getTiddler(title)?.fields;
 
-export const useTiddlerReducer = <A extends Partial<$tw.TiddlerFields>>(title: string, reducer: TiddlerReducerFn<A> = reducerMerge) => {
+export const useTiddlerReducer = <A extends Partial<$tw.TiddlerFields>>(title: string, reducer: TiddlerReducerFn<A> = reducerMerge):[$tw.TiddlerFields | undefined, (action: A) => void] => {
   // based on: https://medium.com/@manojsinghnegi/react-custom-hooks-lets-implement-our-own-usereducer-fb166ca9dd96
   // set the initial state to the tiddler fields so that the hook returns correct state even before the first useEffect run
   const [state, setState] = useState(getTiddlerFields(title));

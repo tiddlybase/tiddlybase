@@ -18,7 +18,8 @@ const EXTERNAL_MODULES = {
   'react': 'commonjs $:/plugins/tiddlybase/react/react.js',
   'react-dom': 'commonjs $:/plugins/tiddlybase/react/react-dom.js',
   'react-dom/client': 'commonjs $:/plugins/tiddlybase/react/react-dom.js',
-  'react/jsx-runtime': 'commonjs $:/plugins/tiddlybase/react/react-jsx-runtime.js'
+  'react/jsx-runtime': 'commonjs $:/plugins/tiddlybase/react/react-jsx-runtime.js',
+  '@mui/material': 'commonjs $:/plugins/tiddlybase/mui/material-ui.js'
 }
 
 const getBaseConfig = ({

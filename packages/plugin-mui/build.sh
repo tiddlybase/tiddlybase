@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-VERSION="5.14.5"
+VERSION="$(cat package.json | jq -r '.dependencies["@mui/material"]')"
 BUILD="${1:-production.min}"
 pluginDir="../../dist/plugins/tiddlybase/mui"
 filesDir="$pluginDir/files"
