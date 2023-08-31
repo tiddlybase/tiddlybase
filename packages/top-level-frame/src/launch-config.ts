@@ -17,7 +17,6 @@ export const getNormalizedLaunchConfig = (searchParams:ParsedSearchParams={}, co
 
   return {
     build: launchConfig.build ?? DEFAULT_BUILD_NAME,
-    wikiInfoConfig: launchConfig?.wikiInfoConfig ?? {},
     auth: launchConfig.auth ?? DEFAULT_AUTH,
     tiddlers,
     files,

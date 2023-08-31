@@ -9,7 +9,6 @@ import type { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
 export interface ChildInitProps {
   user: TiddlyBaseUser,
   tiddlers: $tw.TiddlerFields[],
-  wikiInfoConfig: Partial<$tw.WikiInfoConfig>,
   parentLocation: Partial<Location>
 }
 

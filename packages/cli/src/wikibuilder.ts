@@ -37,40 +37,6 @@ const DEFAULT_JSON_BUILDER_FILTER = [
   "+[sort[title]]",
 ].join(" ");
 
-const SAVE_WIKI_INFO_TIDDLER: $tw.TiddlerFields = {
-  title: "$:/tiddlybase/wikibuilder/save-wiki-info.js",
-  type: "application/javascript",
-  "module-type": "startup",
-  text: `
-(function () {
-  /*jslint node: true, browser: true */
-  /*global $tw: false */
-  'use strict';
-
-  // Export name and synchronous status
-  exports.name = 'save-wiki-info';
-  exports.after = ['load-modules'];
-  exports.synchronous = true;
-  exports.platforms = ['node'];
-
-  const objMap = (fn, input) => Object.fromEntries(Object.entries(input).map(fn));
-
-  exports.startup = function () {
-    if ($tw?.boot?.wikiInfo?.config) {
-      $tw.wiki.addTiddler(
-        new $tw.Tiddler({
-          ...(objMap(
-              ([k, v]) => [k, JSON.stringify(v)],
-              $tw.boot.wikiInfo.config ?? {})),
-          title: '$:/config/wikiInfoConfig',
-          }),
-      );
-    }
-  };
-
-})();`
-}
-
 const SAVE_JSON_COMMAND_TIDDLER: $tw.TiddlerFields = {
 
   title: '$:/tiddlybase/wikibuilder/savejson.js',
@@ -153,7 +119,7 @@ export const buildwiki: CommandModule = {
         "--render", (args.exportfilter as string | undefined) ?? "$:/core/save/all", basename(outputFilename),
         "text/plain"
       ],
-      outputType === 'json' ? [SAVE_JSON_COMMAND_TIDDLER] : [SAVE_WIKI_INFO_TIDDLER],
+      outputType === 'json' ? [SAVE_JSON_COMMAND_TIDDLER] : [],
       wikiInfoFilename
     );
   },

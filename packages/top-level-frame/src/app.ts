@@ -137,7 +137,6 @@ export class TopLevelApp {
         return {
           user,
           tiddlers: Object.values(tiddlers),
-          wikiInfoConfig: this.launchConfig.wikiInfoConfig,
           parentLocation: JSON.parse(JSON.stringify(window.location))
         }
       } catch (e: any) {

@@ -3,7 +3,6 @@ import { apiDefiner, apiClient } from "@tiddlybase/rpc";
 import { makeRPC } from "@tiddlybase/rpc/src/make-rpc";
 import type { TopLevelAPIForSandboxedWiki } from "@tiddlybase/rpc/src/top-level-api";
 import type { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
-import { createWikiInfoConfig } from "@tiddlybase/shared/src/wiki-info";
 import { PatchedModules } from "./patched-modules";
 import { RPCCallbackManager } from "packages/rpc/src/rpc-callback-manager";
 
@@ -52,7 +51,6 @@ export const TIDDLYBASE_INIT_SINGLETONS_TITLE = "$:/plugins/tiddlybase/init/sing
         user,
         tiddlers,
         parentLocation,
-        wikiInfoConfig,
       } = topLevelResponse;
       console.log('child iframe received user info', topLevelResponse);
       window.$tw.tiddlybase = {
@@ -66,7 +64,6 @@ export const TIDDLYBASE_INIT_SINGLETONS_TITLE = "$:/plugins/tiddlybase/init/sing
       // by MDX tiddlers
       window.$tw.modules.define(TIDDLYBASE_INIT_SINGLETONS_TITLE, "library", window.$tw.tiddlybase);
       try {
-        tiddlers.push(createWikiInfoConfig(wikiInfoConfig))
         $tw.preloadTiddlerArray(tiddlers);
         bootTiddlyWiki();
       } catch (e) {

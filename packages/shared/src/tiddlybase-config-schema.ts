@@ -57,7 +57,6 @@ export interface LaunchConfig {
   tiddlers: TiddlersConfig,
   files: FilesConfig,
   auth: AuthProviderSpec,
-  wikiInfoConfig: Partial<$tw.WikiInfoConfig>,
   functions?: FunctionsConfig
 }
 

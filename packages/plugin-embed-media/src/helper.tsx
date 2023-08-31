@@ -12,11 +12,10 @@ import {
   getExtension,
   cleanupURL,
 } from "@tiddlybase/plugin-tiddlybase-utils/src/url";
-import { getWikiInfoConfigValue } from "@tiddlybase/plugin-tiddlybase-utils/src/wiki-info-config";
 import { EXTENSION_TO_OBJECT_TYPE } from "./constants";
 import { useState, useEffect } from "react";
 
-const ENABLE_ICONS = getWikiInfoConfigValue("display-link-icons") === true;
+const ENABLE_ICONS = true;
 
 export const LINK_ICONS: Record<LinkIcon, JSX.Element> = {
   youtube: (
