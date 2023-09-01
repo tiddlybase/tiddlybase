@@ -1,0 +1,44 @@
+{
+  "instanceName": "test",
+  "htmlGeneration": {
+    "title": "browser-test wiki"
+  },
+  "launchConfigs": {
+    "default": {
+      "auth": {
+        "type": "trivial"
+      },
+      "tiddlers": {
+        "sources": [
+          {
+            "type": "http",
+            "url": "/tiddlybase_public/plugins/plugins-default.json"
+          },
+          {
+            "type": "http",
+            "url": "/tiddlybase_public/plugins/plugins-dev.json"
+          },
+          {
+            "type": "http",
+            "url": "/tiddlybase_public/plugins/plugins-test.json"
+          },
+          {
+            "type": "browser-storage",
+            "collection": "all"
+          },
+          {
+            "type": "tiddlyweb"
+          }
+        ]
+      },
+      "files": {
+        "sources": [
+          {
+            "type": "http",
+            "urlPrefix": "files/"
+          }
+        ]
+      }
+    }
+  }
+}

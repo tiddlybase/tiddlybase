@@ -97,7 +97,7 @@ const FIREBASE_JSON_EMULATORS = {
 const generateHostingConfig = (config: TiddlybaseConfig) => (
   {
     // by default, the site is the same as the projectid
-    site: config.hosting?.site ?? config.firebase.clientConfig.projectId,
+    site: config.hosting?.site ?? config.firebase?.clientConfig.projectId,
     "public": config.hosting?.publicPath ?? join(config.instanceName, DIRECTORY_PUBLIC),
     "rewrites": [{
       "source": "**",
@@ -159,7 +159,7 @@ export const cmdGenerateFirestoreRules: CommandModule = {
   },
 };
 
-const getFirebaseClientConfig = async (project?: string): Promise<TiddlybaseConfig["firebase"]["clientConfig"]> => {
+const getFirebaseClientConfig = async (project?: string): Promise<Exclude<TiddlybaseConfig["firebase"], undefined>["clientConfig"]> => {
   const firebaseCLIPath = join(dirname(__non_webpack_require__.resolve('firebase-tools')), "bin", "firebase.js")
   console.log("Invoking firebase binary at " + firebaseCLIPath);
   const { stdout } = await runCommand(`${firebaseCLIPath} ${project ? `--project ${project} ` : ''} apps:sdkconfig web`);

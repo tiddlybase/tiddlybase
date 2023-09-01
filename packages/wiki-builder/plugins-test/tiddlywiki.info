@@ -1,0 +1,13 @@
+{
+    "includeWikis": [
+    ],
+    "config": {
+    },
+    "plugins": [
+        "tiddlybase/browser-test-utils",
+        "tiddlywiki/jasmine"
+    ],
+    "themes": [
+    ],
+    "build": {}
+}

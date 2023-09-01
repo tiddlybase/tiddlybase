@@ -1,28 +1,19 @@
 {
-    "description": "Test runner",
+    "description": "test server",
     "includeWikis": [
-		{"path": "../../browser-tests", "read-only": true}
+        {"path": "../../local-server", "read-only": true}
 	],
     "config": {
-    },
+        "retain-original-tiddler-path": true,
+        "public-dir": "../../../dist",
+        "outer-html-path": "../../../dist/test/outer.html"
+	},
     "plugins": [
         "tiddlywiki/internals",
-        "tiddlywiki/markdown",
-        "tiddlybase/init",
-        "tiddlybase/tiddlybase-utils",
-        "tiddlybase/browser-test-utils",
-        "tiddlybase/react",
-        "tiddlybase/embed-media",
-        "tiddlybase/mdx"
+        "tiddlywiki/markdown"
     ],
     "themes": [
+        "tiddlywiki/vanilla"
     ],
-    "build": {
-        "wiki": [
-            "--rendertiddler",
-            "$:/core/save/all",
-            "wiki.html",
-            "text/plain"
-        ]
-    }
+    "build": {}
 }

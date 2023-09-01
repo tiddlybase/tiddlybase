@@ -80,7 +80,7 @@ export interface TiddlybaseConfig {
    * These values can be copied from the Firebase console or
    * from the command line via "yarn firebase apps:sdkconfig web"
    */
-  firebase: {
+  firebase?: {
     clientConfig: {
       projectId: string,
       appId: string,

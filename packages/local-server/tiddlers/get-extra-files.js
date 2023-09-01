@@ -12,18 +12,30 @@ GET /:filename
 /*global $tw: false */
 "use strict";
 
+const path = require("path");
+const fs = require("fs");
+const util = require("util");
+
 exports.method = "GET";
 
-const DEFAULT_INDEX_HTML_PATH = "public/outer.html";
+const CONFIG_KEY_PUBLIC_DIR = 'public-dir';
+const CONFIG_KEY_OUTER_HTML_PATH = 'outer-html-path';
+const CONFIG_KEY_PUBLIC_SUBDIRS = 'public-subdirs';
+const DEFAULT_PUBLIC_DIR = "public";
+const DEFAULT_OUTER_HTML_FILENAME = "outer.html";
+const DEFAULT_PUBLIC_SUBDIRS = ['tiddlybase_public', 'sourcemaps', 'webfonts', 'collections'];
+const PUBLIC_DIR = $tw.boot.wikiInfo.config[CONFIG_KEY_PUBLIC_DIR] ?? DEFAULT_PUBLIC_DIR;
+const OUTER_HTML_PATH = $tw.boot.wikiInfo.config[CONFIG_KEY_OUTER_HTML_PATH] ?? path.join(PUBLIC_DIR, DEFAULT_OUTER_HTML_FILENAME);
+const PUBLIC_SUBDIRS = $tw.boot.wikiInfo.config[CONFIG_KEY_PUBLIC_SUBDIRS] ?? DEFAULT_PUBLIC_SUBDIRS;
 
-const mappings = {
-    "^\/(?:\\?.*)?$": $tw.boot.wikiInfo.config['index-html-path'] ?? DEFAULT_INDEX_HTML_PATH,
-    "^\/([^\/]+)$": "public",
-    "^\/tiddlybase_public\/(.+)$": "public/tiddlybase_public",
-    "^\/sourcemaps\/(.+)$": "public/sourcemaps",
-    "^\/webfonts\/(.+)$": "public/webfonts",
-    "^\/collections\/(.+)$": "public/collections"
-}
+const mappings = Object.fromEntries([
+    ["^\/(?:\\?.*)?$", OUTER_HTML_PATH],
+    ["^\/([^\/]+)$", PUBLIC_DIR],
+    ...(PUBLIC_SUBDIRS.map(subdir => [
+        `^\/${subdir}\/(.+)$`,
+        path.join(PUBLIC_DIR, subdir),
+    ]))
+])
 
 const getMapping = url => {
     for (let [re, mapping] of Object.entries(mappings)) {
@@ -35,9 +47,6 @@ const getMapping = url => {
 
 exports.path = new RegExp(Object.keys(mappings).join("|"));
 
-const path = require("path");
-const fs = require("fs");
-const util = require("util");
 
 const getFullPath = (rootDir, subPath, filename) => {
     let fullPath = rootDir;
@@ -52,31 +61,26 @@ const getFullPath = (rootDir, subPath, filename) => {
 
 exports.handler = function(request,response,state) {
     const params = state.params.filter(p => p)
-    console.log("get-extra-files", request.url);
     const filename = getFullPath(state.boot.wikiPath, getMapping(request.url), params.length > 0 ? $tw.utils.decodeURIComponentSafe(params[0]): undefined);
+    console.log(`requested ${request.url} returning ${filename}`);
 	const extension = path.extname(filename);
-	// Check that the filename is inside the wiki files folder
-	if(path.relative(state.boot.wikiPath, filename).indexOf("..") !== 0) {
-		// Send the file
-		fs.readFile(filename,function(err,content) {
-			var status,content,type = "text/plain";
-			if(err) {
-				console.log("Error accessing file " + filename + ": " + err.toString());
-				status = 404;
-				content = "File '" + filename + "' not found";
-			} else {
-				status = 200;
-				content = content;
-				type = ($tw.config.fileExtensionInfo[extension] ? $tw.config.fileExtensionInfo[extension].type : "application/octet-stream");
-			}
-			state.sendResponse(status,{
-                "Content-Type": type,
-                "Access-Control-Allow-Origin": "*"
-            },content);
-		});
-	} else {
-		state.sendResponse(404,{"Content-Type": "text/plain"},"File '" + suppliedFilename + "' not found");
-	}
+    // Send the file
+    fs.readFile(filename,function(err,content) {
+        var status,content,type = "text/plain";
+        if(err) {
+            console.log("Error accessing file " + filename + ": " + err.toString());
+            status = 404;
+            content = "File '" + filename + "' not found";
+        } else {
+            status = 200;
+            content = content;
+            type = ($tw.config.fileExtensionInfo[extension] ? $tw.config.fileExtensionInfo[extension].type : "application/octet-stream");
+        }
+        state.sendResponse(status,{
+            "Content-Type": type,
+            "Access-Control-Allow-Origin": "*"
+        },content);
+    });
 };
 
 }());

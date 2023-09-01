@@ -9,7 +9,7 @@
         "build:dev": "MODE=development ./build.sh",
         "browser-tests:build": "yarn workspace @tiddlybase/browser-tests run test:build $(pwd)/browser-tests $(pwd)/../../dist/tests/plugin-mdx/test.html",
         "browser-tests:run": "yarn workspace @tiddlybase/browser-tests run test:run $(pwd)/../../dist/tests/plugin-mdx/test.html",
-        "browser-tests:open": "open $(pwd)/../../dist/tests/plugin-mdx/test.html",
+        "browser-tests:open": "yarn workspace @tiddlybase/cli run cli tw-command --wiki-info-filename $PWD/browser-tests/tiddlywiki.info -- --listen",
         "test": "yarn test:unit && yarn browser-tests:build && yarn browser-tests:run",
         "test:unit": "node --experimental-vm-modules $(yarn bin jest) -c jest.config.ts"
     },

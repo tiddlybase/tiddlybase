@@ -1,20 +1,17 @@
 {
-    "description": "test edition",
+    "description": "test server",
+    "includeWikis": [
+        {"path": "../local-server", "read-only": true}
+	],
     "config": {
-    },
+        "retain-original-tiddler-path": true,
+        "public-dir": "../../dist",
+        "outer-html-path": "../../dist/test/outer.html"
+	},
     "plugins": [
-       "tiddlywiki/jasmine"
     ],
     "themes": [
-     "tiddlywiki/vanilla",
-     "tiddlywiki/snowwhite"
+        "tiddlywiki/vanilla"
     ],
-    "build": {
-        "wiki": [
-            "--rendertiddler",
-            "$:/core/save/all",
-            "wiki.html",
-            "text/plain"
-        ]
-    }
+    "build": {}
 }
