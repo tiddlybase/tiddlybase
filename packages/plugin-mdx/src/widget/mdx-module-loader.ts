@@ -10,7 +10,9 @@ import { MDXErrorDetails } from "../mdx-client/mdx-error-details";
 import { getMdxTagFn } from "./mdx-tag-function";
 import { withContextHelpers } from "./with-context-helpers";
 import { MDXTiddlybaseAPIImpl } from "./mdx-tiddlybase-api-impl";
+import { depthFirstSearch} from "@tiddlybase/shared/src/depth-first-search";
 import type { MDXTiddlybaseAPI } from "./mdx-tiddlybase-api";
+
 
 export type ModuleSet = Set<string>;
 
@@ -34,13 +36,18 @@ export type ModuleLoadError = {
 
 export type CompilationResult = { mdx?: string } & (
   ModuleLoadError
-  | { warnings: Array<MDXErrorDetails>; compiledFn: any; moduleExports: $tw.ModuleExports; dependencies: ModuleSet; tiddler?: string});
+  | { warnings: Array<MDXErrorDetails>; compiledFn: any; moduleExports: $tw.ModuleExports; dependencies: ModuleSet; tiddler?: string });
 
 export type ModuleExportsResult =
   | ModuleLoadError
   | { moduleExports: $tw.ModuleExports }
 
 type RequireAsync = (requiredModuleName: string) => Promise<$tw.ModuleExports>;
+
+type CompilationResultWithChangeCount = {
+  result: Promise<CompilationResult>;
+  changeCount: number;
+}
 
 export type MDXContext = Record<string, any> & {
   definingTiddlerTitle: string | undefined;
@@ -78,15 +85,16 @@ const getContextValues = (mdxContext: MDXContext): any[] =>
     return acc;
   }, [] as any[]);
 
-
 export class MDXModuleLoader {
   anonymousGeneratedFunctionCounter = 0;
   // TiddlyWiki standard objects, which default to global $tw.{wiki, modules}.
   wiki: $tw.Wiki;
   modules: $tw.TW5Modules;
   mdxTiddlybaseAPI: MDXTiddlybaseAPI;
-  private compilationResults: Record<string, Promise<CompilationResult>> = {};
-  private invalidatedModules: Set<string> = new Set([]);
+  private wikiChangeEventCounter = 0;
+  private compilationResults: Record<string, CompilationResultWithChangeCount> = {};
+  private invalidationChangeCount: Record<string, number> = {};
+  private lastInvalidationTask: Promise<boolean> = Promise.resolve(true);
 
   constructor({
     wiki = $tw.wiki,
@@ -100,7 +108,7 @@ export class MDXModuleLoader {
     this.mdxTiddlybaseAPI = new MDXTiddlybaseAPIImpl(this.wiki)
   }
 
-  private makeInitialModuleLoaderContext (context?: MDXContext): ModuleLoaderContext {
+  private makeInitialModuleLoaderContext(context?: MDXContext): ModuleLoaderContext {
     return {
       requireStack: [],
       dependencies: new Set<string>([]),
@@ -161,9 +169,8 @@ export class MDXModuleLoader {
     tiddler?: string;
     boundProps?: object
   }): Promise<CompilationResult> {
-    const moduleExports:$tw.ModuleExports = {};
-    const mdxContext:MDXContext = {...loadContext.mdxContext, exports: moduleExports};
-
+    const moduleExports: $tw.ModuleExports = {};
+    const mdxContext: MDXContext = { ...loadContext.mdxContext, exports: moduleExports };
     const compilationResult = await this.compileMDX(
       tiddler,
       mdx,
@@ -266,9 +273,12 @@ export class MDXModuleLoader {
       }
     }
 
-    // Cases 3 & 4: MDX module's compilation has already begun (possibly completed)
-    if (!this.invalidatedModules.has(tiddler) && (tiddler in this.compilationResults)) {
-      return compilationResultToModuleExports(await this.compilationResults[tiddler]);
+    // Cases 3 & 4 (we can't tell the difference): MDX module's compilation has already begun (possibly completed)
+    // Note that a tiddler might be valid in the sense that it's source and the
+    // compilation result are in sync but the compilation may have failed with an error.
+    await this.lastInvalidationTask;
+    if ((tiddler in this.compilationResults) && !this.isModuleInvalid(tiddler)) {
+      return compilationResultToModuleExports(await this.compilationResults[tiddler].result);
     }
 
     // Case 5: MDX module needs execution
@@ -304,18 +314,24 @@ export class MDXModuleLoader {
 
     // If recompiling an invalidated module, invoke drop() if defined
     if (tiddler in this.compilationResults) {
-      await this.invokeDrop(tiddler, this.compilationResults[tiddler], compilationResultPromise);
+      await this.invokeDrop(tiddler, this.compilationResults[tiddler].result, compilationResultPromise);
     }
 
     // Save promise to compilationResults before it's value is available to
     // avoid simulatenous invocations for the same module.
-    this.compilationResults[tiddler] = compilationResultPromise
+    this.compilationResults[tiddler] = {result: compilationResultPromise, changeCount: this.wikiChangeEventCounter}
     // await literal MDX compilation (if any)
     await Promise.all(loadContext.mdxLiteralCompilationResults ?? []);
     const result = await compilationResultPromise;
-    if ('compiledFn' in result) {
-      // If we just successfully recompiled an invalidated module, remove invalidation marker.
-      this.invalidatedModules.delete(tiddler);
+    if (this.invalidationChangeCount[tiddler] > this.compilationResults[tiddler].changeCount) {
+      // If the invalidation code in the loadContext and the this.invalidationCodes do not match then the
+      // module has been invalidated as it was being recompiled and therefore must be recompiled
+      console.log(`Warning: invalidation code mismatch ${tiddler} ${this.invalidationChangeCount[tiddler]} ${this.compilationResults[tiddler].changeCount}`);
+    } else {
+      // Remove invalidation marker. If compilation failed, we will get an error message
+      // from any tiddler importing this tiddler (since the corresponding module
+      // no longer exists).
+      delete this.invalidationChangeCount[tiddler];
     }
     return compilationResultToModuleExports(result);
   };
@@ -329,7 +345,7 @@ export class MDXModuleLoader {
       dependencies: new Set<string>([])
     };
     ctxt.mdxContext.requireAsync = this.getRequireAsync(ctxt);
-    ctxt.mdxContext.mdx = getMdxTagFn({loader: this, moduleLoaderContext: ctxt});
+    ctxt.mdxContext.mdx = getMdxTagFn({ loader: this, moduleLoaderContext: ctxt });
     if (tiddler) {
       ctxt.mdxContext.definingTiddlerTitle = tiddler;
       ctxt.requireStack.push(tiddler);
@@ -338,16 +354,16 @@ export class MDXModuleLoader {
   };
 
   async getCompilationResult(tiddler: string): Promise<CompilationResult | undefined> {
-    return tiddler in this.compilationResults ? await this.compilationResults[tiddler] : undefined;
+    return tiddler in this.compilationResults ? await this.compilationResults[tiddler].result : undefined;
   }
 
-  async hasModule(tiddler: string): Promise<boolean> {
-    return tiddler in this.compilationResults && 'moduleExports' in (await this.compilationResults[tiddler]);
+  hasModule(tiddler: string): boolean {
+    return tiddler in this.compilationResults;
   }
 
   async getDependencies(tiddler: string): Promise<ModuleSet> {
     if (tiddler in this.compilationResults) {
-      const compilationResult = (await this.compilationResults[tiddler]);
+      const compilationResult = await this.compilationResults[tiddler].result;
       if ('dependencies' in compilationResult) {
         return compilationResult.dependencies;
       }
@@ -356,9 +372,9 @@ export class MDXModuleLoader {
   }
 
   async getConsumers(tiddler: string): Promise<ModuleSet> {
-    return await Object.entries(this.compilationResults).reduce(async (consumerSetPromise, [title, compilationResultPromise]: [string, Promise<CompilationResult>]) => {
+    return await Object.entries(this.compilationResults).reduce(async (consumerSetPromise, [title, { result }]: [string, CompilationResultWithChangeCount]) => {
       const consumerSet = await consumerSetPromise;
-      const compilationResult = await compilationResultPromise;
+      const compilationResult = await result;
       if ('dependencies' in compilationResult && compilationResult.dependencies.has(tiddler)) {
         consumerSet.add(title);
       }
@@ -366,10 +382,60 @@ export class MDXModuleLoader {
     }, Promise.resolve(new Set<string>([])));
   }
 
-  invalidateModule(tiddler: string): void {
+  _handleWikiChange(wikiChange: $tw.WikiChange): void {
+    this.wikiChangeEventCounter += 1;
+    Object.keys(wikiChange).forEach(tiddler => {
+      this.invalidateModule(tiddler, this.wikiChangeEventCounter);
+    });
+  }
+
+  private updateInvalidationChangeCount(tiddler: string, changeCount: number): void {
+    this.invalidationChangeCount[tiddler] = Math.max(
+      this.invalidationChangeCount[tiddler] ?? 0,
+      changeCount)
+  }
+
+  private invalidateModule(tiddler: string, changeCount: number): void {
+    /* TiddlyWiki synchronously dispatches
+      a tiddler change and then a widget refresh event. The MDX tiddler must be
+      invalidated between those for the new version of the tiddler to be
+      rendered.
+      Unfortunately, transitive dependencies cannot be invalidated synchronously
+      since the result of the MDX compilation step (including the list of
+      dependencies) is stored in a Promise. The solution is to invalidate the
+      tiddler synchronously but also invoking an async function to invalidate
+      transitive dependencies.
+
+      This could result in the following race condition:
+      It's possible that a given tiddler A is in the process of being compiled
+      when tiddler B -which is imported by A- is saved.
+      This would cause A to be invalidated, but when the previously started
+      compilation completes, A's invalidated status is cleared. To prevent such
+      races, MDXModuleLoader keeps track of the number of wiki change events
+      dispatched by the wiki and who many such events occurred since the last
+      invalidation.
+
+      The second (async) invalidation must be awaited in getModuleExports.
+     */
+
+    // update invalidationChangeCount for tiddler syncrhonously
     if (tiddler in this.compilationResults) {
-      this.invalidatedModules.add(tiddler);
+      this.updateInvalidationChangeCount(tiddler, changeCount);
     }
+    // update invalidationChangeCount for dependents asynchronously
+    this.lastInvalidationTask = this.getTransitiveConsumers(tiddler).then(modules => {
+      modules.forEach(dependent =>  {
+        this.updateInvalidationChangeCount(dependent, changeCount);
+      })
+      return true;
+    })
+  }
+
+  private isModuleInvalid(tiddler: string) {
+    const compiledChangeCount = this.compilationResults[tiddler]?.changeCount;
+    const invalidatedChangeCount = this.invalidationChangeCount[tiddler];
+    return (typeof invalidatedChangeCount === "number") && (typeof compiledChangeCount === "number") &&
+      (compiledChangeCount <= invalidatedChangeCount);
   }
 
   async evaluateMDX({ mdx, context, moduleLoaderContext, boundProps }: {
@@ -397,5 +463,30 @@ export class MDXModuleLoader {
       tiddler,
     })
   }
+
+  // NOTE: includes the module itself in the set of dependencies
+  async getTransitiveDependencies (moduleName: string, visited: Set<string> = new Set<string>([])): Promise<ModuleSet> {
+  if (this.hasModule(moduleName)) {
+    await depthFirstSearch(
+      (moduleName: string) => this.getDependencies(moduleName),
+      moduleName,
+      visited);
+  }
+  console.log("getTransitiveDependencies", visited)
+  return visited;
+}
+
+// NOTE: includes the module itself in the set of consumers
+  async getTransitiveConsumers (moduleName: string, visited: Set<string> = new Set<string>([])): Promise<ModuleSet> {
+  if (this.hasModule(moduleName)) {
+    await depthFirstSearch(
+      (moduleName: string) => this.getConsumers(moduleName),
+      moduleName,
+      visited);
+  }
+  console.log("getTransitiveConsumers", visited)
+  return visited;
+}
+
 
 } // end class MDXModuleLoader

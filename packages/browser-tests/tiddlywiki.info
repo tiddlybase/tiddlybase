@@ -1,17 +1,8 @@
 {
-    "description": "test server",
-    "includeWikis": [
-        {"path": "../local-server", "read-only": true}
-	],
-    "config": {
-        "retain-original-tiddler-path": true,
-        "public-dir": "../../dist",
-        "outer-html-path": "../../dist/test/outer.html"
-	},
-    "plugins": [
-    ],
-    "themes": [
-        "tiddlywiki/vanilla"
-    ],
+    "description": "",
+    "includeWikis": [],
+    "config": {},
+    "plugins": [],
+    "themes": [],
     "build": {}
 }

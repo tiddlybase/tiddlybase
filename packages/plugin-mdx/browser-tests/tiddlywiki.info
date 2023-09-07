@@ -6,11 +6,14 @@
     "config": {
         "retain-original-tiddler-path": true,
         "public-dir": "../../../dist",
-        "outer-html-path": "../../../dist/test/outer.html"
+        "outer-html-path": "../../../dist/browser-test/outer.html"
 	},
     "plugins": [
         "tiddlywiki/internals",
-        "tiddlywiki/markdown"
+        "tiddlywiki/markdown",
+        "tiddlybase/tiddlybase-utils",
+        "tiddlybase/react",
+        "tiddlybase/mdx"
     ],
     "themes": [
         "tiddlywiki/vanilla"

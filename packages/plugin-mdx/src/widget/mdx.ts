@@ -8,7 +8,6 @@ import { components as baseComponents } from "./components";
 import { mdxModuleLoader } from "./global";
 import { CompilationResult, MDXContext, MDXModuleLoader, ModuleSet } from "./mdx-module-loader";
 import { wrapMDXComponent } from "./mdx-util";
-import { getTransitiveMDXModuleDependencies } from "./module-utils";
 
 const MIME_TYPE = "text/x-markdown";
 
@@ -51,7 +50,7 @@ const addTiddlerChangeHook = async (
   // changing - and rerendering being necessary as a result.
   // Through requireAsync, any module could add additional dependencies after
   // this mdx module is rendered. Changes to such dependencies will go unnoticed.
-  const transitiveDependencies: ModuleSet = await getTransitiveMDXModuleDependencies(definingTiddlerTitle, loader)
+  const transitiveDependencies: ModuleSet = await loader.getTransitiveDependencies(definingTiddlerTitle)
   parentWidget.addChangedTiddlerHook(
     (changedTiddlers: $tw.ChangedTiddlers): boolean => Object.keys(changedTiddlers).some(
       (title) => transitiveDependencies.has(title)));

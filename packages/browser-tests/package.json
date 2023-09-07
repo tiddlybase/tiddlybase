@@ -6,8 +6,8 @@
     "author": "Peter Neumark",
     "license": "Apache-2.0",
     "scripts": {
-        "test:build": "./build.sh",
-        "test:run": "yarn node launcher.js"
+        "build": "./build.sh",
+        "build:dev": "./build.sh"
     },
     "devDependencies": {
         "puppeteer": "^13.6.0",

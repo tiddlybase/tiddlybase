@@ -12,15 +12,7 @@
         "sources": [
           {
             "type": "http",
-            "url": "/tiddlybase_public/plugins/plugins-default.json"
-          },
-          {
-            "type": "http",
-            "url": "/tiddlybase_public/plugins/plugins-dev.json"
-          },
-          {
-            "type": "http",
-            "url": "/tiddlybase_public/plugins/plugins-test.json"
+            "url": "/tiddlybase_public/plugins/plugins-browser-test.json"
           },
           {
             "type": "browser-storage",
