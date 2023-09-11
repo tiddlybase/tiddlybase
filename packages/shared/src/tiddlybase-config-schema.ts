@@ -1,6 +1,15 @@
 import type { } from '@tiddlybase/tw5-types/src/index'
 import type { TiddlyBaseUser } from './users';
 
+export type LaunchParameters = {
+  instance: string;
+  launchConfig: string;
+  userId?: string;
+  getParameters?: Record<string, string>;
+  // Tiddler to open upon load
+  tiddler?: string;
+}
+
 export type TiddlerWriteCondition = { titlePrefix: string }; // more options in the future
 
 export type WritableTiddlerDataSourceSpec = { writeCondition?: 'private' | 'always' | TiddlerWriteCondition };
@@ -60,14 +69,16 @@ export interface LaunchConfig {
   functions?: FunctionsConfig
 }
 
+export interface URLConfig {
+  publicPath: string
+  outerHTML: string
+  pathRegexp: string;
+}
+
 /**
  * This interface describes the schema of the `tiddlybase-config.json` file.
  */
 export interface TiddlybaseConfig {
-  /**
-   * Name of the tiddlybase instance, usually the same as the name of a wiki.
-   */
-  instanceName: string,
   /**
    * Settings related to the generation of the parent HTML (usually called outer.html)
    */
@@ -75,7 +86,7 @@ export interface TiddlybaseConfig {
     title?: string,
     // generated with eg: https://realfavicongenerator.net/
     faviconCode?: string
-  }
+  };
   /**
    * These values can be copied from the Firebase console or
    * from the command line via "yarn firebase apps:sdkconfig web"
@@ -91,18 +102,18 @@ export interface TiddlybaseConfig {
       authDomain: string,
       messagingSenderId: string,
       measurementId?: string
+    },
+    hosting?: {
+      site: string
     }
-  },
-  hosting?: {
-    site: string
-    publicPath?: string
-    outerHTML?: string
-  }
-  launchConfigs: Record<string, Partial<LaunchConfig>>
+  };
+  urls?: Partial<URLConfig>;
+  launchConfigs: Record<string, Partial<LaunchConfig>>;
+  defaultLaunchParameters?: Partial<LaunchParameters>;
 }
 
 // The client config is written to outer.html.
 // It only needs certain parts of the full tiddlybase-config.json.
-export const TIDDLYBASE_CLIENT_CONFIG_KEYS: Readonly<Array<keyof TiddlybaseConfig>> = ['instanceName', 'firebase', 'launchConfigs'] as const;
+export const TIDDLYBASE_CLIENT_CONFIG_KEYS: Readonly<Array<keyof TiddlybaseConfig>> = ['defaultLaunchParameters', 'launchConfigs', 'firebase', 'urls'] as const;
 
 export type TiddlybaseClientConfig = Pick<TiddlybaseConfig, typeof TIDDLYBASE_CLIENT_CONFIG_KEYS[number]>;

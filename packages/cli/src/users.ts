@@ -8,7 +8,6 @@ import { UserRecord } from 'firebase-admin/lib/auth/user-record';
 import { inspect } from 'util';
 import { Argv, CommandModule } from 'yargs';
 import { CLIContext, withCLIContext } from './cli-context';
-import { requireSingleConfig } from './config';
 import {default as merge} from 'lodash.merge';
 
 const RE_UID = /^[a-zA-Z0-9]+$/;
@@ -72,12 +71,16 @@ export const getCollectionRoles: CommandModule = {
 
 // TODO: migrate this to firestore-based ACL instead of custom JWT claims
 export const setCollectionRole: CommandModule = {
-  command: 'setcollectionrole <userid|email> collection role',
+  command: 'setcollectionrole instance <userid|email> collection role',
   describe: 'set a custom claim on a user',
   builder: (argv: Argv) =>
     argv
       .options({
         t: { type: 'string', alias: 'resource-type', describe: 'Resource type (collections or files)', default: PERMISSIONED_DATA_SOURCES[0], choices: PERMISSIONED_DATA_SOURCES }
+      })
+      .positional('instance', {
+        describe: 'Instance name',
+        type: 'string',
       })
       .positional('userid', {
         describe: 'User id or email address',
@@ -98,9 +101,8 @@ export const setCollectionRole: CommandModule = {
     if (!(roleName in USER_ROLES) || !(typeof roleNumber === 'number')) {
       throw new Error('Unknown role ' + cliContext.args.role);
     }
-    const { config } = requireSingleConfig(cliContext.args);
     const resourceType = cliContext.args['resource-type'] as PermissionedDataSource;
-    const instanceSpec = await doSetRole(cliContext.app, user.uid, config.instanceName, resourceType, encodeURIComponent(substituteUserid(cliContext.args.collection as string, user.uid)), roleNumber);
+    const instanceSpec = await doSetRole(cliContext.app, user.uid, cliContext.args.instance as string, resourceType, encodeURIComponent(substituteUserid(cliContext.args.collection as string, user.uid)), roleNumber);
     console.log(JSON.stringify(instanceSpec, null, 4));
   }),
 };

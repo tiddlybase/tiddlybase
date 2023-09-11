@@ -1,5 +1,6 @@
 import { LaunchConfig, TIDDLYBASE_CLIENT_CONFIG_KEYS, TiddlybaseClientConfig, TiddlybaseConfig } from '@tiddlybase/shared/src/tiddlybase-config-schema';
 import { objFilter } from '@tiddlybase/shared/src/obj-filter';
+import { DEFAULT_URL_CONFIG } from '@tiddlybase/shared/src/constants';
 import { Arguments, Argv, CommandModule, Options } from 'yargs';
 import { ParsedConfig, readConfig, requireSingleConfig } from './config';
 import { dirname, resolve, join } from 'path';
@@ -12,9 +13,6 @@ const FIREBASE_RULES_FILENAMES = {
   STORAGE: "storage.rules",
   FIRESTORE: "firestore.rules"
 }
-
-const DIRECTORY_PUBLIC = 'public'
-const OUTER_HTML = 'outer.html'
 
 export const OUTPUT_FILENAME_CLI_OPTION: Record<string, Options> = {
   o: {
@@ -97,11 +95,11 @@ const FIREBASE_JSON_EMULATORS = {
 const generateHostingConfig = (config: TiddlybaseConfig) => (
   {
     // by default, the site is the same as the projectid
-    site: config.hosting?.site ?? config.firebase?.clientConfig.projectId,
-    "public": config.hosting?.publicPath ?? join(config.instanceName, DIRECTORY_PUBLIC),
+    site: config.firebase?.hosting?.site ?? config.firebase?.clientConfig.projectId,
+    "public": config.urls?.publicPath ?? DEFAULT_URL_CONFIG.publicPath,
     "rewrites": [{
       "source": "**",
-      "destination": `/${config.hosting?.outerHTML ?? OUTER_HTML}`
+      "destination": `/${config.urls?.outerHTML ?? DEFAULT_URL_CONFIG.outerHTML}`
     }],
     "ignore": FIREBASE_JSON_HOSTING_IGNORE,
     "headers": [FIREBASE_JSON_HOSTRING_CORS_HEADERS]
@@ -205,17 +203,19 @@ export const cmdGenerateTiddlybaseConfigJson: CommandModule = {
     }),
   handler: async (args: Arguments) => {
     const outputFilename = getOutputFilename(args, 'tiddlybase-config.json');
-    const instanceName = args.instance as string;
+    const instance = args.instance as string;
     const tiddlybaseConfig: TiddlybaseConfig = {
-      instanceName,
       htmlGeneration: {
-        title: instanceName
+        title: instance
       },
       firebase: {
         clientConfig: await getFirebaseClientConfig(args.project as string | undefined)
       },
       launchConfigs: {
         default: DEFAULT_LAUNCH_CONFIG
+      },
+      defaultLaunchParameters: {
+        instance
       }
     }
     writeJSON(
@@ -251,13 +251,13 @@ export const cmdGenerateOuterHTML: CommandModule = {
   describe: 'generate HTML file for single-page app top-level frame',
   builder: (argv: Argv) => argv.options(OUTPUT_FILENAME_CLI_OPTION),
   handler: async (args: Arguments) => {
-    const { config } = requireSingleConfig(args);
+    const { config } = requireSingleConfig(args, false);
     const clientConfig = objFilter<keyof TiddlybaseClientConfig, any>((k) => TIDDLYBASE_CLIENT_CONFIG_KEYS.includes(k), config) as TiddlybaseClientConfig;
     const stringifiedClientConfig = JSON.stringify(clientConfig);
-    const outputFilename = getOutputFilename(args, `${config.instanceName}/public/outer.html`);
+    const outputFilename = getOutputFilename(args, join(config.urls?.publicPath ?? DEFAULT_URL_CONFIG.publicPath, config.urls?.outerHTML ?? DEFAULT_URL_CONFIG.outerHTML));
     writeFile(
       outputFilename,
-      renderMustacheTemplate('index.html.mustache', {
+      renderMustacheTemplate('outer.html.mustache', {
         htmlGeneration: config.htmlGeneration,
         stringifiedClientConfig
       }));

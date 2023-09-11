@@ -1,5 +1,4 @@
 import type { TiddlybaseClientConfig } from '@tiddlybase/shared/src/tiddlybase-config-schema';
-import { parseSearchParams } from '@tiddlybase/shared/src/search-params'
 import { TopLevelApp } from './app';
 
 declare global {
@@ -7,9 +6,7 @@ declare global {
 }
 
 const init = async () => {
-  const app = new TopLevelApp(
-    window.tiddlybaseClientConfig,
-    parseSearchParams(window.location.search));
+  const app = new TopLevelApp(window.tiddlybaseClientConfig);
   app.initApp();
 };
 

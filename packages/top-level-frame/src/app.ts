@@ -1,26 +1,29 @@
 import type { FirebaseApp } from '@firebase/app';
-import { initializeApp } from '@firebase/app';
-import { Functions, getFunctions } from "@firebase/functions";
-import { apiClient, apiDefiner } from "@tiddlybase/rpc/src/types";
-import { makeRPC } from "@tiddlybase/rpc/src/make-rpc";
 import type { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
 import type { TopLevelAPIForSandboxedWiki } from "@tiddlybase/rpc/src/top-level-api";
-import { FileDataSource, WritableFileDataSource } from "@tiddlybase/shared/src/file-data-source";
-import { Lazy, lazy } from "@tiddlybase/shared/src/lazy";
-import { ParsedSearchParams } from "@tiddlybase/shared/src/search-params";
+import type { FileDataSource, WritableFileDataSource } from "@tiddlybase/shared/src/file-data-source";
 import type { WritableTiddlerDataSource } from "@tiddlybase/shared/src/tiddler-data-source";
-import type { LaunchConfig, TiddlerDataSourceSpec, TiddlybaseClientConfig } from "@tiddlybase/shared/src/tiddlybase-config-schema";
-import { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
+import type { LaunchConfig, LaunchParameters, TiddlerDataSourceSpec, TiddlybaseClientConfig } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import type { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
 import type { } from '@tiddlybase/tw5-types/src/index';
-import { exposeFirebaseFunction, exposeObjectMethod, functionsDevSetup } from './api-utils';
 import type { AuthProvider } from "./auth/auth-provider";
+import type { RPC } from './types';
+
+import { initializeApp } from '@firebase/app';
+import { Functions, getFunctions } from "@firebase/functions";
+import { makeRPC } from "@tiddlybase/rpc/src/make-rpc";
+import { RPCCallbackManager } from '@tiddlybase/rpc/src/rpc-callback-manager';
+import { apiClient, apiDefiner } from "@tiddlybase/rpc/src/types";
+import { mergeConfigDefaults } from "@tiddlybase/shared/src/config-defaults";
+import { Lazy, lazy } from "@tiddlybase/shared/src/lazy";
+import { parseLaunchParameters } from 'packages/shared/src/launch-parameters';
+import { exposeFirebaseFunction, exposeObjectMethod, functionsDevSetup } from './api-utils';
 import { getAuthProvider } from "./auth/get-auth-provider";
 import { replaceChildrenWithText, toggleVisibleDOMSection } from "./dom-utils";
 import { makeFileDataSource } from "./file-data-sources/file-data-source-factory";
 import { getNormalizedLaunchConfig } from './launch-config';
 import { readTiddlerSources } from "./tiddler-data-sources/tiddler-data-source-factory";
-import { RPC } from './types';
-import { RPCCallbackManager } from '@tiddlybase/rpc/src/rpc-callback-manager';
+
 
 const initRPC = (childIframe: Window): RPC => {
   const rpc = makeRPC();
@@ -36,21 +39,29 @@ export class TopLevelApp {
   config: TiddlybaseClientConfig;
   tiddlerDataSource?: WritableTiddlerDataSource;
   rpc?: RPC
-  searchParams: ParsedSearchParams;
+  launchParameters: LaunchParameters;
   launchConfig: LaunchConfig;
   lazyFirebaseApp: Lazy<FirebaseApp>;
   authProvider: AuthProvider;
   firebaseFunctions?: Functions
   fileDataSource: FileDataSource | WritableFileDataSource | undefined;
 
-  constructor(config: TiddlybaseClientConfig, searchParams: ParsedSearchParams) {
-    this.config = config;
-    this.searchParams = searchParams;
-    this.launchConfig = getNormalizedLaunchConfig(this.searchParams, this.config);
+  constructor(config: TiddlybaseClientConfig) {
+    this.config = mergeConfigDefaults(config);
+    this.launchParameters = parseLaunchParameters(
+      window.location,
+      config.defaultLaunchParameters,
+      config.urls?.publicPath);
+    this.launchConfig = getNormalizedLaunchConfig(this.config, this.launchParameters);
     // Note: depending on the launchConfig, we might not even need a FirebaseApp instance in the future.
     // This might be good for static websites.
     // TODO: provide helpful error message if firebase is undefined
-    this.lazyFirebaseApp = lazy(() => initializeApp(this.config.firebase!.clientConfig));
+    this.lazyFirebaseApp = lazy(() => {
+      if (this.config.firebase?.clientConfig) {
+        return initializeApp(this.config.firebase.clientConfig)
+      }
+      throw new Error("Could not initialize firebase app object: no client config in tiddlybase config.")
+    });
     this.authProvider = getAuthProvider(this.lazyFirebaseApp, this.launchConfig)
   }
 
@@ -131,9 +142,9 @@ export class TopLevelApp {
     // listen to the child iframe's RPC request as soon as possible.
     rpc.toplevelAPIDefiner('childIframeReady', async () => {
       try {
-        const { tiddlers, writeStore } = await readTiddlerSources(this.config.instanceName, this.launchConfig, user.userId, this.lazyFirebaseApp, rpc);
+        const { tiddlers, writeStore } = await readTiddlerSources(this.launchParameters.instance, this.launchConfig, user.userId, this.lazyFirebaseApp, rpc);
         this.tiddlerDataSource = writeStore;
-        this.fileDataSource = makeFileDataSource(rpc, this.lazyFirebaseApp, this.config.instanceName, this.launchConfig.files);
+        this.fileDataSource = makeFileDataSource(rpc, this.lazyFirebaseApp, this.launchParameters.instance, this.launchConfig.files);
         this.exposeDataSourceAPIs(rpc);
         return {
           user,
