@@ -5,12 +5,15 @@ export type LaunchParameters = {
   instance: string;
   launchConfig: string;
   userId?: string;
-  getParameters?: Record<string, string>;
-  // Tiddler to open upon load
   tiddler?: string;
 }
 
 export type TiddlerWriteCondition = { titlePrefix: string }; // more options in the future
+
+export type TiddlerCollectionPathSpec = {
+  collection?: string,
+  pathTemplate?: string
+};
 
 export type WritableTiddlerDataSourceSpec = { writeCondition?: 'private' | 'always' | TiddlerWriteCondition };
 
@@ -20,12 +23,20 @@ export type FirestoreTiddlerDataSourceOptions = Partial<{
 
 export type TiddlerDataSourceSpec =
   | { type: 'http', url: string }
-  | { type: 'firebase-storage', collection: string, filename: string }
+  | ({
+    type: 'firebase-storage',
+    filename: string
+  }) & TiddlerCollectionPathSpec
   | ({ type: 'tiddlyweb' } & WritableTiddlerDataSourceSpec)
   | ({
-    type: 'firestore', collection: string, options?: FirestoreTiddlerDataSourceOptions
-  } & WritableTiddlerDataSourceSpec)
-  | ({ type: 'browser-storage', collection: string, useLocalStorage?: boolean } & WritableTiddlerDataSourceSpec)
+    type: 'firestore',
+    options?: FirestoreTiddlerDataSourceOptions
+  } & TiddlerCollectionPathSpec & WritableTiddlerDataSourceSpec)
+  | ({
+    type: 'browser-storage',
+    collection: string,
+    useLocalStorage?: boolean
+  } & TiddlerCollectionPathSpec & WritableTiddlerDataSourceSpec)
 
 export type FileDataSourceSpec =
   | { type: 'http', urlPrefix: string }
@@ -54,7 +65,7 @@ export interface TiddlersConfig {
 }
 
 export interface FilesConfig {
-  sources: FileDataSourceSpec[]
+  sources: FileDataSourceSpec[];
 }
 
 /**
@@ -62,17 +73,29 @@ export interface FilesConfig {
  */
 export interface LaunchConfig {
   // build is the relative path to the child iframe HTML, eg: 'tiddlybase_public/default-build.html'
-  build: string,
-  tiddlers: TiddlersConfig,
-  files: FilesConfig,
-  auth: AuthProviderSpec,
-  functions?: FunctionsConfig
+  build: string;
+  tiddlers: TiddlersConfig;
+  files: FilesConfig;
+  auth: AuthProviderSpec;
+  functions?: FunctionsConfig;
 }
 
 export interface URLConfig {
-  publicPath: string
-  outerHTML: string
-  pathRegexp: string;
+  publicPath: string;
+  outerHTML: string;
+  pathRegExp: string;
+}
+
+export interface FirebaseClientCofig {
+  projectId: string;
+  appId: string;
+  databaseURL?: string;
+  storageBucket: string;
+  locationId?: string;
+  apiKey: string;
+  authDomain: string;
+  messagingSenderId: string;
+  measurementId?: string;
 }
 
 /**
@@ -92,24 +115,14 @@ export interface TiddlybaseConfig {
    * from the command line via "yarn firebase apps:sdkconfig web"
    */
   firebase?: {
-    clientConfig: {
-      projectId: string,
-      appId: string,
-      databaseURL?: string,
-      storageBucket: string,
-      locationId?: string,
-      apiKey: string,
-      authDomain: string,
-      messagingSenderId: string,
-      measurementId?: string
-    },
+    clientConfig: FirebaseClientCofig,
     hosting?: {
       site: string
     }
   };
   urls?: Partial<URLConfig>;
-  launchConfigs: Record<string, Partial<LaunchConfig>>;
   defaultLaunchParameters?: Partial<LaunchParameters>;
+  launchConfigs: Record<string, Partial<LaunchConfig>>;
 }
 
 // The client config is written to outer.html.

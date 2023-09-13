@@ -1,7 +1,11 @@
 import { TiddlerCollection, WritableTiddlerDataSource } from "@tiddlybase/shared/src/tiddler-data-source";
+import { LaunchParameters } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import { uriEncodeLaunchParameters } from "./tiddler-store-utils";
+import mustache from 'mustache'
 
 const KEY_SEPARATOR = "/";
 const KEY_PREFIX = "tiddlybase";
+export const DEFAULT_PATH_TEMPLATE = `${KEY_PREFIX}/{{instance}}/{{collection}}`
 
 // based on: https://stackoverflow.com/a/3138591
 export const forAllKeys = (storage: Storage, fn: (key: string) => void): void => {
@@ -26,16 +30,26 @@ const parseKey = (key:string):KeyParts|undefined => {
 
 export class BrowserStorageDataSource implements WritableTiddlerDataSource {
   storage: Storage;
-  tiddlybaseInstanceName: string;
-  tiddlerCollectionName: string;
-  constructor(storage: Storage, tiddlybaseInstanceName: string, tiddlerCollectionName: string) {
+  launchParameters: LaunchParameters;
+  collectionPath: string;
+  collection: string;
+
+  constructor(
+    launchParameters: LaunchParameters,
+    storage: Storage,
+    collection?: string,
+    pathTemplate?: string) {
     this.storage = storage;
-    this.tiddlybaseInstanceName = tiddlybaseInstanceName;
-    this.tiddlerCollectionName = tiddlerCollectionName;
+    this.launchParameters = uriEncodeLaunchParameters(launchParameters);
+    this.collection = encodeURIComponent(collection ?? "");
+    this.collectionPath = mustache.render(pathTemplate ?? DEFAULT_PATH_TEMPLATE, {
+      ...this.launchParameters,
+      collection: this.collection
+    })
   }
 
   private makeKey (title:string):string {
-    return [KEY_PREFIX, this.tiddlybaseInstanceName, this.tiddlerCollectionName, title].map(encodeURIComponent).join(KEY_SEPARATOR);
+    return `${this.collectionPath}/${encodeURIComponent(title)}`;
   }
 
   private getTiddlerSync (title: string): $tw.TiddlerFields | undefined {
@@ -65,7 +79,7 @@ export class BrowserStorageDataSource implements WritableTiddlerDataSource {
       const keyParts = parseKey(key);
       if (keyParts) {
         const [instance, collection, title] = keyParts;
-        if (instance === this.tiddlybaseInstanceName && collection === this.tiddlerCollectionName) {
+        if (instance === this.launchParameters.instance && collection === this.collection) {
           const tiddler = this.getTiddlerSync(title);
           if (tiddler) {
             allTiddlers[tiddler.title] = tiddler

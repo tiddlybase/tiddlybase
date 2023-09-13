@@ -1,5 +1,5 @@
 import { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
-import { AuthProvider, OnLoginHandler, OnLogoutHandler } from "./auth-provider";
+import { AuthProvider, OnLoginHandler, OnLogoutHandler } from "@tiddlybase/shared/src/auth-provider";
 
 export class TrivialAuthProvider implements AuthProvider {
   user: TiddlyBaseUser;

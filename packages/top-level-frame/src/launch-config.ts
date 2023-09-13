@@ -1,6 +1,6 @@
 
 import { DEFAULT_AUTH, DEFAULT_BUILD_NAME, DEFAULT_LAUNCH_CONFIG } from "@tiddlybase/shared/src/constants";
-import type { FilesConfig, LaunchConfig, LaunchParameters, TiddlersConfig, TiddlybaseClientConfig } from "packages/shared/src/tiddlybase-config-schema";
+import type { FilesConfig, LaunchConfig, LaunchParameters, TiddlersConfig, TiddlybaseClientConfig } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 
 export const getNormalizedLaunchConfig = (config: TiddlybaseClientConfig, launchParameters:LaunchParameters): LaunchConfig => {
   // was there a launchConfig in the URL and it refers to an existing launchConfig, use that.

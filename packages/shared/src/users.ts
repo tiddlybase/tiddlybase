@@ -12,5 +12,3 @@ export type TiddlyBaseUser = {
   providerId?: string,
   userId: string
 }
-
-export const substituteUserid = (template: string, userid: string): string => template.replace("$USERID", () => userid);

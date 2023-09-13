@@ -6,8 +6,6 @@ declare namespace $tw {
     topLevelClient: import("@tiddlybase/rpc/src/types").APIClient<import("@tiddlybase/rpc/src/top-level-api").TopLevelAPIForSandboxedWiki>
     rpc: import("mini-iframe-rpc").MiniIframeRPC;
     rpcCallbackManager: import("@tiddlybase/rpc/src/rpc-callback-manager").RPCCallbackManager;
-    user: import("@tiddlybase/shared/src/users").TiddlyBaseUser,
-    parentLocation: Partial<Location>,
     isLocal: boolean
   }>;
 

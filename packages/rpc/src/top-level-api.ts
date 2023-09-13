@@ -3,13 +3,9 @@ import type { AddNumbers, NotifyAdmin } from "@tiddlybase/functions/src/apis";
 import { ParentAPIBase } from "./base";
 import type { WritableTiddlerDataSource } from "@tiddlybase/shared/src/tiddler-data-source";
 import type { WritableFileDataSource } from "@tiddlybase/shared/src/file-data-source";
-import type { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
-
 
 export interface ChildInitProps {
-  user: TiddlyBaseUser,
-  tiddlers: $tw.TiddlerFields[],
-  parentLocation: Partial<Location>
+  tiddlers: $tw.TiddlerFields[]
 }
 
 export interface AuthAPI {

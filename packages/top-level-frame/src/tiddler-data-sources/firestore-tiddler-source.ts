@@ -2,8 +2,8 @@ import type { TiddlerDataSourceChangeListener, TiddlerCollection, WritableTiddle
 import type { Firestore } from '@firebase/firestore';
 import { setDoc, doc, DocumentReference, DocumentData, collection, onSnapshot, Unsubscribe, getDoc, deleteDoc, Timestamp, serverTimestamp } from "firebase/firestore";
 import type { } from '@tiddlybase/tw5-types/src/index'
-import { getFirestoreCollectionPath } from "./tiddler-store-utils";
-import type { FirestoreTiddlerDataSourceOptions } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import { getFirestoreCollectionPath, DEFAULT_FIRESTORE_PATH_TEMPLATE, evaluateMustacheTemplate } from "./tiddler-store-utils";
+import type { FirestoreTiddlerDataSourceOptions, LaunchParameters } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import { normalizeFirebaseReadError } from "../firebase-utils";
 
 const SENTINEL_DOC_ID = "\uffffsentinel"
@@ -26,32 +26,6 @@ const convertTimestamps = (tiddler: $tw.TiddlerFields): $tw.TiddlerFields => {
   return tiddler
 }
 
-const writeTiddler = async (firestore: Firestore, userid: string, path: string, tiddler: $tw.TiddlerFields, docId: string): Promise<DocumentReference<DocumentData>> => {
-  const docRef = doc(firestore, path, docId);
-  await setDoc(docRef, {
-    tiddler: {
-      ...tiddler,
-      created: tiddler.created || serverTimestamp(),
-      creator: tiddler.creator || userid,
-      modifier: userid,
-      modified: serverTimestamp(),
-    }
-  });
-  console.log("Document written with ID: ", docRef.id);
-  return docRef;
-}
-
-const createCollectionSentinel = async (firestore: Firestore, tiddlybaseInstanceName: string, tiddlerCollectionName: string): Promise<DocumentReference<DocumentData>> => {
-  const path = getFirestoreCollectionPath(tiddlybaseInstanceName, tiddlerCollectionName);
-  const docRef = doc(firestore, path, SENTINEL_DOC_ID);
-  // No transaction, so possible but unlikely race condition, but that doesn't really matter too much
-  if (!(await getDoc(docRef)).exists()) {
-    await setDoc(docRef, {});
-    console.log("Document written with ID: ", docRef.id);
-  }
-  return docRef;
-};
-
 type InitialReadState = {
   tiddlers: TiddlerCollection;
   completePromise: Promise<TiddlerCollection>;
@@ -62,13 +36,22 @@ type InitialReadState = {
 export class FirestoreDataSource implements WritableTiddlerDataSource {
 
   firestore: Firestore;
-  userid: string;
-  instance: string;
-  collection: string;
+  collectionPath: string;
   options: FirestoreTiddlerDataSourceOptions | undefined;
   changeListener: TiddlerDataSourceChangeListener | undefined;
   initialReadState: InitialReadState;
   unsubscribe: Unsubscribe | undefined;
+  launchParameters: LaunchParameters;
+
+  private async createCollectionSentinel (): Promise<DocumentReference<DocumentData>> {
+    const docRef = doc(this.firestore, this.collectionPath, SENTINEL_DOC_ID);
+    // No transaction, so possible but unlikely race condition, but that doesn't really matter too much,
+    // because the worst case scenario is that multiple writers write the same empty sentinel doc
+    if (!(await getDoc(docRef)).exists()) {
+      await setDoc(docRef, {});
+    }
+    return docRef;
+  };
 
 
   private getInitialReadState(): InitialReadState {
@@ -85,25 +68,28 @@ export class FirestoreDataSource implements WritableTiddlerDataSource {
   }
 
   constructor(
+    launchParameters:LaunchParameters,
     firestore: Firestore,
-    userid: string,
-    instance: string,
-    collection: string,
+    collection?: string,
+    pathTemplate?: string,
     options?: FirestoreTiddlerDataSourceOptions,
-    changeListener?: TiddlerDataSourceChangeListener) {
-    this.firestore = firestore;
-    this.userid = userid;
-    this.instance = instance;
-    this.collection = collection;
-    this.options = options;
-    this.changeListener = changeListener;
-    this.initialReadState = this.getInitialReadState();
+    changeListener?: TiddlerDataSourceChangeListener,
+  ) {
+      this.launchParameters = launchParameters;
+      this.firestore = firestore;
+      this.collectionPath = getFirestoreCollectionPath(
+        launchParameters,
+        evaluateMustacheTemplate(collection ?? "", launchParameters),
+        pathTemplate ?? DEFAULT_FIRESTORE_PATH_TEMPLATE)
+      this.options = options;
+      this.changeListener = changeListener;
+      this.initialReadState = this.getInitialReadState();
   }
 
   async startListening() {
     try {
-      await createCollectionSentinel(this.firestore, this.instance, this.collection);
-      this.unsubscribe = onSnapshot(collection(this.firestore, getFirestoreCollectionPath(this.instance, this.collection)), (snapshot) => {
+      await this.createCollectionSentinel();
+      this.unsubscribe = onSnapshot(collection(this.firestore, this.collectionPath), (snapshot) => {
         // from: https://firebase.google.com/docs/firestore/query-data/listen#view_changes_between_snapshots
         snapshot.docChanges().forEach((change) => {
           if (change.type === "added" || change.type === "modified") {
@@ -136,7 +122,7 @@ export class FirestoreDataSource implements WritableTiddlerDataSource {
         });
       });
     } catch (e: any) {
-      throw normalizeFirebaseReadError(e, this.instance, this.collection, 'firestore');
+      throw normalizeFirebaseReadError(e, this.launchParameters.instance, this.collectionPath, 'firestore');
     }
   }
 
@@ -158,14 +144,21 @@ export class FirestoreDataSource implements WritableTiddlerDataSource {
     return undefined;
   }
   async setTiddler(tiddler: $tw.TiddlerFields): Promise<$tw.TiddlerFields> {
-    const docId = this.getDocId(tiddler.title);
-    const result = writeTiddler(this.firestore, this.userid, getFirestoreCollectionPath(this.instance, this.collection), tiddler, docId);
-    console.log('setTiddler (outer)', tiddler, result);
+    const docRef = doc(this.firestore, this.collectionPath, this.getDocId(tiddler.title));
+    await setDoc(docRef, {
+      tiddler: {
+        ...tiddler,
+        created: tiddler.created || serverTimestamp(),
+        creator: tiddler.creator || this.launchParameters.userId,
+        modifier: this.launchParameters.userId,
+        modified: serverTimestamp(),
+      }
+    });
     return tiddler;
   }
   async deleteTiddler(title: string): Promise<void> {
     console.log('deleteTiddler (outer)', title);
-    const docRef = doc(this.firestore, getFirestoreCollectionPath(this.instance, this.collection), this.getDocId(title));
+    const docRef = doc(this.firestore, this.collectionPath, this.getDocId(title));
     return await deleteDoc(docRef);
   }
   async getAllTiddlers(): Promise<TiddlerCollection> {

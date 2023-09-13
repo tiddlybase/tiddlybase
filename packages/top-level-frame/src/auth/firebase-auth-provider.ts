@@ -1,7 +1,7 @@
-import { AuthDetails, AuthProvider, OnLoginHandler, OnLogoutHandler } from "./auth-provider";
+import { AuthDetails, AuthProvider, OnLoginHandler, OnLogoutHandler } from "@tiddlybase/shared/src/auth-provider";
 import { FirebaseApp } from '@firebase/app'
 import { getAuth, Auth, User } from '@firebase/auth'
-import { TiddlyBaseUser } from "packages/shared/src/users";
+import { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
 import { Lazy } from "@tiddlybase/shared/src/lazy";
 
 

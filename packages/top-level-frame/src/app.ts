@@ -1,3 +1,4 @@
+import type { } from '@tiddlybase/tw5-types/src/index';
 import type { FirebaseApp } from '@firebase/app';
 import type { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
 import type { TopLevelAPIForSandboxedWiki } from "@tiddlybase/rpc/src/top-level-api";
@@ -5,8 +6,7 @@ import type { FileDataSource, WritableFileDataSource } from "@tiddlybase/shared/
 import type { WritableTiddlerDataSource } from "@tiddlybase/shared/src/tiddler-data-source";
 import type { LaunchConfig, LaunchParameters, TiddlerDataSourceSpec, TiddlybaseClientConfig } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import type { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
-import type { } from '@tiddlybase/tw5-types/src/index';
-import type { AuthProvider } from "./auth/auth-provider";
+import type { AuthProvider } from "@tiddlybase/shared/src/auth-provider";
 import type { RPC } from './types';
 
 import { initializeApp } from '@firebase/app';
@@ -23,6 +23,7 @@ import { replaceChildrenWithText, toggleVisibleDOMSection } from "./dom-utils";
 import { makeFileDataSource } from "./file-data-sources/file-data-source-factory";
 import { getNormalizedLaunchConfig } from './launch-config';
 import { readTiddlerSources } from "./tiddler-data-sources/tiddler-data-source-factory";
+import { TIDDLYBASE_TITLE_PARENT_LOCATION, TIDDLYBASE_TITLE_USER_PROFILE } from "@tiddlybase/shared/src/constants";
 
 
 const initRPC = (childIframe: Window): RPC => {
@@ -62,7 +63,7 @@ export class TopLevelApp {
       }
       throw new Error("Could not initialize firebase app object: no client config in tiddlybase config.")
     });
-    this.authProvider = getAuthProvider(this.lazyFirebaseApp, this.launchConfig)
+    this.authProvider = getAuthProvider(this.launchParameters, this.launchConfig, this.lazyFirebaseApp);
   }
 
   getIframeURL(): string {
@@ -84,7 +85,7 @@ export class TopLevelApp {
     return iframe.contentWindow!;
   };
 
-  async loadWiki(user: TiddlyBaseUser) {
+  async loadWiki(user?: TiddlyBaseUser) {
     const iframe = this.createWikiIframe(this.getIframeURL());
     this.rpc = initRPC(iframe);
     await this.createParentAPI(this.rpc, user);
@@ -131,7 +132,7 @@ export class TopLevelApp {
     }
   }
 
-  async createParentAPI(rpc: RPC, user: TiddlyBaseUser) {
+  async createParentAPI(rpc: RPC, user?: TiddlyBaseUser) {
 
     const loadError = async (message: string) => {
       replaceChildrenWithText(document.getElementById("wiki-error-message"), message);
@@ -142,14 +143,20 @@ export class TopLevelApp {
     // listen to the child iframe's RPC request as soon as possible.
     rpc.toplevelAPIDefiner('childIframeReady', async () => {
       try {
-        const { tiddlers, writeStore } = await readTiddlerSources(this.launchParameters.instance, this.launchConfig, user.userId, this.lazyFirebaseApp, rpc);
+        const { tiddlers, writeStore } = await readTiddlerSources(this.launchParameters, this.launchConfig, this.lazyFirebaseApp, rpc);
         this.tiddlerDataSource = writeStore;
-        this.fileDataSource = makeFileDataSource(rpc, this.lazyFirebaseApp, this.launchParameters.instance, this.launchConfig.files);
+        this.fileDataSource = makeFileDataSource(this.launchParameters, rpc, this.lazyFirebaseApp, this.launchConfig.files);
         this.exposeDataSourceAPIs(rpc);
         return {
           user,
-          tiddlers: Object.values(tiddlers),
-          parentLocation: JSON.parse(JSON.stringify(window.location))
+          tiddlers: [...Object.values(tiddlers), {
+            ...user,
+            title: TIDDLYBASE_TITLE_USER_PROFILE,
+          }, {
+            ...JSON.parse(JSON.stringify(window.location)),
+            title: TIDDLYBASE_TITLE_PARENT_LOCATION
+          }
+        ]
         }
       } catch (e: any) {
         let message = e?.message ?? e?.toString() ?? "load error";
@@ -167,6 +174,17 @@ export class TopLevelApp {
     rpc.toplevelAPIDefiner('loadError', loadError);
   }
 
+  private onAuthChange(user?: TiddlyBaseUser) {
+    this.launchParameters.userId = user?.userId;
+    const wikiHasBeenLoaded = !!this.rpc;
+    if (!wikiHasBeenLoaded) {
+      this.loadWiki(user);
+      toggleVisibleDOMSection('wiki-container');
+    } else {
+      this.rpc?.sandboxedAPIClient('onSetTiddler', [{...user, title: TIDDLYBASE_TITLE_USER_PROFILE}])
+    }
+  }
+
 
   initApp() {
 
@@ -175,12 +193,11 @@ export class TopLevelApp {
     }
 
     this.authProvider.onLogin((user, _authDetails) => {
-      toggleVisibleDOMSection('user-signed-in');
-      this.loadWiki(user);
+      this.onAuthChange(user);
     });
 
     this.authProvider.onLogout(() => {
-      toggleVisibleDOMSection('user-signed-out');
+      this.onAuthChange();
     });
 
   };

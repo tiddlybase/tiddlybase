@@ -1,4 +1,4 @@
-import { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
+import { TiddlyBaseUser } from "./users";
 
 export interface AuthDetails {
   lastLogin?: Date

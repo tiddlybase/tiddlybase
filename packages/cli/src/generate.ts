@@ -1,5 +1,5 @@
 import { LaunchConfig, TIDDLYBASE_CLIENT_CONFIG_KEYS, TiddlybaseClientConfig, TiddlybaseConfig } from '@tiddlybase/shared/src/tiddlybase-config-schema';
-import { objFilter } from '@tiddlybase/shared/src/obj-filter';
+import { objFilter } from '@tiddlybase/shared/src/obj-utils';
 import { DEFAULT_URL_CONFIG } from '@tiddlybase/shared/src/constants';
 import { Arguments, Argv, CommandModule, Options } from 'yargs';
 import { ParsedConfig, readConfig, requireSingleConfig } from './config';
@@ -7,7 +7,6 @@ import { dirname, resolve, join } from 'path';
 import { render } from 'mustache';
 import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { runCommand } from './run-child-process';
-// import { render } from 'mustache';
 
 const FIREBASE_RULES_FILENAMES = {
   STORAGE: "storage.rules",

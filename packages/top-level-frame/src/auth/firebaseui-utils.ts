@@ -4,16 +4,21 @@ import {FirebaseApp} from "@firebase/app"
 import * as firebaseui from 'firebaseui';
 import { FirestoreDataSource } from "../tiddler-data-sources/firestore-tiddler-source";
 import { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
-import { objFilter } from '@tiddlybase/shared/src/obj-filter';
+import { objFilter } from '@tiddlybase/shared/src/obj-utils';
 import { Lazy } from "@tiddlybase/shared/src/lazy";
+import { LaunchParameters } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import { ADMIN_INSTANCE_NAME } from "@tiddlybase/shared/src/constants";
 
-export const writeUserProfile = async (lazyFirebaseApp:Lazy<FirebaseApp>, user:TiddlyBaseUser) => {
+export const writeUserProfile = async (launchParameters: LaunchParameters, lazyFirebaseApp:Lazy<FirebaseApp>, user:TiddlyBaseUser) => {
   const firestore = getFirestore(lazyFirebaseApp());
     return await (new FirestoreDataSource(
+      {
+        ...launchParameters,
+        instance: ADMIN_INSTANCE_NAME
+      },
       firestore,
-      user.userId,
-      "admin",
       "users",
+      undefined,
       {
         stripDocIDPrefix: "users/"
       }
@@ -25,12 +30,12 @@ export const writeUserProfile = async (lazyFirebaseApp:Lazy<FirebaseApp>, user:T
     })
   }
 
-export const addFirebaseUI = (authProvider: FirebaseAuthProvider, domParentId:string, lazyFirebaseApp:Lazy<FirebaseApp>, firebaseUIConfig:firebaseui.auth.Config, writeToFirestore:boolean) => {
+export const addFirebaseUI = (launchParameters: LaunchParameters, authProvider: FirebaseAuthProvider, domParentId:string, lazyFirebaseApp:Lazy<FirebaseApp>, firebaseUIConfig:firebaseui.auth.Config, writeToFirestore:boolean) => {
   const ui = new firebaseui.auth.AuthUI(authProvider.auth);
   if (writeToFirestore) {
     authProvider.onLogin((user, authDetails) => {
       if (!authDetails.lastLogin) {
-        writeUserProfile(lazyFirebaseApp, user);
+        writeUserProfile(launchParameters, lazyFirebaseApp, user);
       }
     });
   }

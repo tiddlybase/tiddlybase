@@ -3,30 +3,46 @@ import { FirebaseStorage, getDownloadURL, ref, uploadBytesResumable, deleteObjec
 import { normalizeFirebaseReadError } from "../firebase-utils";
 import { CallbackMap } from "@tiddlybase/rpc/src/types";
 import { RPCCallbackManager } from "@tiddlybase/rpc/src/rpc-callback-manager";
+import { LaunchParameters } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import mustache from 'mustache'
+import { uriEncodeLaunchParameters } from "../tiddler-data-sources/tiddler-store-utils";
 
 // TODO: this files prefix should be configurable in the future!
 const FILES_PREFIX = "files/"
+const DEFAULT_PATH_TEMPLATE = `/{{instance}}/{{collection}}/{{filename}}`
 
 export class FirebaseStorageDataSource implements WritableFileDataSource {
   storage: FirebaseStorage;
-  instance: string;
-  collection: string;
+  collectionPath: string;
   rpcCallbackManager: RPCCallbackManager;
+  launchParameters: LaunchParameters;
 
-  constructor(rpcCallbackManager: RPCCallbackManager, storage: FirebaseStorage, instance: string, collection: string) {
+  constructor(
+    launchParameters:LaunchParameters,
+    storage: FirebaseStorage,
+    rpcCallbackManager: RPCCallbackManager,
+    collection?: string,
+    pathTemplate?: string
+  ) {
+    this.launchParameters = uriEncodeLaunchParameters(launchParameters);
     this.rpcCallbackManager = rpcCallbackManager;
     this.storage = storage;
-    this.instance = instance;
-    this.collection = collection;
+    this.collectionPath = mustache.render(pathTemplate ?? DEFAULT_PATH_TEMPLATE, {
+      ...this.launchParameters,
+      collection: encodeURIComponent(collection ?? "")
+    });
+  }
+
+  private stripFilesPrefix(pathpart:string):string {
+    if (pathpart.startsWith(FILES_PREFIX)) {
+      return pathpart.substring(FILES_PREFIX.length);
+    }
+    return pathpart;
   }
 
   getFullPath(filename: string): string {
-    let normalizedFilename = filename;
-    // strip "files/" prefix if present
-    if (normalizedFilename.startsWith(FILES_PREFIX)) {
-      normalizedFilename = normalizedFilename.substring(FILES_PREFIX.length);
-    }
-    return `${this.instance}/${this.collection}/${normalizedFilename}`;
+    let normalizedFilename = this.stripFilesPrefix(filename);
+    return `${this.collectionPath}/${normalizedFilename}`;
   }
   async readFile(filename: string, referenceType?: FileReferenceType): Promise<FileReference> {
     try {
@@ -37,7 +53,7 @@ export class FirebaseStorageDataSource implements WritableFileDataSource {
       }
       return { type: 'blob', blob: await (await fetch(url)).blob() };
     } catch (e: any) {
-      throw normalizeFirebaseReadError(e, this.instance, this.collection, 'firebase-storage');
+      throw normalizeFirebaseReadError(e, this.launchParameters.instance, this.collectionPath, 'firebase-storage');
     }
   }
 

@@ -1,7 +1,7 @@
-import { InstanceSpec, PERMISSIONED_DATA_SOURCES, PermissionedDataSource, UserId } from '@tiddlybase/shared/src/instance-spec-schema';
-import { objFilter } from '@tiddlybase/shared/src/obj-filter';
+import { InstanceSpec, PERMISSIONED_DATA_SOURCES, PermissionedDataSource } from '@tiddlybase/shared/src/instance-spec-schema';
+import { objFilter } from '@tiddlybase/shared/src/obj-utils';
 import { makeInstancePermissionsUpdate, instanceSpecPath } from '@tiddlybase/shared/src/permissions';
-import { TiddlyBaseUser, USER_ROLES, substituteUserid } from '@tiddlybase/shared/src/users';
+import { TiddlyBaseUser, USER_ROLES } from '@tiddlybase/shared/src/users';
 import * as crypto from "crypto";
 import * as admin from 'firebase-admin';
 import { UserRecord } from 'firebase-admin/lib/auth/user-record';
@@ -9,22 +9,30 @@ import { inspect } from 'util';
 import { Argv, CommandModule } from 'yargs';
 import { CLIContext, withCLIContext } from './cli-context';
 import {default as merge} from 'lodash.merge';
+import { LaunchParameters } from 'packages/shared/src/tiddlybase-config-schema';
+import { DEFAULT_LAUNCH_PARAMETERS } from '@tiddlybase/shared/src/constants';
+import { render } from 'mustache';
 
 const RE_UID = /^[a-zA-Z0-9]+$/;
 const ROLE_CHOICES = Object.keys(USER_ROLES).map(s => s.toLowerCase());
 
 // doSetRole(cliContext.app, user.uid, config.instanceName, cliContext.args.collection, roleNumber);
-const doSetRole = async (app: admin.app.App, userId: UserId, instanceName: string, resourceType: PermissionedDataSource, collectionName: string, roleNumber: number): Promise<InstanceSpec> => {
-  const docPath = instanceSpecPath(instanceName);
+const doSetRole = async (
+  app: admin.app.App,
+  launchParameters:LaunchParameters,
+  resourceType: PermissionedDataSource,
+  collectionName: string,
+  roleNumber: number): Promise<InstanceSpec> => {
+  const docPath = instanceSpecPath(launchParameters.instance);
   const firestore = app.firestore();
   const instanceSpec = (await firestore.doc(docPath).get()).data()?.tiddler ?? {};
-  merge(instanceSpec, makeInstancePermissionsUpdate(instanceSpec, resourceType, userId, collectionName, roleNumber));
+  merge(instanceSpec, makeInstancePermissionsUpdate(resourceType, launchParameters.userId!, collectionName, roleNumber));
   await firestore.doc(docPath).set({
     tiddler: {
       ...instanceSpec,
       modified: admin.firestore.FieldValue.serverTimestamp(),
       created: instanceSpec.created ?? admin.firestore.FieldValue.serverTimestamp(),
-      title: instanceSpec.title ?? `instances/${instanceName}`
+      title: instanceSpec.title ?? `instances/${launchParameters.instance}`
     }
   });
   return instanceSpec;
@@ -102,7 +110,18 @@ export const setCollectionRole: CommandModule = {
       throw new Error('Unknown role ' + cliContext.args.role);
     }
     const resourceType = cliContext.args['resource-type'] as PermissionedDataSource;
-    const instanceSpec = await doSetRole(cliContext.app, user.uid, cliContext.args.instance as string, resourceType, encodeURIComponent(substituteUserid(cliContext.args.collection as string, user.uid)), roleNumber);
+    const launchParameters:LaunchParameters = {
+      ...DEFAULT_LAUNCH_PARAMETERS,
+      userId: user.uid,
+      instance: cliContext.args.instance as string
+    }
+    const collectionName = render(cliContext.args.collection as string, launchParameters);
+    const instanceSpec = await doSetRole(
+      cliContext.app,
+      launchParameters,
+      resourceType,
+      collectionName,
+      roleNumber);
     console.log(JSON.stringify(instanceSpec, null, 4));
   }),
 };

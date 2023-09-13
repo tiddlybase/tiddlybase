@@ -4,9 +4,9 @@ import { makeRPC } from "@tiddlybase/rpc/src/make-rpc";
 import type { TopLevelAPIForSandboxedWiki } from "@tiddlybase/rpc/src/top-level-api";
 import type { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
 import { PatchedModules } from "./patched-modules";
-import { RPCCallbackManager } from "packages/rpc/src/rpc-callback-manager";
+import { RPCCallbackManager } from "@tiddlybase/rpc/src/rpc-callback-manager";
+import { TIDDLYBASE_INIT_SINGLETONS_TITLE } from "@tiddlybase/shared/src/constants";
 
-export const TIDDLYBASE_INIT_SINGLETONS_TITLE = "$:/plugins/tiddlybase/init/singletons";
 
 (() => {
 
@@ -48,15 +48,11 @@ export const TIDDLYBASE_INIT_SINGLETONS_TITLE = "$:/plugins/tiddlybase/init/sing
       });
       const topLevelResponse = await topLevelClient('childIframeReady', []);
       const {
-        user,
         tiddlers,
-        parentLocation,
       } = topLevelResponse;
       console.log('child iframe received user info', topLevelResponse);
       window.$tw.tiddlybase = {
         topLevelClient,
-        parentLocation,
-        user,
         rpc,
         rpcCallbackManager: new RPCCallbackManager(rpc, window.parent)
       };

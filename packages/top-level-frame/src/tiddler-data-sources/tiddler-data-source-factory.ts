@@ -1,5 +1,5 @@
 import { TiddlerDataSourceChangeListener, TiddlerCollection, TiddlerProvenance, TiddlerDataSource, TiddlerDataSourceWithSpec, WritableTiddlerDataSource } from "@tiddlybase/shared/src/tiddler-data-source";
-import { LaunchConfig, TiddlerDataSourceSpec } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import { LaunchConfig, LaunchParameters, TiddlerDataSourceSpec } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import { FirestoreDataSource } from "./firestore-tiddler-source";
 import { APIClient } from "@tiddlybase/rpc/src/types";
 import { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
@@ -10,11 +10,11 @@ import { FirebaseApp } from '@firebase/app'
 import { getStorage } from '@firebase/storage';
 import { getFirestore } from "firebase/firestore";
 import { Lazy } from "@tiddlybase/shared/src/lazy";
-import { substituteUserid } from "@tiddlybase/shared/src/users";
 import { HttpFileDataSource } from "../file-data-sources/http-file-source";
 import { FileDataSourceTiddlerSource } from "./file-storage-tiddler-source";
 import { FirebaseStorageDataSource } from "../file-data-sources/firebase-storage-file-source";
 import { RPC } from "../types";
+import { TIDDLYBASE_LOCAL_STATE_PREFIX } from "@tiddlybase/shared/src/constants";
 
 export class ProxyToSandboxedIframeChangeListener implements TiddlerDataSourceChangeListener {
   sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>;
@@ -24,39 +24,53 @@ export class ProxyToSandboxedIframeChangeListener implements TiddlerDataSourceCh
   }
 
   onSetTiddler(tiddler: $tw.TiddlerFields): void {
+    if (tiddler.title.startsWith(TIDDLYBASE_LOCAL_STATE_PREFIX)) {
+      console.log(`Ignoring update to tiddler ${tiddler.title} due to TIDDLYBASE_LOCAL_STATE_PREFIX title prefix`, tiddler)
+      return;
+    }
     this.sandboxedAPIClient('onSetTiddler', [tiddler]);
   }
   onDeleteTiddler(title: string): void {
+    if (title.startsWith(TIDDLYBASE_LOCAL_STATE_PREFIX)) {
+      console.log(`Ignoring delete tiddler ${title} due to TIDDLYBASE_LOCAL_STATE_PREFIX title prefix`)
+      return;
+    }
     this.sandboxedAPIClient('onDeleteTiddler', [title]);
   }
 }
 
-const getTiddlerSource = async (instanceName:string, spec: TiddlerDataSourceSpec, userid: string, lazyFirebaseApp: Lazy<FirebaseApp>, rpc:RPC): Promise<TiddlerDataSource> => {
+const getTiddlerSource = async (launchParameters:LaunchParameters, spec: TiddlerDataSourceSpec, lazyFirebaseApp: Lazy<FirebaseApp>, rpc:RPC): Promise<TiddlerDataSource> => {
   switch (spec.type) {
     case "http":
       return new FileDataSourceTiddlerSource(
         new HttpFileDataSource(spec.url), '');
     case "firebase-storage":
-      const storage = getStorage(lazyFirebaseApp());
+      const gcpStorage = getStorage(lazyFirebaseApp());
       return new FileDataSourceTiddlerSource(
         new FirebaseStorageDataSource(
+          launchParameters,
+          gcpStorage,
           rpc.rpcCallbackManager,
-          storage,
-          instanceName,
-          spec.collection
+          spec.collection,
+          spec.pathTemplate
         ),
         spec.filename);
     case "browser-storage":
-      return new BrowserStorageDataSource(spec.useLocalStorage === true ? window.localStorage : window.sessionStorage, instanceName, spec.collection)
+      const browserStorage = spec.useLocalStorage === true ? window.localStorage : window.sessionStorage;
+      return new BrowserStorageDataSource(
+        launchParameters,
+        browserStorage,
+        spec.collection,
+        spec.pathTemplate)
     case "tiddlyweb":
       return new TiddlyWebTiddlerStore();
     case "firestore":
       const firestore = getFirestore(lazyFirebaseApp());
       const firestoreTiddlerStore = new FirestoreDataSource(
+        launchParameters,
         firestore,
-        userid,
-        instanceName,
-        substituteUserid(spec.collection, userid),
+        spec.collection,
+        spec.pathTemplate,
         spec.options,
         // TODO: only notify the client if the affected tiddler is not overridden
         // by another TiddlerDataSource according to tiddler provenance.
@@ -79,8 +93,8 @@ type TiddlerSourcePromiseWithSpec = {
   spec: TiddlerDataSourceSpec;
 }
 
-export const readTiddlerSources = async (instanceName:string, launchConfig: LaunchConfig, userid: string, lazyFirebaseApp: Lazy<FirebaseApp>, rpc:RPC): Promise<MergedSources> => {
-  const sourcePromisesWithSpecs: TiddlerSourcePromiseWithSpec[] = launchConfig.tiddlers.sources.map(spec => ({ spec, source: getTiddlerSource(instanceName, spec, userid, lazyFirebaseApp, rpc) }));
+export const readTiddlerSources = async (launchParameters:LaunchParameters, launchConfig: LaunchConfig, lazyFirebaseApp: Lazy<FirebaseApp>, rpc:RPC): Promise<MergedSources> => {
+  const sourcePromisesWithSpecs: TiddlerSourcePromiseWithSpec[] = launchConfig.tiddlers.sources.map(spec => ({ spec, source: getTiddlerSource(launchParameters, spec, lazyFirebaseApp, rpc) }));
   const collections = await Promise.all(sourcePromisesWithSpecs.map(async s => {
     try {
       return await (await s.source).getAllTiddlers();

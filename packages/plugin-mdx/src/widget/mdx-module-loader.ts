@@ -472,7 +472,6 @@ export class MDXModuleLoader {
       moduleName,
       visited);
   }
-  console.log("getTransitiveDependencies", visited)
   return visited;
 }
 
@@ -484,7 +483,6 @@ export class MDXModuleLoader {
       moduleName,
       visited);
   }
-  console.log("getTransitiveConsumers", visited)
   return visited;
 }
 

@@ -2,6 +2,7 @@ import type {} from "@tiddlybase/tw5-types/src/index"
 import { UploadEventHandler } from "@tiddlybase/shared/src/file-data-source";
 import { makeInvocationObserver } from "@tiddlybase/shared/src/invocation-observer";
 import {createSession, destroySession} from "./upload-sessions"
+import {TIDDLYBASE_TITLE_USER_PROFILE} from "@tiddlybase/shared/src/constants";
 
 const MAX_SIZE = 1048487; // max size of firestore document field in bytes, according to https://firebase.google.com/docs/firestore/quotas#collections_documents_and_fields
 const UPLOAD_MODAL_TIDDLER = "$:/plugins/tiddlybase/upload-file/upload-modal";
@@ -26,7 +27,8 @@ const getMetadata = (info: $tw.ImportFileInfo):Record<string, any> => ({
   contentType: info.type,
   cacheControl: 'public, max-age=31536000',
   customMetadata: {
-    uploader: $tw.tiddlybase?.user?.userId,
+    // TODO: handle case if user isn't logged in
+    uploader: $tw.wiki.getTiddler(TIDDLYBASE_TITLE_USER_PROFILE)?.fields?.userId
   }
 });
 
