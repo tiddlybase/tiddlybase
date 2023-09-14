@@ -11,7 +11,7 @@ export interface ParsedConfig {
 }
 
 export const getValidator = () => {
-  const ajv = new Ajv({ verbose: true, allErrors: true });
+  const ajv = new Ajv({ verbose: true, allErrors: true, allowUnionTypes: true});
   ajv.addSchema(tiddlybaseConfigSchema);
   const validate = ajv.getSchema<TiddlybaseConfig>('#/definitions/TiddlybaseConfig');
   if (validate !== undefined) {

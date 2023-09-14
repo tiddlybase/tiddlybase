@@ -70,6 +70,13 @@ export class TopLevelApp {
     return `${this.launchConfig.build}${window.location.hash}`;
   }
 
+  destroyWikiFrame() {
+    const container = document.getElementById('wiki-frame-parent');
+    [...(container?.getElementsByTagName('iframe') ?? [])].forEach(iframe => {
+      container?.removeChild(iframe);
+    })
+  }
+
   createWikiIframe(iframeURL: string): Window {
     // append URL fragment so permalinks to tiddlers work as expected
     let src = iframeURL;
@@ -91,6 +98,8 @@ export class TopLevelApp {
     await this.createParentAPI(this.rpc, user);
   }
 
+  // TODO: this isn't called right now, but we'll want to support firebase
+  // functions again in the future!
   initFirebaseFunctions(rpc: RPC) {
     if (this.launchConfig.functions) {
       let region: string | undefined = undefined;
@@ -139,6 +148,10 @@ export class TopLevelApp {
       toggleVisibleDOMSection('wiki-error');
     }
 
+    const displayLoginScreen = async () => {
+      toggleVisibleDOMSection('login');
+    }
+
     // tiddler and file data sources are initialized in childIframeReady() so the parent frame can
     // listen to the child iframe's RPC request as soon as possible.
     rpc.toplevelAPIDefiner('childIframeReady', async () => {
@@ -148,15 +161,16 @@ export class TopLevelApp {
         this.fileDataSource = makeFileDataSource(this.launchParameters, rpc, this.lazyFirebaseApp, this.launchConfig.files);
         this.exposeDataSourceAPIs(rpc);
         return {
-          user,
-          tiddlers: [...Object.values(tiddlers), {
-            ...user,
-            title: TIDDLYBASE_TITLE_USER_PROFILE,
-          }, {
-            ...JSON.parse(JSON.stringify(window.location)),
-            title: TIDDLYBASE_TITLE_PARENT_LOCATION
-          }
-        ]
+          tiddlers: [
+            ...Object.values(tiddlers),
+            {
+              ...user,
+              title: TIDDLYBASE_TITLE_USER_PROFILE,
+            }, {
+              ...JSON.parse(JSON.stringify(window.location)),
+              title: TIDDLYBASE_TITLE_PARENT_LOCATION
+            }
+          ]
         }
       } catch (e: any) {
         let message = e?.message ?? e?.toString() ?? "load error";
@@ -172,26 +186,24 @@ export class TopLevelApp {
     exposeObjectMethod(rpc.toplevelAPIDefiner, 'signOut', this.authProvider);
 
     rpc.toplevelAPIDefiner('loadError', loadError);
+    rpc.toplevelAPIDefiner('loginScreen', displayLoginScreen);
+
   }
 
   private onAuthChange(user?: TiddlyBaseUser) {
     this.launchParameters.userId = user?.userId;
     const wikiHasBeenLoaded = !!this.rpc;
-    if (!wikiHasBeenLoaded) {
-      this.loadWiki(user);
-      toggleVisibleDOMSection('wiki-container');
-    } else {
-      this.rpc?.sandboxedAPIClient('onSetTiddler', [{...user, title: TIDDLYBASE_TITLE_USER_PROFILE}])
+    if (wikiHasBeenLoaded) {
+      this.destroyWikiFrame()
     }
+    this.loadWiki(user).then(() => {
+      toggleVisibleDOMSection('wiki-container');
+    })
   }
 
 
   initApp() {
-
-    if (this.rpc) {
-      this.initFirebaseFunctions(this.rpc);
-    }
-
+    console.log("launchParameters", this.launchParameters, "launchConfig", this.launchConfig);
     this.authProvider.onLogin((user, _authDetails) => {
       this.onAuthChange(user);
     });

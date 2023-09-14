@@ -5,6 +5,8 @@ import { HttpFileDataSource } from '../file-data-sources/http-file-source';
 
 const DEFAULT_FILTER_EXPRESSION = "[is[tiddler]]";
 
+const DEFAULT_URL_PREFIX = "/";
+
 const dateFields = new Set<string>(["created", "modified"]);
 
 const knownFields = new Set<string>([
@@ -52,7 +54,7 @@ export class TiddlyWebTiddlerStore implements WritableTiddlerDataSource {
   filterExpression: string;
 
   constructor({urlPrefix, filterExpression}:{urlPrefix?:string, filterExpression?:string}={}) {
-    this.urlPrefix = urlPrefix ?? '';
+    this.urlPrefix = urlPrefix ?? DEFAULT_URL_PREFIX;
     this.filterExpression = filterExpression ?? DEFAULT_FILTER_EXPRESSION;
   }
 
@@ -67,7 +69,7 @@ export class TiddlyWebTiddlerStore implements WritableTiddlerDataSource {
 
   async setTiddler (tiddler: $tw.TiddlerFields): Promise<$tw.TiddlerFields> {
     const url = this.makeURL(`recipes/default/tiddlers/${encodeURIComponent(tiddler.title)}`);
-    const response = await fetch(url, {
+    await fetch(url, {
       method: 'PUT',
       headers: {
         "Content-type": "application/json",
@@ -75,19 +77,17 @@ export class TiddlyWebTiddlerStore implements WritableTiddlerDataSource {
       },
       body: convertTiddlerToTiddlyWebFormat(tiddler)
     });
-    console.log("TiddlyWeb setTiddler response", response);
     return Promise.resolve(tiddler);
   }
 
   async deleteTiddler (title: string): Promise<void> {
     const url = this.makeURL(`bags/default/tiddlers/${encodeURIComponent(title)}`);
-    const response = await fetch(url, {
+    await fetch(url, {
       method: 'DELETE',
       headers: {
         "X-Requested-With": "TiddlyWiki"
       },
     });
-    console.log("TiddlyWeb deleteTiddler response", response);
     return
   }
 

@@ -20,6 +20,7 @@ export interface BackendFunctions {
 
 export interface TopLevelUIAPI {
   loadError: (message: string) => Promise<void>;
+  loginScreen: () => Promise<void>;
 }
 
 export interface TopLevelAPIForSandboxedWiki extends ParentAPIBase<ChildInitProps>, WritableTiddlerDataSource, WritableFileDataSource, AuthAPI, BackendFunctions, TopLevelUIAPI {}

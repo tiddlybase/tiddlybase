@@ -1,40 +1,31 @@
 import { TiddlerCollection, TiddlerProvenance, TiddlerDataSource, TiddlerDataSourceWithSpec, WritableTiddlerDataSource } from "@tiddlybase/shared/src/tiddler-data-source";
 import type { } from '@tiddlybase/tw5-types/src/index'
-import { TiddlerDataSourceSpec, TiddlerWriteCondition } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import type { TiddlerDataSourceSpec, TiddlerWriteConditionAssertion } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import { EvalAssertion, Expression, evalExpression } from "packages/shared/src/expressions";
 
 type PredicateFn = (tiddler: $tw.TiddlerFields) => boolean
 const KNOWN_PRIVATE = new Set<string>(['$:/StoryList', '$:/HistoryList', '$:/DefaultTiddlers'])
 const PRIVATE_PREFIX = '€:/'
-
-const ALWAYS = (_: $tw.TiddlerFields) => true;
-const PRIVATE:PredicateFn = tiddler => KNOWN_PRIVATE.has(tiddler.title) || tiddler.title.startsWith(PRIVATE_PREFIX) || ('draft.of' in tiddler)
-
-const getConditionPredicate = (writeCondition: TiddlerWriteCondition): PredicateFn => {
-  if (writeCondition.titlePrefix) {
-    return tiddler => tiddler.title.startsWith(writeCondition.titlePrefix);
-  }
-  throw new Error("Cannot create PredicateFn for specified writeCondition");
-};
-
-const getPredicate = (spec: TiddlerDataSourceSpec) : PredicateFn => {
-  if (!('writeCondition' in spec) || !spec.writeCondition) {
-    return ALWAYS;
-  }
-  switch (spec.writeCondition) {
-      case 'private':
-        return PRIVATE;
-      case 'always':
-        return ALWAYS;
-      default:
-        return getConditionPredicate(spec.writeCondition);
-    }
-}
+const DEFAULT_WRITE_CONDITION: Expression<TiddlerWriteConditionAssertion> = true;
 
 type CandidateDataSource = {
   predicate: PredicateFn;
   source: WritableTiddlerDataSource;
   spec: TiddlerDataSourceSpec;
 };
+
+const evalWriteCondition:EvalAssertion<TiddlerWriteConditionAssertion, $tw.TiddlerFields> = (assertion, tiddler) => {
+  if (typeof assertion === 'boolean') {
+    return assertion;
+  }
+  if (typeof assertion === 'object') {
+    return tiddler.title.startsWith(assertion.titlePrefix);
+  }
+  if (assertion === 'private') {
+    return KNOWN_PRIVATE.has(tiddler.title) || tiddler.title.startsWith(PRIVATE_PREFIX) || ('draft.of' in tiddler)
+  }
+  throw new Error(`unhandled write condition assertion: ${JSON.stringify(assertion)}`);
+}
 
 const isWritableTiddlerDataSource = (s: TiddlerDataSource): s is WritableTiddlerDataSource => {
   return 'setTiddler' in s;
@@ -50,7 +41,11 @@ export class RoutingProxyTiddlerSource implements WritableTiddlerDataSource {
         this.candidateStores.push({
           spec,
           source: source,
-          predicate: getPredicate(spec)});
+          predicate: (tiddler: $tw.TiddlerFields) => evalExpression(
+            evalWriteCondition,
+            spec.writeCondition ?? DEFAULT_WRITE_CONDITION,
+            tiddler)
+        });
       }
     }
     // TODO: what happens if there are not candidateStores?

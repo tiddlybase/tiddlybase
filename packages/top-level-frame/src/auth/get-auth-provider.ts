@@ -5,11 +5,7 @@ import { Lazy } from "@tiddlybase/shared/src/lazy";
 import {FirebaseApp} from '@firebase/app';
 import { addFirebaseUI } from "./firebaseui-utils";
 import { TrivialAuthProvider } from "./trivial-auth-provider";
-import { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
-import { ANONYMOUS_USER_ID } from "@tiddlybase/shared/src/constants";
 import type * as firebaseui from 'firebaseui';
-
-export const ANONYMOUS_USER:TiddlyBaseUser = {userId: ANONYMOUS_USER_ID};
 
 export const getAuthProvider = (launchParameters: LaunchParameters, launchConfig:LaunchConfig, lazyFirebaseApp: Lazy<FirebaseApp>):AuthProvider => {
  switch (launchConfig.auth.type) {
@@ -20,7 +16,7 @@ export const getAuthProvider = (launchParameters: LaunchParameters, launchConfig
     }
     return authProvider;
   case 'trivial':
-    return new TrivialAuthProvider(launchConfig.auth.user || ANONYMOUS_USER)
+    return new TrivialAuthProvider(launchConfig.auth.user)
   default:
     throw Error(`Invalid auth provider`);
  }

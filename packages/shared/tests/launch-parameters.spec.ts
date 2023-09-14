@@ -4,7 +4,7 @@ import { LaunchParameters } from '../src/tiddlybase-config-schema';
 
 const parseLaunchParameters = (url:string, defaults:Partial<LaunchParameters>={}) => _parseLaunchParameters(new URL(url), defaults);
 
-const DEFAULT_LP:LaunchParameters = {...DEFAULT_LAUNCH_PARAMETERS, getParameters: {}}
+const DEFAULT_LP:LaunchParameters = {...DEFAULT_LAUNCH_PARAMETERS}
 
 describe('parseLaunchParameters', function () {
 

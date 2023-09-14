@@ -2,16 +2,20 @@ import { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
 import { AuthProvider, OnLoginHandler, OnLogoutHandler } from "@tiddlybase/shared/src/auth-provider";
 
 export class TrivialAuthProvider implements AuthProvider {
-  user: TiddlyBaseUser;
-  constructor(user:TiddlyBaseUser) {
+  user?: TiddlyBaseUser;
+  constructor(user?:TiddlyBaseUser) {
     this.user = user;
   }
   onLogin (loginHandler: OnLoginHandler) {
     // immediately invoke onLogin handler
-    loginHandler(this. user, {});
+    if (this.user) {
+      loginHandler(this.user, {});
+    }
   }
-  onLogout (_logoutHandler: OnLogoutHandler) {
-    // the onlogout handler is never called
+  onLogout (logoutHandler: OnLogoutHandler) {
+    if (!this.user) {
+      logoutHandler();
+    }
   }
   getCurrentUser () {
     return this.user;

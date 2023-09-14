@@ -140,7 +140,6 @@ export class FirestoreDataSource implements WritableTiddlerDataSource {
 
   async getTiddler(title: string): Promise<$tw.TiddlerFields | undefined> {
     // TODO
-    console.log('getTiddler', title);
     return undefined;
   }
   async setTiddler(tiddler: $tw.TiddlerFields): Promise<$tw.TiddlerFields> {
@@ -157,7 +156,6 @@ export class FirestoreDataSource implements WritableTiddlerDataSource {
     return tiddler;
   }
   async deleteTiddler(title: string): Promise<void> {
-    console.log('deleteTiddler (outer)', title);
     const docRef = doc(this.firestore, this.collectionPath, this.getDocId(title));
     return await deleteDoc(docRef);
   }

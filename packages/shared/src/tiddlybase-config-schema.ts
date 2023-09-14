@@ -1,67 +1,82 @@
-import type { } from '@tiddlybase/tw5-types/src/index'
-import type { TiddlyBaseUser } from './users';
+import type {} from "@tiddlybase/tw5-types/src/index";
+import type { TiddlyBaseUser } from "./users";
+import type { Expression } from "./expressions";
 
 export type LaunchParameters = {
   instance: string;
   launchConfig: string;
   userId?: string;
   tiddler?: string;
-}
-
-export type TiddlerWriteCondition = { titlePrefix: string }; // more options in the future
-
-export type TiddlerCollectionPathSpec = {
-  collection?: string,
-  pathTemplate?: string
 };
 
-export type WritableTiddlerDataSourceSpec = { writeCondition?: 'private' | 'always' | TiddlerWriteCondition };
+export type TiddlerCollectionPathSpec = {
+  collection?: string;
+  pathTemplate?: string;
+};
+
+export type TiddlerWriteConditionAssertion =
+  | true
+  | false
+  | "private"
+  | { titlePrefix: string };
+
+export type TiddlerDataSourceUseConditionAssertion =
+  | true
+  | false
+  | "authenticated";
 
 export type FirestoreTiddlerDataSourceOptions = Partial<{
-  stripDocIDPrefix: string
-}>
+  stripDocIDPrefix: string;
+}>;
 
-export type TiddlerDataSourceSpec =
-  | { type: 'http', url: string }
+type TiddlerDataSourceTypeSpec =
+  | { type: "http"; url: string }
   | ({
-    type: 'firebase-storage',
-    filename: string
-  }) & TiddlerCollectionPathSpec
-  | ({ type: 'tiddlyweb' } & WritableTiddlerDataSourceSpec)
+      type: "firebase-storage";
+      filename: string;
+    } & TiddlerCollectionPathSpec)
+  | { type: "tiddlyweb" }
   | ({
-    type: 'firestore',
-    options?: FirestoreTiddlerDataSourceOptions
-  } & TiddlerCollectionPathSpec & WritableTiddlerDataSourceSpec)
+      type: "firestore";
+      options?: FirestoreTiddlerDataSourceOptions;
+    } & TiddlerCollectionPathSpec)
   | ({
-    type: 'browser-storage',
-    collection: string,
-    useLocalStorage?: boolean
-  } & TiddlerCollectionPathSpec & WritableTiddlerDataSourceSpec)
+      type: "browser-storage";
+      collection: string;
+      useLocalStorage?: boolean;
+    } & TiddlerCollectionPathSpec);
+
+export type TiddlerDataSourceSpec = TiddlerDataSourceTypeSpec & {
+  useCondition?: Expression<TiddlerDataSourceUseConditionAssertion>;
+  writeCondition?: Expression<TiddlerWriteConditionAssertion>;
+};
 
 export type FileDataSourceSpec =
-  | { type: 'http', urlPrefix: string }
-  | { type: 'firebase-storage', collection: string }
+  | { type: "http"; urlPrefix: string }
+  | { type: "firebase-storage"; collection: string };
 
 export type AuthProviderSpec =
   | {
-    type: 'firebase',
-    writeToFirestore?: boolean,
-    // this would actually be the type
-    // import type * as firebaseui from 'firebaseui';
-    // firebaseui.auth.Config
-    // but that seems like an unnecessary dependency here
-    firebaseui?: any
-  }
-  | { type: 'trivial', user?: TiddlyBaseUser };
+      type: "firebase";
+      writeToFirestore?: boolean;
+      // this would actually be the type
+      // import type * as firebaseui from 'firebaseui';
+      // firebaseui.auth.Config
+      // but that seems like an unnecessary dependency here
+      firebaseui?: any;
+    }
+  | { type: "trivial"; user?: TiddlyBaseUser };
 
-export type FunctionsEndpoint = { type: "production", region: string } | { type: "development", emulatorHost: string, emulatorPort: number };
+export type FunctionsEndpoint =
+  | { type: "production"; region: string }
+  | { type: "development"; emulatorHost: string; emulatorPort: number };
 
 export interface FunctionsConfig {
-  endpoint: FunctionsEndpoint
+  endpoint: FunctionsEndpoint;
 }
 
 export interface TiddlersConfig {
-  sources: TiddlerDataSourceSpec[]
+  sources: TiddlerDataSourceSpec[];
 }
 
 export interface FilesConfig {
@@ -106,19 +121,19 @@ export interface TiddlybaseConfig {
    * Settings related to the generation of the parent HTML (usually called outer.html)
    */
   htmlGeneration?: {
-    title?: string,
+    title?: string;
     // generated with eg: https://realfavicongenerator.net/
-    faviconCode?: string
+    faviconCode?: string;
   };
   /**
    * These values can be copied from the Firebase console or
    * from the command line via "yarn firebase apps:sdkconfig web"
    */
   firebase?: {
-    clientConfig: FirebaseClientCofig,
+    clientConfig: FirebaseClientCofig;
     hosting?: {
-      site: string
-    }
+      site: string;
+    };
   };
   urls?: Partial<URLConfig>;
   defaultLaunchParameters?: Partial<LaunchParameters>;
@@ -127,6 +142,11 @@ export interface TiddlybaseConfig {
 
 // The client config is written to outer.html.
 // It only needs certain parts of the full tiddlybase-config.json.
-export const TIDDLYBASE_CLIENT_CONFIG_KEYS: Readonly<Array<keyof TiddlybaseConfig>> = ['defaultLaunchParameters', 'launchConfigs', 'firebase', 'urls'] as const;
+export const TIDDLYBASE_CLIENT_CONFIG_KEYS: Readonly<
+  Array<keyof TiddlybaseConfig>
+> = ["defaultLaunchParameters", "launchConfigs", "firebase", "urls"] as const;
 
-export type TiddlybaseClientConfig = Pick<TiddlybaseConfig, typeof TIDDLYBASE_CLIENT_CONFIG_KEYS[number]>;
+export type TiddlybaseClientConfig = Pick<
+  TiddlybaseConfig,
+  (typeof TIDDLYBASE_CLIENT_CONFIG_KEYS)[number]
+>;

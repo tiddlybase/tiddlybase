@@ -1,6 +1,6 @@
 import type { AuthProviderSpec, LaunchParameters, URLConfig } from "./tiddlybase-config-schema";
 
-export const DEFAULT_BUILD_NAME = 'tiddlybase_public/default-build.html';
+export const DEFAULT_BUILD_NAME = '/tiddlybase_public/default-build.html';
 export const DEFAULT_TIDDLER_COLLECTION_FILENAME = 'default-tiddler-collection.json';
 export const DEFAULT_LAUNCH_CONFIG = "default";
 
@@ -13,8 +13,6 @@ export const DEFAULT_AUTH: AuthProviderSpec = {
   }
 };
 
-export const ANONYMOUS_USER_ID = "anonymous";
-
 export const ADMIN_INSTANCE_NAME = "admin";
 export const DEFAULT_INSTANCE_NAME = "welcome";
 
@@ -25,12 +23,12 @@ const pathRegexpPart = (prefix:string, varName: string, pattern=IDENTIFIER_REGEX
 export const DEFAULT_URL_CONFIG:URLConfig = {
   publicPath: 'public',
   outerHTML: 'outer.html',
-  pathRegExp: `^${pathRegexpPart('lc', 'launchConfig')}${pathRegexpPart('i', 'instance')}${pathRegexpPart('t', 'tiddler')}\\/?$`
+  pathRegExp: `^${pathRegexpPart('i', 'instance')}${pathRegexpPart('t', 'tiddler')}${pathRegexpPart('lc', 'launchConfig')}\\/?$`
 }
 
 export const DEFAULT_LAUNCH_PARAMETERS:LaunchParameters = {
   instance: DEFAULT_INSTANCE_NAME,
-  launchConfig: DEFAULT_LAUNCH_CONFIG
+  launchConfig: DEFAULT_LAUNCH_CONFIG,
 }
 
 export const TIDDLYBASE_LOCAL_STATE_PREFIX = "$:/state/tiddlybase/local"

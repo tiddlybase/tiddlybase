@@ -30,7 +30,10 @@ const PUBLIC_SUBDIRS = $tw.boot.wikiInfo.config[CONFIG_KEY_PUBLIC_SUBDIRS] ?? DE
 
 const mappings = Object.fromEntries([
     ["^\/(?:\\?.*)?$", OUTER_HTML_PATH],
-    ["^\/([^\/]+)$", PUBLIC_DIR],
+    // instance
+    ["^\/i\/?.*$", OUTER_HTML_PATH],
+    // a file in the public directory, careful not to match tiddlyweb paths like /status
+    ["^\/([^\/]+\\.[^\/]+)$", PUBLIC_DIR],
     ...(PUBLIC_SUBDIRS.map(subdir => [
         `^\/${subdir}\/(.+)$`,
         path.join(PUBLIC_DIR, subdir),

@@ -1,5 +1,5 @@
 import { TiddlerDataSourceChangeListener, TiddlerCollection, TiddlerProvenance, TiddlerDataSource, TiddlerDataSourceWithSpec, WritableTiddlerDataSource } from "@tiddlybase/shared/src/tiddler-data-source";
-import { LaunchConfig, LaunchParameters, TiddlerDataSourceSpec } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import { LaunchConfig, LaunchParameters, TiddlerDataSourceSpec, TiddlerDataSourceUseConditionAssertion } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import { FirestoreDataSource } from "./firestore-tiddler-source";
 import { APIClient } from "@tiddlybase/rpc/src/types";
 import { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
@@ -15,6 +15,9 @@ import { FileDataSourceTiddlerSource } from "./file-storage-tiddler-source";
 import { FirebaseStorageDataSource } from "../file-data-sources/firebase-storage-file-source";
 import { RPC } from "../types";
 import { TIDDLYBASE_LOCAL_STATE_PREFIX } from "@tiddlybase/shared/src/constants";
+import { EvalAssertion, Expression, evalExpression } from "@tiddlybase/shared/src/expressions";
+
+const DEFAULT_USE_CONDITION: Expression<TiddlerDataSourceUseConditionAssertion> = true;
 
 export class ProxyToSandboxedIframeChangeListener implements TiddlerDataSourceChangeListener {
   sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>;
@@ -39,7 +42,7 @@ export class ProxyToSandboxedIframeChangeListener implements TiddlerDataSourceCh
   }
 }
 
-const getTiddlerSource = async (launchParameters:LaunchParameters, spec: TiddlerDataSourceSpec, lazyFirebaseApp: Lazy<FirebaseApp>, rpc:RPC): Promise<TiddlerDataSource> => {
+const getTiddlerSource = async (launchParameters: LaunchParameters, spec: TiddlerDataSourceSpec, lazyFirebaseApp: Lazy<FirebaseApp>, rpc: RPC): Promise<TiddlerDataSource> => {
   switch (spec.type) {
     case "http":
       return new FileDataSourceTiddlerSource(
@@ -93,15 +96,40 @@ type TiddlerSourcePromiseWithSpec = {
   spec: TiddlerDataSourceSpec;
 }
 
-export const readTiddlerSources = async (launchParameters:LaunchParameters, launchConfig: LaunchConfig, lazyFirebaseApp: Lazy<FirebaseApp>, rpc:RPC): Promise<MergedSources> => {
-  const sourcePromisesWithSpecs: TiddlerSourcePromiseWithSpec[] = launchConfig.tiddlers.sources.map(spec => ({ spec, source: getTiddlerSource(launchParameters, spec, lazyFirebaseApp, rpc) }));
+const evalUseCondition: EvalAssertion<TiddlerDataSourceUseConditionAssertion, LaunchParameters> = (assertion, launchParameters) => {
+  if (typeof assertion === 'boolean') {
+    return assertion;
+  }
+  if (assertion === 'authenticated') {
+    return !!launchParameters.userId;
+  }
+  throw new Error(`unhandled use condition assertion: ${JSON.stringify(assertion)}`);
+}
+
+export const readTiddlerSources = async (launchParameters: LaunchParameters, launchConfig: LaunchConfig, lazyFirebaseApp: Lazy<FirebaseApp>, rpc: RPC): Promise<MergedSources> => {
+  const sourcePromisesWithSpecs = launchConfig.tiddlers.sources.reduce(
+    (sourcePromisesWithSpecs, spec) => {
+      if (evalExpression(
+        evalUseCondition,
+        spec.useCondition ?? DEFAULT_USE_CONDITION,
+        launchParameters
+      )) {
+        sourcePromisesWithSpecs.push({
+          spec,
+          source: getTiddlerSource(launchParameters, spec, lazyFirebaseApp, rpc)
+        });
+      } else {
+        console.log("Disabling data source due to useCondition", spec);
+      }
+      return sourcePromisesWithSpecs;
+    }, [] as TiddlerSourcePromiseWithSpec[]);
   const collections = await Promise.all(sourcePromisesWithSpecs.map(async s => {
     try {
       return await (await s.source).getAllTiddlers();
-    } catch (e:any) {
+    } catch (e: any) {
       // attach spec which failed to load to the exception for debugging purposes.
       e.spec = s.spec;
-      throw(e);
+      throw (e);
     }
   }));
   const sourcesWithSpecs: TiddlerDataSourceWithSpec[] = await Promise.all(sourcePromisesWithSpecs.map(async s => ({
