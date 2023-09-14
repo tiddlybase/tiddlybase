@@ -192,8 +192,9 @@ export class TopLevelApp {
 
   private onAuthChange(user?: TiddlyBaseUser) {
     this.launchParameters.userId = user?.userId;
-    const wikiHasBeenLoaded = !!this.rpc;
-    if (wikiHasBeenLoaded) {
+    if (this.rpc) {
+      // wiki has been loaded
+      this.rpc.rpc.close();
       this.destroyWikiFrame()
     }
     this.loadWiki(user).then(() => {
