@@ -7,6 +7,7 @@ export type LaunchParameters = {
   launchConfig: string;
   userId?: string;
   tiddler?: string;
+  searchParameters?: Record<string, string>;
 };
 
 export type TiddlerCollectionPathSpec = {

@@ -2,7 +2,7 @@ import { DEFAULT_LAUNCH_PARAMETERS, DEFAULT_URL_CONFIG } from "./constants";
 import { objFilter } from "./obj-utils";
 import { LaunchParameters } from "./tiddlybase-config-schema";
 
-export const parseSearchParams = (rawSearchParams: string): Record<string, string> => Object.fromEntries((new URLSearchParams(rawSearchParams)).entries());
+export const parseSearchParameters = (rawSearchParams: string): Record<string, string> => Object.fromEntries((new URLSearchParams(rawSearchParams)).entries());
 
 export const parsePathParameters = (path: string, re?: string) => {
   const match = decodeURIComponent(path).match(new RegExp(re ?? DEFAULT_URL_CONFIG.pathRegExp));
@@ -13,4 +13,5 @@ export const parseLaunchParameters = (url: URL | typeof window.location, default
   {},
   DEFAULT_LAUNCH_PARAMETERS,
   defaults,
+  {searchParameters: parseSearchParameters(url.search)},
   parsePathParameters(url.pathname, pathRegexp));

@@ -9,6 +9,8 @@ import { Lazy } from "@tiddlybase/shared/src/lazy";
 import { LaunchParameters } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import { ADMIN_INSTANCE_NAME } from "@tiddlybase/shared/src/constants";
 
+const SEARCH_PARAMETER_SIGN_IN_FLOW = 'auth:signInFlow';
+
 export const writeUserProfile = async (launchParameters: LaunchParameters, lazyFirebaseApp:Lazy<FirebaseApp>, user:TiddlyBaseUser) => {
   const firestore = getFirestore(lazyFirebaseApp());
     return await (new FirestoreDataSource(
@@ -42,6 +44,7 @@ export const addFirebaseUI = (launchParameters: LaunchParameters, authProvider: 
   authProvider.onLogout(() => {
     ui.start(domParentId, {
       ...firebaseUIConfig,
+      signInFlow: launchParameters.searchParameters?.[SEARCH_PARAMETER_SIGN_IN_FLOW] ?? firebaseUIConfig.signInFlow,
       callbacks: {
         signInSuccessWithAuthResult: (authResult: any, redirectUrl: string) => {
           console.log("signInSuccessWithAuthResult", authResult, redirectUrl);

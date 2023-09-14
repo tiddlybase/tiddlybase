@@ -23,7 +23,7 @@ import { replaceChildrenWithText, toggleVisibleDOMSection } from "./dom-utils";
 import { makeFileDataSource } from "./file-data-sources/file-data-source-factory";
 import { getNormalizedLaunchConfig } from './launch-config';
 import { readTiddlerSources } from "./tiddler-data-sources/tiddler-data-source-factory";
-import { TIDDLYBASE_TITLE_PARENT_LOCATION, TIDDLYBASE_TITLE_USER_PROFILE } from "@tiddlybase/shared/src/constants";
+import { TIDDLYBASE_TITLE_LAUNCH_PARAMETERS, TIDDLYBASE_TITLE_PARENT_LOCATION, TIDDLYBASE_TITLE_USER_PROFILE } from "@tiddlybase/shared/src/constants";
 
 
 const initRPC = (childIframe: Window): RPC => {
@@ -169,6 +169,9 @@ export class TopLevelApp {
             }, {
               ...JSON.parse(JSON.stringify(window.location)),
               title: TIDDLYBASE_TITLE_PARENT_LOCATION
+            }, {
+              ...this.launchParameters,
+              title: TIDDLYBASE_TITLE_LAUNCH_PARAMETERS
             }
           ]
         }

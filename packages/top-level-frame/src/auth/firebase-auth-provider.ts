@@ -14,8 +14,8 @@ export const convertUser = (firebaseUser: User): TiddlyBaseUser => ({
 })
 
 export const getAuthDetails = (user: User): AuthDetails => {
-  const lastLoginTimestamp:string|undefined = (user as any)?.reloadUserInfo?.lastLoginAt
-  const authDetails:AuthDetails = {};
+  const lastLoginTimestamp: string | undefined = (user as any)?.reloadUserInfo?.lastLoginAt
+  const authDetails: AuthDetails = {};
   if (lastLoginTimestamp) {
     authDetails.lastLogin = new Date(parseInt(lastLoginTimestamp, 10));
   }
@@ -63,7 +63,7 @@ export class FirebaseAuthProvider implements AuthProvider {
     return user ? convertUser(user) : undefined;
   }
 
-  async signOut () {
+  async signOut() {
     this.auth.signOut();
   }
 
