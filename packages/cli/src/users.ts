@@ -1,6 +1,6 @@
 import { InstanceSpec, PERMISSIONED_DATA_SOURCES, PermissionedDataSource } from '@tiddlybase/shared/src/instance-spec-schema';
 import { objFilter } from '@tiddlybase/shared/src/obj-utils';
-import { makeInstancePermissionsUpdate, instanceSpecPath } from '@tiddlybase/shared/src/permissions';
+import { makeInstanceUserPermissionsUpdate, instanceSpecPath, makeInstanceUnauthenticatedPermissionsUpdate } from '@tiddlybase/shared/src/permissions';
 import { TiddlyBaseUser, USER_ROLES } from '@tiddlybase/shared/src/users';
 import * as crypto from "crypto";
 import * as admin from 'firebase-admin';
@@ -17,7 +17,7 @@ const RE_UID = /^[a-zA-Z0-9]+$/;
 const ROLE_CHOICES = Object.keys(USER_ROLES).map(s => s.toLowerCase());
 
 // doSetRole(cliContext.app, user.uid, config.instanceName, cliContext.args.collection, roleNumber);
-const doSetRole = async (
+const doSetUserCollectionRole = async (
   app: admin.app.App,
   launchParameters:LaunchParameters,
   resourceType: PermissionedDataSource,
@@ -26,13 +26,34 @@ const doSetRole = async (
   const docPath = instanceSpecPath(launchParameters.instance);
   const firestore = app.firestore();
   const instanceSpec = (await firestore.doc(docPath).get()).data()?.tiddler ?? {};
-  merge(instanceSpec, makeInstancePermissionsUpdate(resourceType, launchParameters.userId!, collectionName, roleNumber));
+  merge(instanceSpec, makeInstanceUserPermissionsUpdate(resourceType, launchParameters.userId!, encodeURIComponent(collectionName), roleNumber));
   await firestore.doc(docPath).set({
     tiddler: {
       ...instanceSpec,
       modified: admin.firestore.FieldValue.serverTimestamp(),
       created: instanceSpec.created ?? admin.firestore.FieldValue.serverTimestamp(),
       title: instanceSpec.title ?? `instances/${launchParameters.instance}`
+    }
+  });
+  return instanceSpec;
+}
+
+const doSetUnauthenticatedCollectionRole = async (
+  app: admin.app.App,
+  resourceType: PermissionedDataSource,
+  instance: string,
+  collectionName: string,
+  roleNumber: number): Promise<InstanceSpec> => {
+  const docPath = instanceSpecPath(instance);
+  const firestore = app.firestore();
+  const instanceSpec = (await firestore.doc(docPath).get()).data()?.tiddler ?? {};
+  merge(instanceSpec, makeInstanceUnauthenticatedPermissionsUpdate(resourceType, encodeURIComponent(collectionName), roleNumber));
+  await firestore.doc(docPath).set({
+    tiddler: {
+      ...instanceSpec,
+      modified: admin.firestore.FieldValue.serverTimestamp(),
+      created: instanceSpec.created ?? admin.firestore.FieldValue.serverTimestamp(),
+      title: instanceSpec.title ?? `instances/${instance}`
     }
   });
   return instanceSpec;
@@ -77,6 +98,8 @@ export const getCollectionRoles: CommandModule = {
   }),
 };
 
+const UNAUTHENTICATED = "unauthenticated"
+
 // TODO: migrate this to firestore-based ACL instead of custom JWT claims
 export const setCollectionRole: CommandModule = {
   command: 'setcollectionrole instance <userid|email> collection role',
@@ -91,7 +114,7 @@ export const setCollectionRole: CommandModule = {
         type: 'string',
       })
       .positional('userid', {
-        describe: 'User id or email address',
+        describe: 'User id or email address or "unauthenticated"',
         type: 'string',
       })
       .positional('collection', {
@@ -103,26 +126,39 @@ export const setCollectionRole: CommandModule = {
         choices: ROLE_CHOICES
       }),
   handler: withCLIContext(async (cliContext: CLIContext) => {
-    const user = await getUser(cliContext.app, cliContext.args.userid as string);
     const roleName = (cliContext.args.role as string).toUpperCase();
     const roleNumber = USER_ROLES[roleName];
     if (!(roleName in USER_ROLES) || !(typeof roleNumber === 'number')) {
       throw new Error('Unknown role ' + cliContext.args.role);
     }
     const resourceType = cliContext.args['resource-type'] as PermissionedDataSource;
-    const launchParameters:LaunchParameters = {
-      ...DEFAULT_LAUNCH_PARAMETERS,
-      userId: user.uid,
-      instance: cliContext.args.instance as string
+    const userArg = cliContext.args.userid as string;
+    const instance = cliContext.args.instance as string;
+    const collectionArg = cliContext.args.collection as string;
+    if (userArg === UNAUTHENTICATED) {
+      const instanceSpec = await doSetUnauthenticatedCollectionRole(
+        cliContext.app,
+        resourceType,
+        instance,
+        collectionArg,
+        roleNumber);
+      console.log(JSON.stringify(instanceSpec, null, 4));
+    } else {
+      const user = await getUser(cliContext.app, userArg);
+      const launchParameters:LaunchParameters = {
+        ...DEFAULT_LAUNCH_PARAMETERS,
+        userId: user.uid,
+        instance
+      }
+      const collectionName = render(collectionArg, launchParameters);
+      const instanceSpec = await doSetUserCollectionRole(
+        cliContext.app,
+        launchParameters,
+        resourceType,
+        collectionName,
+        roleNumber);
+      console.log(JSON.stringify(instanceSpec, null, 4));
     }
-    const collectionName = render(cliContext.args.collection as string, launchParameters);
-    const instanceSpec = await doSetRole(
-      cliContext.app,
-      launchParameters,
-      resourceType,
-      collectionName,
-      roleNumber);
-    console.log(JSON.stringify(instanceSpec, null, 4));
   }),
 };
 

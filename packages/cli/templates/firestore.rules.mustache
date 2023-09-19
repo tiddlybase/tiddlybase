@@ -8,13 +8,18 @@ service cloud.firestore {
 
   match /databases/{database}/documents/tiddlybase-instances/{instance}/collections/{collection}/{document=**} {
 
-    function hasMinAccess(minAccessLevel) {
-      let permissions = get(/databases/$(database)/documents/tiddlybase-instances/admin/collections/instances/tiddlers/$(instance)).data.tiddler.permissions;
+    function hasUnauthMinAccess(minAccessLevel) {
+      let permissions = get(/databases/$(database)/documents/tiddlybase-instances/admin/collections/instances/tiddlers/$(instance)).data.tiddler["unauthenticated-permissions"];
+      return int(permissions["firestore"][collection]) >= minAccessLevel;
+    }
+
+    function hasAuthMinAccess(minAccessLevel) {
+      let permissions = get(/databases/$(database)/documents/tiddlybase-instances/admin/collections/instances/tiddlers/$(instance)).data.tiddler["user-permissions"];
       return int(permissions[request.auth.uid]["firestore"][collection]) >= minAccessLevel;
     }
 
-    allow read, list: if request.auth != null && hasMinAccess(1);
-    allow create, update, delete: if request.auth != null && hasMinAccess(2);
+    allow read, list: if (request.auth != null && hasAuthMinAccess(1)) || (request.auth == null && hasUnauthMinAccess(1));
+    allow create, update, delete: if request.auth != null && hasAuthMinAccess(2);
 
   }
 }

@@ -12,5 +12,6 @@ export type PermissionedDataSource = typeof PERMISSIONED_DATA_SOURCES[number]
 export type InstanceUserPermissions = Partial<Record<PermissionedDataSource, CollectionPermissions>>;
 
 export type InstanceSpec = {
-  permissions: Record<UserId, Partial<InstanceUserPermissions>>;
+  "user-permissions": Record<UserId, Partial<InstanceUserPermissions>>;
+  "unauthenticated-permissions"?: Partial<InstanceUserPermissions>;
 }

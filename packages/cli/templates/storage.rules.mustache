@@ -8,8 +8,15 @@ service firebase.storage {
           let permissions = firestore.get(/databases/(default)/documents/tiddlybase-instances/admin/collections/instances/tiddlers/$(instance)).data.tiddler.permissions;
           return int(permissions[request.auth.uid]["firebase-storage"][collection]) >= minAccessLevel;
         }
+
+        function uploaderSet() {
+          return request.resource.metadata['uploader'] == request.auth.uid;
+        }
+
         allow read: if request.auth != null && hasMinAccess(1);
-        allow create, update, delete: if request.auth != null && hasMinAccess(2);
+        // verify uploader custom metadata
+        allow create, update: if request.auth != null && hasMinAccess(2) && uploaderSet();
+        allow delete: if request.auth != null && hasMinAccess(2);
         allow list: if request.auth != null && hasMinAccess(3);
       }
     }
