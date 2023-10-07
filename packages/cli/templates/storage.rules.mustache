@@ -5,7 +5,7 @@ service firebase.storage {
       match /{instance}/{collection}/{allPaths=**}{
 
         function hasMinAccess(minAccessLevel) {
-          let permissions = firestore.get(/databases/(default)/documents/tiddlybase-instances/admin/collections/instances/tiddlers/$(instance)).data.tiddler.permissions;
+          let permissions = firestore.get(/databases/(default)/documents/tiddlybase-instances/admin/collections/instances/tiddlers/$(instance)).data.tiddler["user-permissions"];
           return int(permissions[request.auth.uid]["firebase-storage"][collection]) >= minAccessLevel;
         }
 
