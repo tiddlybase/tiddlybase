@@ -159,7 +159,7 @@ export const cmdGenerateFirestoreRules: CommandModule = {
 const getFirebaseClientConfig = async (project?: string): Promise<Exclude<TiddlybaseConfig["firebase"], undefined>["clientConfig"]> => {
   const firebaseCLIPath = join(dirname(__non_webpack_require__.resolve('firebase-tools')), "bin", "firebase.js")
   console.log("Invoking firebase binary at " + firebaseCLIPath);
-  const { stdout } = await runCommand(`${firebaseCLIPath} ${project ? `--project ${project} ` : ''} apps:sdkconfig web`);
+  const { stdout } = await runCommand(`node ${firebaseCLIPath} ${project ? `--project ${project} ` : ''} apps:sdkconfig web`);
   const sdkOutput = stdout.trim();
   const prefix = 'firebase.initializeApp('
   const suffix = ');';
