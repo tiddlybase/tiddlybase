@@ -28,6 +28,8 @@ export const writeUserProfile = async (launchParameters: LaunchParameters, lazyF
       // firestore can't write undefined values, so if any field is undefined,
       // filter it out. TODO: this should happen in FirestoreTiddlerStore
       ...objFilter((_k, v) => v !== undefined, (user as any)),
+      creator: user.userId,
+      modifier: user.userId,
       title: `users/${user.userId}`
     })
   }

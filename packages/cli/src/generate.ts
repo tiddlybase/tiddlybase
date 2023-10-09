@@ -1,6 +1,6 @@
 import { LaunchConfig, TIDDLYBASE_CLIENT_CONFIG_KEYS, TiddlybaseClientConfig, TiddlybaseConfig } from '@tiddlybase/shared/src/tiddlybase-config-schema';
 import { objFilter } from '@tiddlybase/shared/src/obj-utils';
-import { DEFAULT_URL_CONFIG } from '@tiddlybase/shared/src/constants';
+import { DEFAULT_LAUNCH_PARAMETER_DOMAIN, DEFAULT_URL_CONFIG } from '@tiddlybase/shared/src/constants';
 import { Arguments, Argv, CommandModule, Options } from 'yargs';
 import { ParsedConfig, readConfig, requireSingleConfig } from './config';
 import { dirname, resolve, join } from 'path';
@@ -214,7 +214,7 @@ export const cmdGenerateTiddlybaseConfigJson: CommandModule = {
         default: DEFAULT_LAUNCH_CONFIG
       },
       defaultLaunchParameters: {
-        instance
+        [DEFAULT_LAUNCH_PARAMETER_DOMAIN]: {instance}
       }
     }
     writeJSON(

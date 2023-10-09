@@ -137,7 +137,11 @@ export interface TiddlybaseConfig {
     };
   };
   urls?: Partial<URLConfig>;
-  defaultLaunchParameters?: Partial<LaunchParameters>;
+  /**
+   * Matches domain to launch parameters. If current domain is not found,
+   * attempts to use "*" record if it exists.
+   */
+  defaultLaunchParameters?: Record<string, Partial<LaunchParameters>>;
   launchConfigs: Record<string, Partial<LaunchConfig>>;
 }
 

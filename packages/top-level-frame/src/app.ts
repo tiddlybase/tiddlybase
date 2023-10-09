@@ -48,10 +48,11 @@ export class TopLevelApp {
   fileDataSource: FileDataSource | WritableFileDataSource | undefined;
 
   constructor(config: TiddlybaseClientConfig) {
-    this.config = mergeConfigDefaults(config);
+    const {tiddlybaseConfig, defaultLaunchParameters} = mergeConfigDefaults(config, window.location.hostname);
+    this.config = tiddlybaseConfig;
     this.launchParameters = parseLaunchParameters(
       window.location,
-      config.defaultLaunchParameters,
+      defaultLaunchParameters,
       config.urls?.publicPath);
     this.launchConfig = getNormalizedLaunchConfig(this.config, this.launchParameters);
     // Note: depending on the launchConfig, we might not even need a FirebaseApp instance in the future.

@@ -31,6 +31,8 @@ export const DEFAULT_LAUNCH_PARAMETERS:LaunchParameters = {
   launchConfig: DEFAULT_LAUNCH_CONFIG,
 }
 
+export const DEFAULT_LAUNCH_PARAMETER_DOMAIN = "*";
+
 export const TIDDLYBASE_LOCAL_STATE_PREFIX = "$:/state/tiddlybase/local"
 export const TIDDLYBASE_INIT_SINGLETONS_TITLE = "$:/plugins/tiddlybase/init/singletons";
 export const TIDDLYBASE_TITLE_USER_PROFILE = `${TIDDLYBASE_LOCAL_STATE_PREFIX}/user`

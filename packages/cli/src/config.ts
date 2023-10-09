@@ -41,7 +41,7 @@ export const readConfig = (
   filename: string | string[],
   addDefaults=true): Array<ParsedConfig> => (typeof filename === 'string' ? [filename] : filename).map(f => {
     const {filename, config} = readJSON(f);
-    return {filename, config: addDefaults ? mergeConfigDefaults(config) : config};
+    return {filename, config: addDefaults ? mergeConfigDefaults(config).tiddlybaseConfig : config};
 });
 
 export const requireSingleConfig = (args: Arguments, addDefaults=true) => {
