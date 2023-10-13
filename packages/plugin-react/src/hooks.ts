@@ -2,7 +2,7 @@ import { useReducer, useCallback, useState, useEffect } from "react";
 import type { } from "@tiddlybase/tw5-types/src/index"
 import { merge } from "@tiddlybase/plugin-tiddlybase-utils/src/lodash";
 
-export const DEFAULT_IGNORE_TEST = (title: string) => title.startsWith('$:/') || title.startsWith('Draft of ')
+export const DEFAULT_IGNORE_TEST = (title: string) => title.startsWith('Draft of ')
 
 interface UseFilterState {
   resultTitles: string[],
