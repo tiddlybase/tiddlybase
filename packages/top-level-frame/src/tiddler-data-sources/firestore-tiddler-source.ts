@@ -42,6 +42,7 @@ export class FirestoreDataSource implements WritableTiddlerDataSource {
   initialReadState: InitialReadState;
   unsubscribe: Unsubscribe | undefined;
   launchParameters: LaunchParameters;
+  clientId: number;
 
   private async createCollectionSentinel (): Promise<DocumentReference<DocumentData>> {
     const docRef = doc(this.firestore, this.collectionPath, SENTINEL_DOC_ID);
@@ -84,6 +85,7 @@ export class FirestoreDataSource implements WritableTiddlerDataSource {
       this.options = options;
       this.changeListener = changeListener;
       this.initialReadState = this.getInitialReadState();
+      this.clientId = Math.ceil(Math.random() * 1000000)
   }
 
   async startListening() {
@@ -100,7 +102,11 @@ export class FirestoreDataSource implements WritableTiddlerDataSource {
                 // firestore triggers the update twice: once when it's updated locally
                 // and once more when the write goes through. We can safely ignore the first one.
                 // see: https://stackoverflow.com/questions/63123697/while-updating-firestore-data-timestamp-is-null
-                this.changeListener.onSetTiddler(convertTimestamps(change.doc.data().tiddler));
+                const data = change.doc.data();
+                // We don't want to trigger tiddler updates from our own writes
+                if (data.clientId !== this.clientId) {
+                  this.changeListener.onSetTiddler(convertTimestamps(change.doc.data().tiddler));
+                }
               }
             } else {
               // The first time the sentinel doc is encountered signals the end of the tiddler documents in the collection.
@@ -151,7 +157,8 @@ export class FirestoreDataSource implements WritableTiddlerDataSource {
         creator: tiddler.creator || this.launchParameters.userId,
         modifier: this.launchParameters.userId,
         modified: serverTimestamp(),
-      }
+      },
+      clientId: this.clientId
     });
     return tiddler;
   }
