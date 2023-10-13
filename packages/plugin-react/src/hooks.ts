@@ -117,6 +117,6 @@ export const useTiddlerReducer = <A extends Partial<$tw.TiddlerFields>>(title: s
     $tw.wiki.addEventListener("change", changeListener);
     // cleanup removes the event listener
     return () => $tw.wiki.removeEventListener("change", changeListener);
-  }, [title, reducer]);
+  }, [title]);
   return [state, dispatch];
 };
