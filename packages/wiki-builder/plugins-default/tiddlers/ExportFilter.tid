@@ -4,6 +4,7 @@ revision: 0
 title: ExportFilter
 type: text/vnd.tiddlywiki
 
+[[$:/config/SyncLogging]]
 [[$:/plugins/tiddlybase/embed-media]]
 [[$:/plugins/tiddlybase/mdx]]
 [[$:/plugins/tiddlybase/mui]]

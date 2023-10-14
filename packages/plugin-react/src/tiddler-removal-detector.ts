@@ -50,7 +50,7 @@ export type RemovalHandler = (event: $tw.Widget.WidgetEvent) => void;
 let registeredCallbacks: Record<string, RemovalHandler[]> = {};
 
 export const monitorRemoval = (tiddlerTitle: string, callback: RemovalHandler) => {
-  console.log(`monitoring ${tiddlerTitle} for removal`)
+  // console.log(`monitoring ${tiddlerTitle} for removal`)
   registeredCallbacks[tiddlerTitle] = (registeredCallbacks[tiddlerTitle] ?? []).concat(callback);
 }
 
@@ -61,7 +61,7 @@ export const unmonitorRemoval = (tiddlerTitle: string) => {
 export const isInstalled = () => _isInstalled;
 
 const dispatchAndRemove = <T extends $tw.Widget.WidgetEvent>(tiddlerTitles: string[], event: T) => {
-  console.log(`dispatching removal event for`, tiddlerTitles);
+  // console.log(`dispatching removal event for`, tiddlerTitles);
   for (let title of tiddlerTitles) {
     for (let callback of registeredCallbacks[title] ?? []) {
       callback(event);
@@ -72,7 +72,7 @@ const dispatchAndRemove = <T extends $tw.Widget.WidgetEvent>(tiddlerTitles: stri
 
 export const install = () => {
   if (isInstalled()) {
-    console.log("already installed, doing nothing");
+    // console.log("already installed, doing nothing");
     return;
   }
   const navigator = findNavigator();

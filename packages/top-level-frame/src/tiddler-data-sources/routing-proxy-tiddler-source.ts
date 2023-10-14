@@ -66,7 +66,7 @@ export class RoutingProxyTiddlerSource implements WritableTiddlerDataSource {
   }
   setTiddler(tiddler: $tw.TiddlerFields): Promise<$tw.TiddlerFields> {
     const candidateStore = this.selectStoreForWrite(tiddler);
-    console.log(`RoutingProxyTiddlerStore setTiddler("${tiddler.title}")`, tiddler, candidateStore);
+    // console.log(`RoutingProxyTiddlerStore setTiddler("${tiddler.title}")`, tiddler, candidateStore);
     this.provenance[tiddler.title] = { source: candidateStore.source, spec: candidateStore.spec }
     return candidateStore.source.setTiddler(tiddler);
   }

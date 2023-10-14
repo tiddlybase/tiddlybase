@@ -36,7 +36,7 @@ export class RPCSyncadaptor implements $tw.SyncAdaptor, TiddlerDataSourceChangeL
   }
 
   deleteTiddler(title: string, callback: $tw.Callback, options: { tiddlerInfo: { adaptorInfo: $tw.SyncAdaptorTiddlerInfo } }): void {
-    console.log("deleteTiddler (sandboxed)", title);
+    // console.log("deleteTiddler (sandboxed)", title);
     globalThis.$tw.tiddlybase?.topLevelClient?.('deleteTiddler', [title]).then(
       result => callback(null, result),
       err => callback(err)
@@ -50,7 +50,7 @@ export class RPCSyncadaptor implements $tw.SyncAdaptor, TiddlerDataSourceChangeL
     // TODO: unimplemented
   }
   saveTiddler(tiddler: $tw.Tiddler, callback: $tw.Callback): void {
-    console.log("saveTiddler (sandboxed)", tiddler);
+    // console.log("saveTiddler (sandboxed)", tiddler);
     globalThis.$tw.tiddlybase?.topLevelClient?.('setTiddler', [tiddler.fields]).then(
       result => callback(null, result),
       err => callback(err)
