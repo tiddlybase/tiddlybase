@@ -1,4 +1,4 @@
-import { useReducer, useCallback, useState, useEffect } from "react";
+import { useReducer, useEffect, useMemo } from "react";
 import type { } from "@tiddlybase/tw5-types/src/index"
 import { merge } from "@tiddlybase/plugin-tiddlybase-utils/src/lodash";
 
@@ -6,7 +6,7 @@ export const DEFAULT_IGNORE_TEST = (title: string) => title.startsWith('Draft of
 
 interface UseFilterState {
   resultTitles: string[],
-  resultTiddlers: Array<$tw.TiddlerFields|undefined>,
+  resultTiddlers: Array<$tw.TiddlerFields | undefined>,
   query: string
 }
 
@@ -29,7 +29,7 @@ export const arraysEqual = (array1: string[], array2: string[]) => {
 
 export const arraysIntersect = (array1: string[], array2: string[]) => array1.filter(x => array2.includes(x)).length > 0;
 
-type UseFilterAction = {newQuery: string} | {wikiChange: $tw.WikiChange};
+type UseFilterAction = { newQuery: string } | { wikiChange: $tw.WikiChange };
 
 export const useFilter = (
   query: string,
@@ -73,7 +73,7 @@ export const useFilter = (
         // ignore update completely because none of the affected tiddlers matter
         return;
       }
-      dispatch({wikiChange: changes})
+      dispatch({ wikiChange: changes })
     }
     wiki.addEventListener("change", changeListener);
     return () => {
@@ -81,7 +81,7 @@ export const useFilter = (
       wiki.removeEventListener("change", changeListener);
     };
   }, []);
-  useEffect(() => { dispatch({newQuery: query}); }, [query, titlesOnly, wiki]);
+  useEffect(() => { dispatch({ newQuery: query }); }, [query, titlesOnly, wiki]);
   // useEffect(() => { console.log("useFilter filterResult changed"); }, [filterResult]);
   return titlesOnly ? filterState.resultTitles : filterState.resultTiddlers;
 };
@@ -95,28 +95,21 @@ export const reducerMerge: TiddlerReducerFn<Partial<$tw.TiddlerFields>> = (prevS
 const getTiddlerFields = (title: string): $tw.TiddlerFields | undefined => $tw.wiki.getTiddler(title)?.fields;
 
 export const useTiddlerReducer = <A extends Partial<$tw.TiddlerFields>>(title: string, reducer: TiddlerReducerFn<A> = reducerMerge): [$tw.TiddlerFields | undefined, (action: A) => void] => {
-  // based on: https://medium.com/@manojsinghnegi/react-custom-hooks-lets-implement-our-own-usereducer-fb166ca9dd96
-  // set the initial state to the tiddler fields so that the hook returns correct state even before the first useEffect run
-  const [state, setState] = useState(() => getTiddlerFields(title));
-  const dispatch = useCallback((action: A) => {
-    const nextState = reducer(state ?? { title }, action);
+  // https://reactjs.org/docs/hooks-faq.html#is-there-something-like-forceupdate
+  const [_, forceUpdate] = useReducer((x) => x + 1, 0);
+  const dispatch = useMemo(() => (action: A) => {
+    const nextState = reducer(getTiddlerFields(title) ?? { title }, action);
     $tw.wiki.addTiddler(nextState);
-  }, [title, reducer, state]);
+  }, [title, reducer]);
   useEffect(() => {
-    // reload the state tiddler if the title changes
-    setState(getTiddlerFields(title));
     const changeListener = (changes: $tw.WikiChange) => {
       if ((changes[title]?.modified === true) || (changes[title]?.deleted === true)) {
-        // the tiddler has changed, so update the state variable accordingly
-        const newTiddlerFields = $tw.wiki.getTiddler(title)?.fields;
-        setState(oldTiddlerFields => {
-          return oldTiddlerFields !== newTiddlerFields ? newTiddlerFields : oldTiddlerFields;
-        });
+        forceUpdate();
       }
     };
     $tw.wiki.addEventListener("change", changeListener);
     // cleanup removes the event listener
     return () => $tw.wiki.removeEventListener("change", changeListener);
   }, [title]);
-  return [state, dispatch];
+  return [getTiddlerFields(title), dispatch];
 };
