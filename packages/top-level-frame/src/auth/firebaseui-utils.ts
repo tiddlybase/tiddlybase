@@ -2,7 +2,7 @@ import { FirebaseAuthProvider } from "./firebase-auth-provider";
 import {getFirestore} from "@firebase/firestore"
 import {FirebaseApp} from "@firebase/app"
 import * as firebaseui from 'firebaseui';
-import { FirestoreTiddlerStorage } from "../tiddler-data-sources/firestore-tiddler-source";
+import { FirestoreTiddlerStorage } from "../tiddler-storage/firestore-tiddler-storage";
 import { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
 import { objFilter } from '@tiddlybase/shared/src/obj-utils';
 import { Lazy } from "@tiddlybase/shared/src/lazy";

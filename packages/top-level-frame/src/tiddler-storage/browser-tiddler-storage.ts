@@ -1,7 +1,8 @@
-import { TiddlerCollection, WriteConditionEvaluator } from "@tiddlybase/shared/src/tiddler-storage";
+import { TiddlerCollection } from "@tiddlybase/shared/src/tiddler-storage";
 import { LaunchParameters, TiddlerStorageWriteCondition } from "@tiddlybase/shared/src/tiddlybase-config-schema";
-import { uriEncodeLaunchParameters } from "./tiddler-store-utils";
+import { uriEncodeLaunchParameters } from "./tiddler-storage-utils";
 import mustache from 'mustache'
+import { TiddlerStorageBase } from "./tiddler-storage-base";
 
 const KEY_SEPARATOR = "/";
 const KEY_PREFIX = "tiddlybase";
@@ -28,7 +29,7 @@ const parseKey = (key:string):KeyParts|undefined => {
   return undefined;
 }
 
-export class BrowserTiddlerStorage extends WriteConditionEvaluator {
+export class BrowserTiddlerStorage extends TiddlerStorageBase {
   storage: Storage;
   launchParameters: LaunchParameters;
   collectionPath: string;

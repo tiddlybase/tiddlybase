@@ -1,10 +1,11 @@
-import { type TiddlerStorageChangeListener, type TiddlerCollection, WriteConditionEvaluator } from "@tiddlybase/shared/src/tiddler-storage";
+import { type TiddlerStorageChangeListener, type TiddlerCollection } from "@tiddlybase/shared/src/tiddler-storage";
 import type { Firestore } from '@firebase/firestore';
 import { setDoc, doc, DocumentReference, DocumentData, collection, onSnapshot, Unsubscribe, getDoc, deleteDoc, Timestamp, serverTimestamp } from "firebase/firestore";
 import type { } from '@tiddlybase/tw5-types/src/index'
-import { getFirestoreCollectionPath, DEFAULT_FIRESTORE_PATH_TEMPLATE, evaluateMustacheTemplate } from "./tiddler-store-utils";
+import { getFirestoreCollectionPath, DEFAULT_FIRESTORE_PATH_TEMPLATE, evaluateMustacheTemplate } from "./tiddler-storage-utils";
 import type { FirestoreTiddlerStorageOptions, LaunchParameters, TiddlerStorageWriteCondition } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import { normalizeFirebaseReadError } from "../firebase-utils";
+import { TiddlerStorageBase } from "./tiddler-storage-base";
 
 const SENTINEL_DOC_ID = "\uffffsentinel"
 
@@ -33,7 +34,7 @@ type InitialReadState = {
   completePromiseResolved: boolean;
 }
 
-export class FirestoreTiddlerStorage extends WriteConditionEvaluator {
+export class FirestoreTiddlerStorage extends TiddlerStorageBase {
 
   firestore: Firestore;
   collectionPath: string;

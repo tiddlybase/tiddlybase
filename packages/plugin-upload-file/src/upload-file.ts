@@ -1,5 +1,5 @@
 import type {} from "@tiddlybase/tw5-types/src/index"
-import { UploadEventHandler } from "@tiddlybase/shared/src/file-data-source";
+import { UploadEventHandler } from "@tiddlybase/shared/src/file-storage";
 import { makeInvocationObserver } from "@tiddlybase/shared/src/invocation-observer";
 import {createSession, destroySession} from "./upload-sessions"
 import {TIDDLYBASE_TITLE_USER_PROFILE} from "@tiddlybase/shared/src/constants";

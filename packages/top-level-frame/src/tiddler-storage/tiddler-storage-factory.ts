@@ -1,22 +1,23 @@
-import { TiddlerStorageChangeListener, TiddlerCollection, TiddlerProvenance, TiddlerStorageWithSpec, TiddlerStorage, ReadOnlyTiddlerStorageWrapper } from "@tiddlybase/shared/src/tiddler-storage";
+import { TiddlerStorageChangeListener, TiddlerCollection, TiddlerProvenance, TiddlerStorageWithSpec, TiddlerStorage } from "@tiddlybase/shared/src/tiddler-storage";
 import { LaunchConfig, LaunchParameters, TiddlerStorageSpec } from "@tiddlybase/shared/src/tiddlybase-config-schema";
-import { FirestoreTiddlerStorage } from "./firestore-tiddler-source";
+import { FirestoreTiddlerStorage } from "./firestore-tiddler-storage";
 import { APIClient } from "@tiddlybase/rpc/src/types";
 import { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
-import { RoutingProxyTiddlerSource } from "./routing-proxy-tiddler-source";
-import { BrowserTiddlerStorage } from "./browser-storage-tiddler-source";
-import { TiddlyWebTiddlerStore } from "./tiddlyweb-tiddler-store";
+import { RoutingProxyTiddlerStorage } from "./routing-proxy-tiddler-storage";
+import { BrowserTiddlerStorage } from "./browser-tiddler-storage";
+import { TiddlyWebTiddlerStorage } from "./tiddlyweb-tiddler-storage";
 import { FirebaseApp } from '@firebase/app'
 import { getStorage } from '@firebase/storage';
 import { getFirestore } from "firebase/firestore";
 import { Lazy } from "@tiddlybase/shared/src/lazy";
-import { HttpFileStorage } from "../file-data-sources/http-file-source";
-import { FileStorageTiddlerStorage } from "./file-storage-tiddler-source";
-import { FirebaseStorageFileStorage } from "../file-data-sources/firebase-storage-file-source";
+import { HttpFileStorage } from "../file-storage/http-file-source";
+import { FileStorageTiddlerStorage } from "./file-storage-tiddler-storage";
+import { FirebaseStorageFileStorage } from "../file-storage/firebase-storage-file-storage";
 import { RPC } from "../types";
 import { TIDDLYBASE_LOCAL_STATE_PREFIX } from "@tiddlybase/shared/src/constants";
-import { LiteralTiddlerStorage } from "./literal-tiddler-source";
+import { LiteralTiddlerStorage } from "./literal-tiddler-storage";
 import { evaluateTiddlerStorageUseCondition } from "packages/shared/src/tiddler-storage-conditions";
+import { ReadOnlyTiddlerStorageWrapper } from "./tiddler-storage-base";
 
 
 export class ProxyToSandboxedIframeChangeListener implements TiddlerStorageChangeListener {
@@ -69,7 +70,7 @@ const getTiddlerStorage = async (launchParameters: LaunchParameters, spec: Tiddl
         spec.collection,
         spec.pathTemplate)
     case "tiddlyweb":
-      return new TiddlyWebTiddlerStore(spec.writeCondition);
+      return new TiddlyWebTiddlerStorage(spec.writeCondition);
     case "firestore":
       const firestore = getFirestore(lazyFirebaseApp());
       const firestoreTiddlerStore = new FirestoreTiddlerStorage(
@@ -104,7 +105,7 @@ type TiddlerSourcePromiseWithSpec = {
 
 
 export const readTiddlerSources = async (launchParameters: LaunchParameters, launchConfig: LaunchConfig, lazyFirebaseApp: Lazy<FirebaseApp>, rpc: RPC): Promise<MergedSources> => {
-  const sourcePromisesWithSpecs = launchConfig.tiddlers.tiddlerStorage.reduce(
+  const sourcePromisesWithSpecs = launchConfig.tiddlers.storage.reduce(
     (sourcePromisesWithSpecs, spec) => {
       if (evaluateTiddlerStorageUseCondition(spec.useCondition, launchParameters)) {
         sourcePromisesWithSpecs.push({
@@ -137,6 +138,6 @@ export const readTiddlerSources = async (launchParameters: LaunchParameters, lau
     }
   }
 
-  mergedSources.writeStore = new RoutingProxyTiddlerSource(mergedSources.provenance, sourcesWithSpecs);
+  mergedSources.writeStore = new RoutingProxyTiddlerStorage(mergedSources.provenance, sourcesWithSpecs);
   return mergedSources;
 }

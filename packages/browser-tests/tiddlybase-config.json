@@ -8,7 +8,7 @@
         "type": "trivial"
       },
       "tiddlers": {
-        "sources": [
+        "storage": [
           {
             "type": "http",
             "url": "/tiddlybase_public/plugins/plugins-browser-test.json"
@@ -23,7 +23,7 @@
         ]
       },
       "files": {
-        "sources": [
+        "storage": [
           {
             "type": "http",
             "urlPrefix": "files/"

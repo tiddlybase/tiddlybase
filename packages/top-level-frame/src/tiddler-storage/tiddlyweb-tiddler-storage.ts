@@ -1,8 +1,9 @@
 import type { } from '@tiddlybase/tw5-types/src/index'
-import { WriteConditionEvaluator, type TiddlerCollection } from "@tiddlybase/shared/src/tiddler-storage";
-import { FileStorageTiddlerStorage } from './file-storage-tiddler-source';
-import { HttpFileStorage } from '../file-data-sources/http-file-source';
+import type {TiddlerCollection } from "@tiddlybase/shared/src/tiddler-storage";
+import { FileStorageTiddlerStorage } from './file-storage-tiddler-storage';
+import { HttpFileStorage } from '../file-storage/http-file-source';
 import { TiddlerStorageWriteCondition } from '@tiddlybase/shared/src/tiddlybase-config-schema';
+import { TiddlerStorageBase } from './tiddler-storage-base';
 
 const DEFAULT_FILTER_EXPRESSION = "[is[tiddler]]";
 
@@ -50,7 +51,7 @@ const convertTiddlerToTiddlyWebFormat = (tiddler:$tw.TiddlerFields):string => {
   return JSON.stringify(result,null,4);
 };
 
-export class TiddlyWebTiddlerStore extends WriteConditionEvaluator {
+export class TiddlyWebTiddlerStorage extends TiddlerStorageBase {
   urlPrefix: string;
   filterExpression: string;
 

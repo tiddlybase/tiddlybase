@@ -1,6 +1,6 @@
 import type { TiddlerCollection, TiddlerStorage } from "@tiddlybase/shared/src/tiddler-storage";
 
-export class StubTiddlerSource implements TiddlerStorage {
+export class StubTiddlerStorage implements TiddlerStorage {
 
   async getTiddler (title: string) : Promise<$tw.TiddlerFields | undefined> {
     console.log(`StubTiddlerStore.getTiddler("${title}") called`);

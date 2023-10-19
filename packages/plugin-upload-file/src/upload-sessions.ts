@@ -1,5 +1,5 @@
 import { WithCleanupRPC } from "@tiddlybase/rpc/src/types";
-import { UploadController, UploadEventHandler } from "@tiddlybase/shared/src/file-data-source";
+import { UploadController, UploadEventHandler } from "@tiddlybase/shared/src/file-storage";
 import { InvocationObserver } from "@tiddlybase/shared/src/invocation-observer";
 
 export interface UploadSessionState {

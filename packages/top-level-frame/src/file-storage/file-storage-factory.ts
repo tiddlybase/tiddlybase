@@ -1,9 +1,9 @@
 import type { FileStorageSpec, FilesConfig, LaunchParameters } from "@tiddlybase/shared/src/tiddlybase-config-schema";
-import type { ReadOnlyFileStorage, FileStorage, FileReference, UploadEventHandler, UploadController } from "@tiddlybase/shared/src/file-data-source";
+import type { ReadOnlyFileStorage, FileStorage, FileReference, UploadEventHandler, UploadController } from "@tiddlybase/shared/src/file-storage";
 import { Lazy } from "@tiddlybase/shared/src/lazy";
 import type { FirebaseApp } from '@firebase/app'
 import  { getStorage } from '@firebase/storage'
-import { FirebaseStorageFileStorage } from "./firebase-storage-file-source";
+import { FirebaseStorageFileStorage } from "./firebase-storage-file-storage";
 import { HttpFileStorage } from "./http-file-source";
 import { RPC } from "../types";
 import { CallbackMap } from "@tiddlybase/rpc/src/types";
@@ -35,8 +35,8 @@ export const makeFileStorage = (launchParameters:LaunchParameters, rpc:RPC, lazy
   // Eventually, this function should return a routing proxy similar to
   // RoutingProxyTiddlerSource for tiddlers.
   // For now, just return the first FileDataSource defined in the config.
-  if (filesConfig.fileStorage.length > 0) {
-    return initFileStorage(launchParameters, rpc, lazyFirebaseApp, filesConfig.fileStorage[0]);
+  if (filesConfig.storage.length > 0) {
+    return initFileStorage(launchParameters, rpc, lazyFirebaseApp, filesConfig.storage[0]);
   }
   return undefined;
 }

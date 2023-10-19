@@ -1,4 +1,4 @@
-import { ReadOnlyFileStorage, FileReference, FileReferenceType } from "@tiddlybase/shared/src/file-data-source";
+import { ReadOnlyFileStorage, FileReference, FileReferenceType } from "@tiddlybase/shared/src/file-storage";
 
 export class HttpFileStorage implements ReadOnlyFileStorage {
   urlPrefix: string;

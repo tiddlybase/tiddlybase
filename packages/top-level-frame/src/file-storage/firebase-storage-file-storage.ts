@@ -1,11 +1,11 @@
-import { FileReference, FileReferenceType, UploadController, UploadEventHandler, FileStorage } from "@tiddlybase/shared/src/file-data-source";
+import { FileReference, FileReferenceType, UploadController, UploadEventHandler, FileStorage } from "@tiddlybase/shared/src/file-storage";
 import { FirebaseStorage, getDownloadURL, ref, uploadBytesResumable, deleteObject } from '@firebase/storage';
 import { normalizeFirebaseReadError } from "../firebase-utils";
 import { CallbackMap } from "@tiddlybase/rpc/src/types";
 import { RPCCallbackManager } from "@tiddlybase/rpc/src/rpc-callback-manager";
 import { LaunchParameters } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import mustache from 'mustache'
-import { uriEncodeLaunchParameters } from "../tiddler-data-sources/tiddler-store-utils";
+import { uriEncodeLaunchParameters } from "../tiddler-storage/tiddler-storage-utils";
 
 // TODO: this files prefix should be configurable in the future!
 const FILES_PREFIX = "files/"

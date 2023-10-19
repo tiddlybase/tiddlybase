@@ -2,7 +2,7 @@ import type { } from '@tiddlybase/tw5-types/src/index'
 import type { AddNumbers, NotifyAdmin } from "@tiddlybase/functions/src/apis";
 import { ParentAPIBase } from "./base";
 import type { TiddlerStorage } from "@tiddlybase/shared/src/tiddler-storage";
-import type { FileStorage } from "@tiddlybase/shared/src/file-data-source";
+import type { FileStorage } from "@tiddlybase/shared/src/file-storage";
 
 export interface ChildInitProps {
   tiddlers: $tw.TiddlerFields[]

@@ -84,11 +84,11 @@ export interface FunctionsConfig {
 }
 
 export interface TiddlersConfig {
-  tiddlerStorage: TiddlerStorageSpec[];
+  storage: TiddlerStorageSpec[];
 }
 
 export interface FilesConfig {
-  fileStorage: FileStorageSpec[];
+  storage: FileStorageSpec[];
 }
 
 /**

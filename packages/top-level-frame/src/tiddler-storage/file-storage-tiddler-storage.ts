@@ -1,6 +1,6 @@
 import type { TiddlerCollection, ReadOnlyTiddlerStorage } from "@tiddlybase/shared/src/tiddler-storage";
-import type { ReadOnlyFileStorage } from "@tiddlybase/shared/src/file-data-source";
-import { fetchJSON, mergeTiddlerArray } from "./tiddler-store-utils";
+import type { ReadOnlyFileStorage } from "@tiddlybase/shared/src/file-storage";
+import { fetchJSON, mergeTiddlerArray } from "./tiddler-storage-utils";
 
 export class FileStorageTiddlerStorage implements ReadOnlyTiddlerStorage {
   fileStorage: ReadOnlyFileStorage;

@@ -2,7 +2,7 @@ import type { } from '@tiddlybase/tw5-types/src/index';
 import type { FirebaseApp } from '@firebase/app';
 import type { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
 import type { TopLevelAPIForSandboxedWiki } from "@tiddlybase/rpc/src/top-level-api";
-import type { ReadOnlyFileStorage, FileStorage } from "@tiddlybase/shared/src/file-data-source";
+import type { ReadOnlyFileStorage, FileStorage } from "@tiddlybase/shared/src/file-storage";
 import type { TiddlerStorage } from "@tiddlybase/shared/src/tiddler-storage";
 import type { LaunchConfig, LaunchParameters, TiddlerStorageSpec, TiddlybaseClientConfig } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import type { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
@@ -20,9 +20,9 @@ import { parseLaunchParameters } from 'packages/shared/src/launch-parameters';
 import { exposeFirebaseFunction, exposeObjectMethod, functionsDevSetup } from './api-utils';
 import { getAuthProvider } from "./auth/get-auth-provider";
 import { replaceChildrenWithText, toggleVisibleDOMSection } from "./dom-utils";
-import { makeFileStorage } from "./file-data-sources/file-storage-factory";
+import { makeFileStorage } from "./file-storage/file-storage-factory";
 import { getNormalizedLaunchConfig } from './launch-config';
-import { readTiddlerSources } from "./tiddler-data-sources/tiddler-data-source-factory";
+import { readTiddlerSources } from "./tiddler-storage/tiddler-storage-factory";
 import { TIDDLYBASE_TITLE_LAUNCH_PARAMETERS, TIDDLYBASE_TITLE_PARENT_LOCATION, TIDDLYBASE_TITLE_USER_PROFILE } from "@tiddlybase/shared/src/constants";
 
 

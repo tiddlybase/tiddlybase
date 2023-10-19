@@ -2,7 +2,7 @@ import { TiddlerCollection, TiddlerProvenance, TiddlerStorageWithSpec, TiddlerSt
 import type { } from '@tiddlybase/tw5-types/src/index';
 
 
-export class RoutingProxyTiddlerSource implements TiddlerStorage {
+export class RoutingProxyTiddlerStorage implements TiddlerStorage {
   provenance: TiddlerProvenance;
   storageWithSpecs: TiddlerStorageWithSpec[];
 
@@ -50,6 +50,6 @@ export class RoutingProxyTiddlerSource implements TiddlerStorage {
   }
 
   canAcceptTiddler (tiddler: $tw.TiddlerFields) {
-    return true;
+    return !!this.selectStorageForWrite(tiddler);
   }
 }
