@@ -17,7 +17,8 @@ export const writeUserProfile = async (launchParameters: LaunchParameters, lazyF
       undefined,
       {
         ...launchParameters,
-        instance: ADMIN_INSTANCE_NAME
+        instance: ADMIN_INSTANCE_NAME,
+        userId: user.userId
       },
       firestore,
       "users",
