@@ -1,8 +1,8 @@
 import type { } from '@tiddlybase/tw5-types/src/index'
 import type { AddNumbers, NotifyAdmin } from "@tiddlybase/functions/src/apis";
 import { ParentAPIBase } from "./base";
-import type { WritableTiddlerDataSource } from "@tiddlybase/shared/src/tiddler-data-source";
-import type { WritableFileDataSource } from "@tiddlybase/shared/src/file-data-source";
+import type { TiddlerStorage } from "@tiddlybase/shared/src/tiddler-storage";
+import type { FileStorage } from "@tiddlybase/shared/src/file-data-source";
 
 export interface ChildInitProps {
   tiddlers: $tw.TiddlerFields[]
@@ -23,4 +23,4 @@ export interface TopLevelUIAPI {
   loginScreen: () => Promise<void>;
 }
 
-export interface TopLevelAPIForSandboxedWiki extends ParentAPIBase<ChildInitProps>, WritableTiddlerDataSource, WritableFileDataSource, AuthAPI, BackendFunctions, TopLevelUIAPI {}
+export interface TopLevelAPIForSandboxedWiki extends ParentAPIBase<ChildInitProps>, TiddlerStorage, FileStorage, AuthAPI, BackendFunctions, TopLevelUIAPI {}

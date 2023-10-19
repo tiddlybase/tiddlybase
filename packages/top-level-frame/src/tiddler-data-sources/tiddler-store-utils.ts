@@ -1,4 +1,4 @@
-import type { TiddlerCollection } from "@tiddlybase/shared/src/tiddler-data-source";
+import type { TiddlerCollection } from "@tiddlybase/shared/src/tiddler-storage";
 import { LaunchParameters } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import mustache from 'mustache'
 

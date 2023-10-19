@@ -1,14 +1,14 @@
-import type { TiddlerDataSourceChangeListener, TiddlerCollection, WritableTiddlerDataSource } from "@tiddlybase/shared/src/tiddler-data-source";
+import { type TiddlerStorageChangeListener, type TiddlerCollection, WriteConditionEvaluator } from "@tiddlybase/shared/src/tiddler-storage";
 import type { Firestore } from '@firebase/firestore';
 import { setDoc, doc, DocumentReference, DocumentData, collection, onSnapshot, Unsubscribe, getDoc, deleteDoc, Timestamp, serverTimestamp } from "firebase/firestore";
 import type { } from '@tiddlybase/tw5-types/src/index'
 import { getFirestoreCollectionPath, DEFAULT_FIRESTORE_PATH_TEMPLATE, evaluateMustacheTemplate } from "./tiddler-store-utils";
-import type { FirestoreTiddlerDataSourceOptions, LaunchParameters } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import type { FirestoreTiddlerStorageOptions, LaunchParameters, TiddlerStorageWriteCondition } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import { normalizeFirebaseReadError } from "../firebase-utils";
 
 const SENTINEL_DOC_ID = "\uffffsentinel"
 
-const maybeTrimPrefix = (title: string, options: FirestoreTiddlerDataSourceOptions | undefined): string => {
+const maybeTrimPrefix = (title: string, options: FirestoreTiddlerStorageOptions | undefined): string => {
   if (options?.stripDocIDPrefix && title.startsWith(options.stripDocIDPrefix)) {
     return title.substring(options.stripDocIDPrefix.length);
   }
@@ -33,18 +33,18 @@ type InitialReadState = {
   completePromiseResolved: boolean;
 }
 
-export class FirestoreDataSource implements WritableTiddlerDataSource {
+export class FirestoreTiddlerStorage extends WriteConditionEvaluator {
 
   firestore: Firestore;
   collectionPath: string;
-  options: FirestoreTiddlerDataSourceOptions | undefined;
-  changeListener: TiddlerDataSourceChangeListener | undefined;
+  options: FirestoreTiddlerStorageOptions | undefined;
+  changeListener: TiddlerStorageChangeListener | undefined;
   initialReadState: InitialReadState;
   unsubscribe: Unsubscribe | undefined;
   launchParameters: LaunchParameters;
   clientId: number;
 
-  private async createCollectionSentinel (): Promise<DocumentReference<DocumentData>> {
+  private async createCollectionSentinel(): Promise<DocumentReference<DocumentData>> {
     const docRef = doc(this.firestore, this.collectionPath, SENTINEL_DOC_ID);
     // No transaction, so possible but unlikely race condition, but that doesn't really matter too much,
     // because the worst case scenario is that multiple writers write the same empty sentinel doc
@@ -69,23 +69,25 @@ export class FirestoreDataSource implements WritableTiddlerDataSource {
   }
 
   constructor(
-    launchParameters:LaunchParameters,
+    writeCondition: TiddlerStorageWriteCondition|undefined,
+    launchParameters: LaunchParameters,
     firestore: Firestore,
     collection?: string,
     pathTemplate?: string,
-    options?: FirestoreTiddlerDataSourceOptions,
-    changeListener?: TiddlerDataSourceChangeListener,
+    options?: FirestoreTiddlerStorageOptions,
+    changeListener?: TiddlerStorageChangeListener,
   ) {
-      this.launchParameters = launchParameters;
-      this.firestore = firestore;
-      this.collectionPath = getFirestoreCollectionPath(
-        launchParameters,
-        evaluateMustacheTemplate(collection ?? "", launchParameters),
-        pathTemplate ?? DEFAULT_FIRESTORE_PATH_TEMPLATE)
-      this.options = options;
-      this.changeListener = changeListener;
-      this.initialReadState = this.getInitialReadState();
-      this.clientId = Math.ceil(Math.random() * 1000000)
+    super(writeCondition);
+    this.launchParameters = launchParameters;
+    this.firestore = firestore;
+    this.collectionPath = getFirestoreCollectionPath(
+      launchParameters,
+      evaluateMustacheTemplate(collection ?? "", launchParameters),
+      pathTemplate ?? DEFAULT_FIRESTORE_PATH_TEMPLATE)
+    this.options = options;
+    this.changeListener = changeListener;
+    this.initialReadState = this.getInitialReadState();
+    this.clientId = Math.ceil(Math.random() * 1000000)
   }
 
   async startListening() {

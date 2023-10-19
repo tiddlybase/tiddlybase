@@ -1,10 +1,10 @@
 import { ADMIN_INSTANCE_NAME } from "./constants";
-import type { PermissionedDataSource, InstanceSpec, UserId } from "./instance-spec-schema"
+import type { PermissionedStorage, InstanceSpec, UserId } from "./instance-spec-schema"
 
 export const instanceSpecPath = (instanceName: string) => `tiddlybase-instances/${encodeURIComponent(ADMIN_INSTANCE_NAME)}/collections/instances/tiddlers/${encodeURIComponent(instanceName)}`
 
 export const makeInstanceUserPermissionsUpdate = (
-  resourceType: PermissionedDataSource,
+  resourceType: PermissionedStorage,
   userId: UserId,
   collectionName: string,
   role: number): InstanceSpec => ({
@@ -18,7 +18,7 @@ export const makeInstanceUserPermissionsUpdate = (
   });
 
 export const makeInstanceUnauthenticatedPermissionsUpdate = (
-  resourceType: PermissionedDataSource,
+  resourceType: PermissionedStorage,
   collectionName: string,
   role: number): Partial<InstanceSpec> => ({
     "unauthenticated-permissions": {

@@ -1,5 +1,5 @@
-import { TiddlerCollection, WritableTiddlerDataSource } from "@tiddlybase/shared/src/tiddler-data-source";
-import { LaunchParameters } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import { TiddlerCollection, WriteConditionEvaluator } from "@tiddlybase/shared/src/tiddler-storage";
+import { LaunchParameters, TiddlerStorageWriteCondition } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import { uriEncodeLaunchParameters } from "./tiddler-store-utils";
 import mustache from 'mustache'
 
@@ -28,17 +28,19 @@ const parseKey = (key:string):KeyParts|undefined => {
   return undefined;
 }
 
-export class BrowserStorageDataSource implements WritableTiddlerDataSource {
+export class BrowserTiddlerStorage extends WriteConditionEvaluator {
   storage: Storage;
   launchParameters: LaunchParameters;
   collectionPath: string;
   collection: string;
 
   constructor(
+    writeCondition: TiddlerStorageWriteCondition|undefined,
     launchParameters: LaunchParameters,
     storage: Storage,
     collection?: string,
     pathTemplate?: string) {
+    super(writeCondition);
     this.storage = storage;
     this.launchParameters = uriEncodeLaunchParameters(launchParameters);
     this.collection = encodeURIComponent(collection ?? "");

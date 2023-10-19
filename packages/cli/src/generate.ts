@@ -179,7 +179,7 @@ const DEFAULT_LAUNCH_CONFIG: Partial<LaunchConfig> = {
     }
   },
   tiddlers: {
-    "sources": [
+    "tiddlerStorage": [
       { "type": "http", "url": "/tiddlybase_public/plugins/plugins-default.json" },
       { "type": "firestore", "collection": "user:$USERID", "writeCondition": "private" },
       { "type": "firestore", "collection": "shared" }

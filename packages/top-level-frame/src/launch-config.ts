@@ -11,8 +11,8 @@ export const getNormalizedLaunchConfig = (config: TiddlybaseClientConfig, launch
     throw Error(`Undefined launch config '${launchConfigName}' requested`)
   }
 
-  const tiddlers:TiddlersConfig = launchConfig?.tiddlers ?? {sources: []}
-  const files:FilesConfig = launchConfig?.files ?? {sources: []}
+  const tiddlers:TiddlersConfig = launchConfig?.tiddlers ?? {tiddlerStorage: []}
+  const files:FilesConfig = launchConfig?.files ?? {fileStorage: []}
 
   return {
     build: launchConfig.build ?? DEFAULT_BUILD_NAME,

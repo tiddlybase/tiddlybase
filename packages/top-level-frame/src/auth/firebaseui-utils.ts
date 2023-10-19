@@ -2,7 +2,7 @@ import { FirebaseAuthProvider } from "./firebase-auth-provider";
 import {getFirestore} from "@firebase/firestore"
 import {FirebaseApp} from "@firebase/app"
 import * as firebaseui from 'firebaseui';
-import { FirestoreDataSource } from "../tiddler-data-sources/firestore-tiddler-source";
+import { FirestoreTiddlerStorage } from "../tiddler-data-sources/firestore-tiddler-source";
 import { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
 import { objFilter } from '@tiddlybase/shared/src/obj-utils';
 import { Lazy } from "@tiddlybase/shared/src/lazy";
@@ -13,7 +13,8 @@ const SEARCH_PARAMETER_SIGN_IN_FLOW = 'auth:signInFlow';
 
 export const writeUserProfile = async (launchParameters: LaunchParameters, lazyFirebaseApp:Lazy<FirebaseApp>, user:TiddlyBaseUser) => {
   const firestore = getFirestore(lazyFirebaseApp());
-    return await (new FirestoreDataSource(
+    return await (new FirestoreTiddlerStorage(
+      undefined,
       {
         ...launchParameters,
         instance: ADMIN_INSTANCE_NAME

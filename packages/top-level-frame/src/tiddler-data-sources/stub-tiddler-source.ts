@@ -1,6 +1,6 @@
-import type { TiddlerCollection, WritableTiddlerDataSource } from "@tiddlybase/shared/src/tiddler-data-source";
+import type { TiddlerCollection, TiddlerStorage } from "@tiddlybase/shared/src/tiddler-storage";
 
-export class StubTiddlerSource implements WritableTiddlerDataSource {
+export class StubTiddlerSource implements TiddlerStorage {
 
   async getTiddler (title: string) : Promise<$tw.TiddlerFields | undefined> {
     console.log(`StubTiddlerStore.getTiddler("${title}") called`);
@@ -17,4 +17,8 @@ export class StubTiddlerSource implements WritableTiddlerDataSource {
     console.log(`StubTiddlerStore.getAllTiddlers() called`);
     return {};
   }
+  canAcceptTiddler(tiddler: $tw.TiddlerFields): boolean {
+    return true;
+  }
+
 }

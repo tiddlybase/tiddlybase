@@ -1,4 +1,4 @@
-import { InstanceSpec, PERMISSIONED_DATA_SOURCES, PermissionedDataSource } from '@tiddlybase/shared/src/instance-spec-schema';
+import { InstanceSpec, PERMISSIONED_DATA_STORAGE, PermissionedStorage } from '@tiddlybase/shared/src/instance-spec-schema';
 import { objFilter } from '@tiddlybase/shared/src/obj-utils';
 import { makeInstanceUserPermissionsUpdate, instanceSpecPath, makeInstanceUnauthenticatedPermissionsUpdate } from '@tiddlybase/shared/src/permissions';
 import { TiddlyBaseUser, USER_ROLES } from '@tiddlybase/shared/src/users';
@@ -20,7 +20,7 @@ const ROLE_CHOICES = Object.keys(USER_ROLES).map(s => s.toLowerCase());
 const doSetUserCollectionRole = async (
   app: admin.app.App,
   launchParameters:LaunchParameters,
-  resourceType: PermissionedDataSource,
+  resourceType: PermissionedStorage,
   collectionName: string,
   roleNumber: number): Promise<InstanceSpec> => {
   const docPath = instanceSpecPath(launchParameters.instance);
@@ -40,7 +40,7 @@ const doSetUserCollectionRole = async (
 
 const doSetUnauthenticatedCollectionRole = async (
   app: admin.app.App,
-  resourceType: PermissionedDataSource,
+  resourceType: PermissionedStorage,
   instance: string,
   collectionName: string,
   roleNumber: number): Promise<InstanceSpec> => {
@@ -107,7 +107,7 @@ export const setCollectionRole: CommandModule = {
   builder: (argv: Argv) =>
     argv
       .options({
-        t: { type: 'string', alias: 'resource-type', describe: 'Resource type (collections or files)', default: PERMISSIONED_DATA_SOURCES[0], choices: PERMISSIONED_DATA_SOURCES }
+        t: { type: 'string', alias: 'resource-type', describe: 'Resource type (collections or files)', default: PERMISSIONED_DATA_STORAGE[0], choices: PERMISSIONED_DATA_STORAGE }
       })
       .positional('instance', {
         describe: 'Instance name',
@@ -131,7 +131,7 @@ export const setCollectionRole: CommandModule = {
     if (!(roleName in USER_ROLES) || !(typeof roleNumber === 'number')) {
       throw new Error('Unknown role ' + cliContext.args.role);
     }
-    const resourceType = cliContext.args['resource-type'] as PermissionedDataSource;
+    const resourceType = cliContext.args['resource-type'] as PermissionedStorage;
     const userArg = cliContext.args.userid as string;
     const instance = cliContext.args.instance as string;
     const collectionArg = cliContext.args.collection as string;

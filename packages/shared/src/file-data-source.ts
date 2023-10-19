@@ -8,7 +8,7 @@ export type FileReference = {type: "url", url: string} | {type: "blob", blob: Bl
 
 export type FileReferenceType = FileReference["type"];
 
-export interface FileDataSource {
+export interface ReadOnlyFileStorage {
   // full filename relative to the collection dir
   readFile: (filename:string, referenceType?:FileReferenceType) => Promise<FileReference>;
 }
@@ -25,7 +25,7 @@ export interface UploadController {
   resume: () => Promise<void>;
 }
 
-export interface WritableFileDataSource extends FileDataSource {
+export interface FileStorage extends ReadOnlyFileStorage {
   // returns the number of bytes written
   writeFile: (
     filename: string,

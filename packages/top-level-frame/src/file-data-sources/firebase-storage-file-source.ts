@@ -1,4 +1,4 @@
-import { FileReference, FileReferenceType, UploadController, UploadEventHandler, WritableFileDataSource } from "@tiddlybase/shared/src/file-data-source";
+import { FileReference, FileReferenceType, UploadController, UploadEventHandler, FileStorage } from "@tiddlybase/shared/src/file-data-source";
 import { FirebaseStorage, getDownloadURL, ref, uploadBytesResumable, deleteObject } from '@firebase/storage';
 import { normalizeFirebaseReadError } from "../firebase-utils";
 import { CallbackMap } from "@tiddlybase/rpc/src/types";
@@ -11,7 +11,7 @@ import { uriEncodeLaunchParameters } from "../tiddler-data-sources/tiddler-store
 const FILES_PREFIX = "files/"
 const DEFAULT_PATH_TEMPLATE = `/{{instance}}/{{collection}}/{{filename}}`
 
-export class FirebaseStorageDataSource implements WritableFileDataSource {
+export class FirebaseStorageFileStorage implements FileStorage {
   storage: FirebaseStorage;
   collectionPath: string;
   rpcCallbackManager: RPCCallbackManager;

@@ -15,22 +15,22 @@ export type TiddlerCollectionPathSpec = {
   pathTemplate?: string;
 };
 
-export type TiddlerWriteConditionAssertion =
+export type TiddlerStorageWriteConditionAssertion =
   | true
   | false
   | "private"
   | { titlePrefix: string };
 
-export type TiddlerDataSourceUseConditionAssertion =
+export type TiddlerStorageUseConditionAssertion =
   | true
   | false
   | "authenticated";
 
-export type FirestoreTiddlerDataSourceOptions = Partial<{
+export type FirestoreTiddlerStorageOptions = Partial<{
   stripDocIDPrefix: string;
 }>;
 
-type TiddlerDataSourceTypeSpec =
+type TiddlerStorageTypeSpec =
   | { type: "http"; url: string }
   | ({
       type: "firebase-storage";
@@ -39,7 +39,7 @@ type TiddlerDataSourceTypeSpec =
   | { type: "tiddlyweb" }
   | ({
       type: "firestore";
-      options?: FirestoreTiddlerDataSourceOptions;
+      options?: FirestoreTiddlerStorageOptions;
     } & TiddlerCollectionPathSpec)
   | ({
       type: "browser-storage";
@@ -51,12 +51,15 @@ type TiddlerDataSourceTypeSpec =
     tiddlers: $tw.TiddlerFields[]
   };
 
-export type TiddlerDataSourceSpec = TiddlerDataSourceTypeSpec & {
-  useCondition?: Expression<TiddlerDataSourceUseConditionAssertion>;
-  writeCondition?: Expression<TiddlerWriteConditionAssertion>;
+export type TiddlerStorageUseCondition = Expression<TiddlerStorageUseConditionAssertion>;
+export type TiddlerStorageWriteCondition = Expression<TiddlerStorageWriteConditionAssertion>
+
+export type TiddlerStorageSpec = TiddlerStorageTypeSpec & {
+  useCondition?: TiddlerStorageUseCondition;
+  writeCondition?: TiddlerStorageWriteCondition;
 };
 
-export type FileDataSourceSpec =
+export type FileStorageSpec =
   | { type: "http"; urlPrefix: string }
   | { type: "firebase-storage"; collection: string };
 
@@ -81,11 +84,11 @@ export interface FunctionsConfig {
 }
 
 export interface TiddlersConfig {
-  sources: TiddlerDataSourceSpec[];
+  tiddlerStorage: TiddlerStorageSpec[];
 }
 
 export interface FilesConfig {
-  sources: FileDataSourceSpec[];
+  fileStorage: FileStorageSpec[];
 }
 
 /**

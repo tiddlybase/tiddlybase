@@ -1,7 +1,8 @@
 import type { } from '@tiddlybase/tw5-types/src/index'
-import type { TiddlerCollection, WritableTiddlerDataSource } from "@tiddlybase/shared/src/tiddler-data-source";
-import { FileDataSourceTiddlerSource } from './file-storage-tiddler-source';
-import { HttpFileDataSource } from '../file-data-sources/http-file-source';
+import { WriteConditionEvaluator, type TiddlerCollection } from "@tiddlybase/shared/src/tiddler-storage";
+import { FileStorageTiddlerStorage } from './file-storage-tiddler-source';
+import { HttpFileStorage } from '../file-data-sources/http-file-source';
+import { TiddlerStorageWriteCondition } from '@tiddlybase/shared/src/tiddlybase-config-schema';
 
 const DEFAULT_FILTER_EXPRESSION = "[is[tiddler]]";
 
@@ -49,11 +50,14 @@ const convertTiddlerToTiddlyWebFormat = (tiddler:$tw.TiddlerFields):string => {
   return JSON.stringify(result,null,4);
 };
 
-export class TiddlyWebTiddlerStore implements WritableTiddlerDataSource {
+export class TiddlyWebTiddlerStore extends WriteConditionEvaluator {
   urlPrefix: string;
   filterExpression: string;
 
-  constructor({urlPrefix, filterExpression}:{urlPrefix?:string, filterExpression?:string}={}) {
+  constructor(
+    writeCondition: TiddlerStorageWriteCondition|undefined,
+    {urlPrefix, filterExpression}:{urlPrefix?:string, filterExpression?:string}={}) {
+    super(writeCondition);
     this.urlPrefix = urlPrefix ?? DEFAULT_URL_PREFIX;
     this.filterExpression = filterExpression ?? DEFAULT_FILTER_EXPRESSION;
   }
@@ -94,8 +98,8 @@ export class TiddlyWebTiddlerStore implements WritableTiddlerDataSource {
   async getAllTiddlers (): Promise<TiddlerCollection> {
     // exclude=, prevents 'text' field from being omitted
     let urlSuffix = `recipes/default/tiddlers.json?exclude=,&filter=${encodeURIComponent(this.filterExpression)}`;
-    return new FileDataSourceTiddlerSource(
-      new HttpFileDataSource(this.makeURL(urlSuffix)),
+    return new FileStorageTiddlerStorage(
+      new HttpFileStorage(this.makeURL(urlSuffix)),
       '').getAllTiddlers();
   }
 }

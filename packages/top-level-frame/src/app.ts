@@ -2,9 +2,9 @@ import type { } from '@tiddlybase/tw5-types/src/index';
 import type { FirebaseApp } from '@firebase/app';
 import type { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
 import type { TopLevelAPIForSandboxedWiki } from "@tiddlybase/rpc/src/top-level-api";
-import type { FileDataSource, WritableFileDataSource } from "@tiddlybase/shared/src/file-data-source";
-import type { WritableTiddlerDataSource } from "@tiddlybase/shared/src/tiddler-data-source";
-import type { LaunchConfig, LaunchParameters, TiddlerDataSourceSpec, TiddlybaseClientConfig } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import type { ReadOnlyFileStorage, FileStorage } from "@tiddlybase/shared/src/file-data-source";
+import type { TiddlerStorage } from "@tiddlybase/shared/src/tiddler-storage";
+import type { LaunchConfig, LaunchParameters, TiddlerStorageSpec, TiddlybaseClientConfig } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import type { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
 import type { AuthProvider } from "@tiddlybase/shared/src/auth-provider";
 import type { RPC } from './types';
@@ -20,7 +20,7 @@ import { parseLaunchParameters } from 'packages/shared/src/launch-parameters';
 import { exposeFirebaseFunction, exposeObjectMethod, functionsDevSetup } from './api-utils';
 import { getAuthProvider } from "./auth/get-auth-provider";
 import { replaceChildrenWithText, toggleVisibleDOMSection } from "./dom-utils";
-import { makeFileDataSource } from "./file-data-sources/file-data-source-factory";
+import { makeFileStorage } from "./file-data-sources/file-storage-factory";
 import { getNormalizedLaunchConfig } from './launch-config';
 import { readTiddlerSources } from "./tiddler-data-sources/tiddler-data-source-factory";
 import { TIDDLYBASE_TITLE_LAUNCH_PARAMETERS, TIDDLYBASE_TITLE_PARENT_LOCATION, TIDDLYBASE_TITLE_USER_PROFILE } from "@tiddlybase/shared/src/constants";
@@ -38,14 +38,14 @@ const initRPC = (childIframe: Window): RPC => {
 
 export class TopLevelApp {
   config: TiddlybaseClientConfig;
-  tiddlerDataSource?: WritableTiddlerDataSource;
+  tiddlerStorage?: TiddlerStorage;
   rpc?: RPC
   launchParameters: LaunchParameters;
   launchConfig: LaunchConfig;
   lazyFirebaseApp: Lazy<FirebaseApp>;
   authProvider: AuthProvider;
   firebaseFunctions?: Functions
-  fileDataSource: FileDataSource | WritableFileDataSource | undefined;
+  fileStorage: ReadOnlyFileStorage | FileStorage | undefined;
 
   constructor(config: TiddlybaseClientConfig) {
     const {tiddlybaseConfig, defaultLaunchParameters} = mergeConfigDefaults(config, window.location.hostname);
@@ -122,22 +122,22 @@ export class TopLevelApp {
     }
   }
 
-  exposeDataSourceAPIs(rpc: RPC) {
+  exposeStorageAPIs(rpc: RPC) {
     // expose tiddler data source interface functions
-    if (this.tiddlerDataSource) {
-      exposeObjectMethod(rpc.toplevelAPIDefiner, 'setTiddler', this.tiddlerDataSource);
-      exposeObjectMethod(rpc.toplevelAPIDefiner, 'getTiddler', this.tiddlerDataSource);
-      exposeObjectMethod(rpc.toplevelAPIDefiner, 'deleteTiddler', this.tiddlerDataSource);
+    if (this.tiddlerStorage) {
+      exposeObjectMethod(rpc.toplevelAPIDefiner, 'setTiddler', this.tiddlerStorage);
+      exposeObjectMethod(rpc.toplevelAPIDefiner, 'getTiddler', this.tiddlerStorage);
+      exposeObjectMethod(rpc.toplevelAPIDefiner, 'deleteTiddler', this.tiddlerStorage);
     }
 
     // expose file data source interface functions
-    if (this.fileDataSource) {
-      exposeObjectMethod(rpc.toplevelAPIDefiner, 'readFile', this.fileDataSource);
-      if ('writeFile' in this.fileDataSource) {
-        exposeObjectMethod(rpc.toplevelAPIDefiner, 'writeFile', this.fileDataSource);
+    if (this.fileStorage) {
+      exposeObjectMethod(rpc.toplevelAPIDefiner, 'readFile', this.fileStorage);
+      if ('writeFile' in this.fileStorage) {
+        exposeObjectMethod(rpc.toplevelAPIDefiner, 'writeFile', this.fileStorage);
       }
-      if ('deleteFile' in this.fileDataSource) {
-        exposeObjectMethod(rpc.toplevelAPIDefiner, 'deleteFile', this.fileDataSource);
+      if ('deleteFile' in this.fileStorage) {
+        exposeObjectMethod(rpc.toplevelAPIDefiner, 'deleteFile', this.fileStorage);
       }
     }
   }
@@ -158,9 +158,9 @@ export class TopLevelApp {
     rpc.toplevelAPIDefiner('childIframeReady', async () => {
       try {
         const { tiddlers, writeStore } = await readTiddlerSources(this.launchParameters, this.launchConfig, this.lazyFirebaseApp, rpc);
-        this.tiddlerDataSource = writeStore;
-        this.fileDataSource = makeFileDataSource(this.launchParameters, rpc, this.lazyFirebaseApp, this.launchConfig.files);
-        this.exposeDataSourceAPIs(rpc);
+        this.tiddlerStorage = writeStore;
+        this.fileStorage = makeFileStorage(this.launchParameters, rpc, this.lazyFirebaseApp, this.launchConfig.files);
+        this.exposeStorageAPIs(rpc);
         return {
           tiddlers: [
             ...Object.values(tiddlers),
@@ -179,7 +179,7 @@ export class TopLevelApp {
       } catch (e: any) {
         let message = e?.message ?? e?.toString() ?? "load error";
         if ('spec' in e) {
-          const spec = e.spec as TiddlerDataSourceSpec;
+          const spec = e.spec as TiddlerStorageSpec;
           message += `\nCould not load tiddlers from the following source: ${JSON.stringify(spec)}`;
         }
         loadError(message);
