@@ -2,6 +2,7 @@ import { TiddlybaseConfig } from '@tiddlybase/shared/src/tiddlybase-config-schem
 import { readFileSync } from 'fs';
 import { Arguments } from 'yargs';
 import Ajv from 'ajv';
+import addFormats from "ajv-formats"
 import { default as tiddlybaseConfigSchema } from "@tiddlybase/shared/src/generated/tiddlybase-config-schema.json";
 import { mergeConfigDefaults } from "@tiddlybase/shared/src/config-defaults";
 
@@ -12,6 +13,7 @@ export interface ParsedConfig {
 
 export const getValidator = () => {
   const ajv = new Ajv({ verbose: true, allErrors: true, allowUnionTypes: true});
+  addFormats(ajv)
   ajv.addSchema(tiddlybaseConfigSchema);
   const validate = ajv.getSchema<TiddlybaseConfig>('#/definitions/TiddlybaseConfig');
   if (validate !== undefined) {

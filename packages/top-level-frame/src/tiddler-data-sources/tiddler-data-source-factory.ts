@@ -16,6 +16,7 @@ import { FirebaseStorageDataSource } from "../file-data-sources/firebase-storage
 import { RPC } from "../types";
 import { TIDDLYBASE_LOCAL_STATE_PREFIX } from "@tiddlybase/shared/src/constants";
 import { EvalAssertion, Expression, evalExpression } from "@tiddlybase/shared/src/expressions";
+import { LiteralDataSourceTiddlerSource } from "./literal-tiddler-source";
 
 const DEFAULT_USE_CONDITION: Expression<TiddlerDataSourceUseConditionAssertion> = true;
 
@@ -80,6 +81,8 @@ const getTiddlerSource = async (launchParameters: LaunchParameters, spec: Tiddle
         new ProxyToSandboxedIframeChangeListener(rpc.sandboxedAPIClient));
       await firestoreTiddlerStore.startListening();
       return firestoreTiddlerStore;
+    case "literal":
+      return new LiteralDataSourceTiddlerSource(spec.tiddlers);
     default:
       throw new Error(`Tiddler source spec unrecognized!`)
   }

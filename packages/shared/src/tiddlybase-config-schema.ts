@@ -45,7 +45,11 @@ type TiddlerDataSourceTypeSpec =
       type: "browser-storage";
       collection: string;
       useLocalStorage?: boolean;
-    } & TiddlerCollectionPathSpec);
+    } & TiddlerCollectionPathSpec)
+  | {
+    type: "literal";
+    tiddlers: $tw.TiddlerFields[]
+  };
 
 export type TiddlerDataSourceSpec = TiddlerDataSourceTypeSpec & {
   useCondition?: Expression<TiddlerDataSourceUseConditionAssertion>;
