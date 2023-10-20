@@ -11,3 +11,4 @@ type: text/vnd.tiddlywiki
 [[$:/plugins/tiddlybase/react]]
 [[$:/plugins/tiddlybase/tiddlybase-utils]]
 [[$:/plugins/tiddlybase/upload-file]]
+[[$:/core/ui/ViewTemplate/subtitle/modifier]]

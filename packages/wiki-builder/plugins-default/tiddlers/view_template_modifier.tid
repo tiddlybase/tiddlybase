@@ -1,0 +1,11 @@
+created: 20231019195549269
+modified: 20231019202250372
+tags: $:/tags/ViewTemplate/Subtitle
+title: $:/core/ui/ViewTemplate/subtitle/modifier
+type: text/vnd.tiddlywiki
+
+<$let mod={{{ [{!!modifier}] }}}>
+<$tiddler tiddler=`users/$(mod)$`>
+<img style="height:16px" src={{!!photoURL}} /> {{!!displayName}}
+</$tiddler>
+</$let>
