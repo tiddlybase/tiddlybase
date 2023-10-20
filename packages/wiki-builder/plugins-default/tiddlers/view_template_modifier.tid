@@ -6,6 +6,6 @@ type: text/vnd.tiddlywiki
 
 <$let mod={{{ [{!!modifier}] }}}>
 <$tiddler tiddler=`users/$(mod)$`>
-<img style="height:16px" src={{!!photoURL}} /> {{!!displayName}}
+<img style="height:16px;padding-top: 2px" src={{!!photoURL}} /> {{!!displayName}}
 </$tiddler>
 </$let>

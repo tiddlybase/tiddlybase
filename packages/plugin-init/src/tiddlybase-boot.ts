@@ -50,7 +50,6 @@ import { TIDDLYBASE_INIT_SINGLETONS_TITLE } from "@tiddlybase/shared/src/constan
       const {
         tiddlers,
       } = topLevelResponse;
-      console.log('child iframe received user info', topLevelResponse);
       window.$tw.tiddlybase = {
         topLevelClient,
         rpc,
