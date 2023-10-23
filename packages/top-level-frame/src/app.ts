@@ -16,7 +16,7 @@ import { RPCCallbackManager } from '@tiddlybase/rpc/src/rpc-callback-manager';
 import { apiClient, apiDefiner } from "@tiddlybase/rpc/src/types";
 import { mergeConfigDefaults } from "@tiddlybase/shared/src/config-defaults";
 import { Lazy, lazy } from "@tiddlybase/shared/src/lazy";
-import { parseLaunchParameters } from 'packages/shared/src/launch-parameters';
+import { parseLaunchParameters } from './launch-parameters';
 import { exposeFirebaseFunction, exposeObjectMethod, functionsDevSetup } from './api-utils';
 import { getAuthProvider } from "./auth/get-auth-provider";
 import { replaceChildrenWithText, toggleVisibleDOMSection } from "./dom-utils";
@@ -52,8 +52,8 @@ export class TopLevelApp {
     this.config = tiddlybaseConfig;
     this.launchParameters = parseLaunchParameters(
       window.location,
-      defaultLaunchParameters,
-      config.urls?.publicPath);
+      config.urls?.pathTemplate!,
+      defaultLaunchParameters);
     this.launchConfig = getNormalizedLaunchConfig(this.config, this.launchParameters);
     // Note: depending on the launchConfig, we might not even need a FirebaseApp instance in the future.
     // This might be good for static websites.

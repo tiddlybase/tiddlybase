@@ -1,6 +1,7 @@
 import type {} from "@tiddlybase/tw5-types/src/index";
 import type { TiddlyBaseUser } from "./users";
 import type { Expression } from "./expressions";
+import { PathTemplate } from "./path-template";
 
 export type LaunchParameters = {
   instance: string;
@@ -106,7 +107,7 @@ export interface LaunchConfig {
 export interface URLConfig {
   publicPath: string;
   outerHTML: string;
-  pathRegExp: string;
+  pathTemplate: PathTemplate;
 }
 
 export interface FirebaseClientCofig {

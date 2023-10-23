@@ -16,14 +16,15 @@ export const DEFAULT_AUTH: AuthProviderSpec = {
 export const ADMIN_INSTANCE_NAME = "admin";
 export const DEFAULT_INSTANCE_NAME = "welcome";
 
-export const IDENTIFIER_REGEXP = "[^\\s\\/\\\\]+";
-
-const pathRegexpPart = (prefix:string, varName: string, pattern=IDENTIFIER_REGEXP):string => `(?:\\/${prefix}\\/(?<${varName}>${pattern}))?`
-
 export const DEFAULT_URL_CONFIG:URLConfig = {
   publicPath: 'public',
   outerHTML: 'outer.html',
-  pathRegExp: `^${pathRegexpPart('i', 'instance')}${pathRegexpPart('t', 'tiddler')}${pathRegexpPart('lc', 'launchConfig')}\\/?$`
+  pathTemplate: [
+    {shortName: 'lc', variableName: 'launchConfig'},
+    {shortName: 'i', variableName: 'instance'},
+    {shortName: 'pv', variableName: 'permaView', encoding: 'base64'},
+    {shortName: 't', variableName: 'tiddler', encoding: 'encodeURI' , pattern: '.*'}
+  ]
 }
 
 export const DEFAULT_LAUNCH_PARAMETERS:LaunchParameters = {

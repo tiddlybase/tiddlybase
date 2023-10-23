@@ -7,7 +7,8 @@
     "license": "Apache-2.0",
     "scripts": {
         "build": "webpack",
-        "build:dev": "MODE=development webpack"
+        "build:dev": "MODE=development webpack",
+        "test": "yarn jest"
     },
     "devDependencies": {
         "@tiddlybase/functions": "workspace:*",
@@ -16,7 +17,9 @@
         "@tiddlybase/webpack-config": "workspace:*",
         "firebase": "10.4.0",
         "firebaseui": "6.1.0",
+        "jest": "^29.7.0",
         "mini-iframe-rpc": "1.7.3",
+        "ts-jest": "^29.1.1",
         "typescript": "^5.1.6",
         "webpack": "^5.88.2",
         "webpack-cli": "^5.1.4"

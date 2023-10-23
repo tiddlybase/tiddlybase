@@ -16,7 +16,7 @@ import { FirebaseStorageFileStorage } from "../file-storage/firebase-storage-fil
 import { RPC } from "../types";
 import { TIDDLYBASE_LOCAL_STATE_PREFIX } from "@tiddlybase/shared/src/constants";
 import { LiteralTiddlerStorage } from "./literal-tiddler-storage";
-import { evaluateTiddlerStorageUseCondition } from "packages/shared/src/tiddler-storage-conditions";
+import { evaluateTiddlerStorageUseCondition } from "@tiddlybase/shared/src/tiddler-storage-conditions";
 import { ReadOnlyTiddlerStorageWrapper } from "./tiddler-storage-base";
 
 
@@ -113,7 +113,7 @@ export const readTiddlerSources = async (launchParameters: LaunchParameters, lau
           storage: getTiddlerStorage(launchParameters, spec, lazyFirebaseApp, rpc)
         });
       } else {
-        console.log("Disabling data source due to useCondition", spec);
+        console.log("Disabling tiddler storage due to useCondition", spec);
       }
       return sourcePromisesWithSpecs;
     }, [] as TiddlerSourcePromiseWithSpec[]);

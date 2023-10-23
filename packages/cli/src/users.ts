@@ -9,7 +9,7 @@ import { inspect } from 'util';
 import { Argv, CommandModule } from 'yargs';
 import { CLIContext, withCLIContext } from './cli-context';
 import {default as merge} from 'lodash.merge';
-import { LaunchParameters } from 'packages/shared/src/tiddlybase-config-schema';
+import { LaunchParameters } from '@tiddlybase/shared/src/tiddlybase-config-schema';
 import { DEFAULT_LAUNCH_PARAMETERS } from '@tiddlybase/shared/src/constants';
 import { render } from 'mustache';
 
