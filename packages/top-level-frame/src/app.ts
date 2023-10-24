@@ -52,7 +52,7 @@ export class TopLevelApp {
     this.config = tiddlybaseConfig;
     this.launchParameters = parseLaunchParameters(
       window.location,
-      config.urls?.pathTemplate!,
+      this.config.urls?.pathTemplate!,
       defaultLaunchParameters);
     this.launchConfig = getNormalizedLaunchConfig(this.config, this.launchParameters);
     // Note: depending on the launchConfig, we might not even need a FirebaseApp instance in the future.
