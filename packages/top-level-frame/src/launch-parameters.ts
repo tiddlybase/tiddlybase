@@ -1,7 +1,7 @@
 import { DEFAULT_LAUNCH_PARAMETERS } from "@tiddlybase/shared/src/constants";
 import { PathTemplate } from "@tiddlybase/shared/src/path-template";
 import { LaunchParameters } from "@tiddlybase/shared/src/tiddlybase-config-schema";
-import { parseURLPath } from "./path-template-utils";
+import { parseURLPath } from "@tiddlybase/shared/src/path-template-utils";
 
 export const parseSearchParameters = (rawSearchParams: string): Record<string, string> => Object.fromEntries((new URLSearchParams(rawSearchParams)).entries());
 

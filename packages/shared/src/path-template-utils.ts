@@ -1,4 +1,4 @@
-import { PathTemplate, PathTemplateComponent, PathTemplateComponentEncoding } from "@tiddlybase/shared/src/path-template";
+import { PathTemplate, PathTemplateComponent, PathTemplateComponentEncoding } from "./path-template";
 
 // Regxp for at least on character, no spaces or slashes:
 const IDENTIFIER_REGEXP = "[^\\s\\/\\\\]+";
@@ -12,7 +12,7 @@ export const encodePathComponent = (value:string, encoding:PathTemplateComponent
     case "encodeURI":
       return encodeURI(value);
     case "base64":
-      return encodeURIComponent(btoa(value))
+      return btoa(encodeURIComponent(value))
     case "encodeURIComponent":
       return encodeURIComponent(value);
   }
@@ -23,7 +23,7 @@ export const decodePathComponent = (encodedValue:string, encoding:PathTemplateCo
     case "encodeURI":
       return decodeURI(encodedValue);
     case "base64":
-      return atob(decodeURIComponent(encodedValue));
+      return decodeURIComponent(atob(encodedValue));
     case "encodeURIComponent":
       return decodeURIComponent(encodedValue);
   }
@@ -43,6 +43,11 @@ export const parseURLPath = (path:string, pathTemplate: PathTemplate):PathVariab
     return acc;
   }, {} as Record<string, PathTemplateComponent>);
   const match = path.match(pathRegExp);
+  const pathVariables:PathVariables = {};
+  if ((match?.index  ?? 0) > 0) {
+    const prefix = path.substring(0, match!.index);
+    pathVariables['prefix'] = prefix;
+  }
   return Object.entries(match?.groups ?? {}).reduce(
     (acc: PathVariables, [variableName, value]) => {
       if (!!value) {
@@ -51,15 +56,28 @@ export const parseURLPath = (path:string, pathTemplate: PathTemplate):PathVariab
       }
       return acc;
     },
-    {} as PathVariables);
+    pathVariables);
 }
 
-export const createURLPath = (pathTemplate:PathTemplate, variables:PathVariables):string => {
+export const parseURL = (url:string, pathTemplate:PathTemplate):PathVariables => {
+  const parsedUrl = new URL(url);
+  return parseURLPath(parsedUrl.pathname, pathTemplate);
+}
+
+export const createURLPath = (pathTemplate:PathTemplate, pathVariables:PathVariables):string => {
   return pathTemplate.reduce((pathAcc:string, pathComponent:PathTemplateComponent) => {
-    const value = variables[pathComponent.variableName];
+    const value = pathVariables[pathComponent.variableName];
     if (value) {
       return pathAcc + `/${pathComponent.shortName}/${encodePathComponent(value, pathComponent.encoding ?? DEFAULT_ENCODING)}`
     }
     return pathAcc;
   }, "")
+}
+
+export const createURL = (baseURL:string, pathTemplate:PathTemplate, pathVariables:PathVariables):string => {
+  const parsedBaseURL = new URL(baseURL);
+  const baseURLPathVariables = parseURL(baseURL, pathTemplate);
+  const mergedPathVariables = Object.assign({}, baseURLPathVariables, pathVariables);
+  parsedBaseURL.pathname = (baseURLPathVariables["prefix"] ?? "") + createURLPath(pathTemplate, mergedPathVariables);
+  return parsedBaseURL.href;
 }

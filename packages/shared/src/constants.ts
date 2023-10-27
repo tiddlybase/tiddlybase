@@ -22,7 +22,7 @@ export const DEFAULT_URL_CONFIG:URLConfig = {
   pathTemplate: [
     {shortName: 'lc', variableName: 'launchConfig'},
     {shortName: 'i', variableName: 'instance'},
-    {shortName: 'pv', variableName: 'permaView', encoding: 'base64'},
+    {shortName: 'f', variableName: 'filter', encoding: 'base64'},
     {shortName: 't', variableName: 'tiddler', encoding: 'encodeURI' , pattern: '.*'}
   ]
 }
