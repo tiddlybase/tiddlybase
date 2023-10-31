@@ -23,7 +23,7 @@
         "lodash.debounce": "^4.0.8",
         "lodash.merge": "^4.6.2",
         "ts-jest": "29.1.0",
-        "typescript": "^5.1.6",
+        "typescript": "^5.2.2",
         "webpack": "^5.88.2",
         "webpack-cli": "^5.1.4"
     }
