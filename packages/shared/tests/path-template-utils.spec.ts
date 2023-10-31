@@ -1,111 +1,102 @@
 import { DEFAULT_URL_CONFIG } from "../src/constants";
 import { createURL, encodePathComponent, parseURL } from "../src/path-template-utils";
 
+const getPrefixAndVariables = (href: string) => {
+  const parsed = parseURL(
+    href,
+    DEFAULT_URL_CONFIG.pathTemplate
+  );
+  return [parsed.pathPrefix, parsed.pathVariables];
+}
 
 describe("parseURLPath", function () {
   it("can extract instance name from path", async () => {
     expect(
-      parseURL(
+      getPrefixAndVariables(
         "https://tiddlybase.com/",
-        DEFAULT_URL_CONFIG.pathTemplate
       )
-    ).toEqual({});
+    ).toEqual(['', {}]);
     expect(
-      parseURL(
+      getPrefixAndVariables(
         "https://tiddlybase.com/i/",
-        DEFAULT_URL_CONFIG.pathTemplate
       )
-    ).toEqual({prefix: "/i"});
+    ).toEqual(["/i", {}]);
     expect(
-      parseURL(
+      getPrefixAndVariables(
         "https://tiddlybase.com/i/myinstance",
-        DEFAULT_URL_CONFIG.pathTemplate
       )
-    ).toEqual({ instance: "myinstance" });
+    ).toEqual(["", { instance: "myinstance" }]);
     expect(
-      parseURL(
+      getPrefixAndVariables(
         "https://tiddlybase.com/i/myinstance/",
-        DEFAULT_URL_CONFIG.pathTemplate
       )
-    ).toEqual({ instance: "myinstance" });
+    ).toEqual(["", { instance: "myinstance" }]);
     expect(
-      parseURL(
+      getPrefixAndVariables(
         "https://tiddlybase.com/i/my%20instance",
-        DEFAULT_URL_CONFIG.pathTemplate
       )
-    ).toEqual({ instance: "my instance" });
+    ).toEqual(["", { instance: "my instance" }]);
     expect(
-      parseURL(
+      getPrefixAndVariables(
         "https://tiddlybase.com/junkprefix/stilljunk/alsojunk/i/my%20instance",
-        DEFAULT_URL_CONFIG.pathTemplate
       )
-    ).toEqual({
+    ).toEqual(["/junkprefix/stilljunk/alsojunk", {
       instance: "my instance",
-      prefix: "/junkprefix/stilljunk/alsojunk"
-    });
+    }]);
   });
 
   it("can extract launchConfig name from path", async () => {
     expect(
-      parseURL(
+      getPrefixAndVariables(
         "https://tiddlybase.com/lc/mylaunchconfig",
-        DEFAULT_URL_CONFIG.pathTemplate
       )
-    ).toEqual({ launchConfig: "mylaunchconfig" });
+    ).toEqual(['', { launchConfig: "mylaunchconfig" }]);
     expect(
-      parseURL(
+      getPrefixAndVariables(
         "https://tiddlybase.com/lc/my%20launch%20config",
-        DEFAULT_URL_CONFIG.pathTemplate
       )
-    ).toEqual({ launchConfig: "my launch config" });
+    ).toEqual(['', { launchConfig: "my launch config" }]);
     expect(
-      parseURL(
+      getPrefixAndVariables(
         "https://tiddlybase.com/lc/my%20launch%20config/i/myinstance",
-        DEFAULT_URL_CONFIG.pathTemplate
       )
-    ).toEqual({
+    ).toEqual(['', {
       launchConfig: "my launch config",
       instance: "myinstance",
-    });
+    }]);
     expect(
-      parseURL(
+      getPrefixAndVariables(
         "https://tiddlybase.com/i/myinstance/lc/my%20launch%20config/",
-        DEFAULT_URL_CONFIG.pathTemplate
       )
-    ).toEqual({
+    ).toEqual(["/i/myinstance", {
       launchConfig: "my launch config",
       // launchconfig must come first
-      prefix: "/i/myinstance"
-    });
+    }]);
   });
 
   it("can extract tiddler name from path", async () => {
     expect(
-      parseURL(
+      getPrefixAndVariables(
         "https://tiddlybase.com/t/my%20tiddler%20name",
-        DEFAULT_URL_CONFIG.pathTemplate
       )
-    ).toEqual({ tiddler: "my tiddler name" });
+    ).toEqual(['', { tiddler: "my tiddler name" }]);
     expect(
-      parseURL(
+      getPrefixAndVariables(
         "https://tiddlybase.com/junkprefix/stilljunk/alsojunk/t/my/tiddler/with/slashs%20and%20spaces",
-        DEFAULT_URL_CONFIG.pathTemplate
       )
-    ).toEqual({
+    ).toEqual(["/junkprefix/stilljunk/alsojunk", {
       tiddler: "my/tiddler/with/slashs and spaces",
-      prefix: "/junkprefix/stilljunk/alsojunk"
-    });
+    }]);
   });
 
   it("can extract filters", async () => {
     const filter = "[is[tiddler]type[application/javascript]]";
     const encodedFilter = encodePathComponent(filter, "base64");
     expect(
-      parseURL(
+      getPrefixAndVariables(
         `https://tiddlybase.com/f/${encodedFilter}`,
-        DEFAULT_URL_CONFIG.pathTemplate
       )
-    ).toEqual({ filter });
+    ).toEqual(['', { filter }]);
   });
 });
 
@@ -116,7 +107,7 @@ describe("createURL", function () {
       createURL(
         'https://tiddlybase.com',
         DEFAULT_URL_CONFIG.pathTemplate,
-        {tiddler: 'my favorite tiddler'}
+        { tiddler: 'my favorite tiddler' }
       )
     ).toEqual("https://tiddlybase.com/t/my%20favorite%20tiddler");
   });
@@ -126,7 +117,7 @@ describe("createURL", function () {
       createURL(
         'https://tiddlybase.com',
         DEFAULT_URL_CONFIG.pathTemplate,
-        {tiddler: 'my/favorite/tiddler'}
+        { tiddler: 'my/favorite/tiddler' }
       )
     ).toEqual("https://tiddlybase.com/t/my/favorite/tiddler");
   });
@@ -136,7 +127,7 @@ describe("createURL", function () {
       createURL(
         'https://tiddlybase.com/?foo=bar#heading1',
         DEFAULT_URL_CONFIG.pathTemplate,
-        {tiddler: 'my/favorite/tiddler'}
+        { tiddler: 'my/favorite/tiddler' }
       )
     ).toEqual("https://tiddlybase.com/t/my/favorite/tiddler?foo=bar#heading1");
   });
@@ -147,7 +138,7 @@ describe("createURL", function () {
       createURL(
         'https://tiddlybase.com/some/super/prefix',
         DEFAULT_URL_CONFIG.pathTemplate,
-        {tiddler: 'my/favorite/tiddler'}
+        { tiddler: 'my/favorite/tiddler' }
       )
     ).toEqual("https://tiddlybase.com/some/super/prefix/t/my/favorite/tiddler");
 
@@ -156,7 +147,7 @@ describe("createURL", function () {
       createURL(
         'https://tiddlybase.com/some/super/prefix/t/tid1',
         DEFAULT_URL_CONFIG.pathTemplate,
-        {tiddler: 'tid2'}
+        { tiddler: 'tid2' }
       )
     ).toEqual("https://tiddlybase.com/some/super/prefix/t/tid2");
 
@@ -165,7 +156,7 @@ describe("createURL", function () {
       createURL(
         'https://tiddlybase.com/some/super/prefix/lc/lc1',
         DEFAULT_URL_CONFIG.pathTemplate,
-        {tiddler: 'tid2'}
+        { tiddler: 'tid2' }
       )
     ).toEqual("https://tiddlybase.com/some/super/prefix/lc/lc1/t/tid2");
 

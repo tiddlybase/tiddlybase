@@ -3,11 +3,11 @@ import { PathTemplate, PathTemplateComponent, PathTemplateComponentEncoding } fr
 // Regxp for at least on character, no spaces or slashes:
 const IDENTIFIER_REGEXP = "[^\\s\\/\\\\]+";
 
-const DEFAULT_ENCODING:PathTemplateComponentEncoding = 'encodeURIComponent';
+const DEFAULT_ENCODING: PathTemplateComponentEncoding = 'encodeURIComponent';
 
 export type PathVariables = Record<string, string>;
 
-export const encodePathComponent = (value:string, encoding:PathTemplateComponentEncoding):string => {
+export const encodePathComponent = (value: string, encoding: PathTemplateComponentEncoding): string => {
   switch (encoding) {
     case "encodeURI":
       return encodeURI(value);
@@ -18,7 +18,7 @@ export const encodePathComponent = (value:string, encoding:PathTemplateComponent
   }
 }
 
-export const decodePathComponent = (encodedValue:string, encoding:PathTemplateComponentEncoding):string => {
+export const decodePathComponent = (encodedValue: string, encoding: PathTemplateComponentEncoding): string => {
   switch (encoding) {
     case "encodeURI":
       return decodeURI(encodedValue);
@@ -29,26 +29,26 @@ export const decodePathComponent = (encodedValue:string, encoding:PathTemplateCo
   }
 }
 
-const pathRegexpPart = ({shortName, variableName, pattern}:PathTemplateComponent):string => `(?:\\/${shortName}\\/(?<${variableName}>${pattern ?? IDENTIFIER_REGEXP}))?`;
+const pathRegexpPart = ({ shortName, variableName, pattern }: PathTemplateComponent): string => `(?:\\/${shortName}\\/(?<${variableName}>${pattern ?? IDENTIFIER_REGEXP}))?`;
 
-export const createPathRegExp = (pathTemplate:PathTemplate):RegExp => {
+export const createPathRegExp = (pathTemplate: PathTemplate): RegExp => {
   const re = `${pathTemplate.map(pathRegexpPart).join('')}/?$`;
   return new RegExp(re);
 }
 
-export const parseURLPath = (path:string, pathTemplate: PathTemplate):PathVariables => {
-  const pathRegExp:RegExp = createPathRegExp(pathTemplate);
+export const parseURLPath = (path: string, pathTemplate: PathTemplate): [string, PathVariables] => {
+  let prefix = "";
+  const pathRegExp: RegExp = createPathRegExp(pathTemplate);
   const componentsByVariable = pathTemplate.reduce((acc, component) => {
     acc[component.variableName] = component;
     return acc;
   }, {} as Record<string, PathTemplateComponent>);
   const match = path.match(pathRegExp);
-  const pathVariables:PathVariables = {};
-  if ((match?.index  ?? 0) > 0) {
-    const prefix = path.substring(0, match!.index);
-    pathVariables['prefix'] = prefix;
+  const pathVariables: PathVariables = {};
+  if ((match?.index ?? 0) > 0) {
+    prefix = path.substring(0, match!.index);
   }
-  return Object.entries(match?.groups ?? {}).reduce(
+  return [prefix, Object.entries(match?.groups ?? {}).reduce(
     (acc: PathVariables, [variableName, value]) => {
       if (!!value) {
         const component = componentsByVariable[variableName]
@@ -56,16 +56,27 @@ export const parseURLPath = (path:string, pathTemplate: PathTemplate):PathVariab
       }
       return acc;
     },
-    pathVariables);
+    pathVariables)];
 }
 
-export const parseURL = (url:string, pathTemplate:PathTemplate):PathVariables => {
-  const parsedUrl = new URL(url);
-  return parseURLPath(parsedUrl.pathname, pathTemplate);
+export type ParsedURL = {
+  url: URL,
+  pathPrefix: string,
+  pathVariables: PathVariables
 }
 
-export const createURLPath = (pathTemplate:PathTemplate, pathVariables:PathVariables):string => {
-  return pathTemplate.reduce((pathAcc:string, pathComponent:PathTemplateComponent) => {
+export const parseURL = (url: string, pathTemplate: PathTemplate): ParsedURL => {
+  const parsedURL = new URL(url);
+  const [pathPrefix, pathVariables] = parseURLPath(parsedURL.pathname, pathTemplate);
+  return {
+    url: parsedURL,
+    pathPrefix,
+    pathVariables
+  }
+}
+
+export const createURLPath = (pathTemplate: PathTemplate, pathVariables: PathVariables): string => {
+  return pathTemplate.reduce((pathAcc: string, pathComponent: PathTemplateComponent) => {
     const value = pathVariables[pathComponent.variableName];
     if (value) {
       return pathAcc + `/${pathComponent.shortName}/${encodePathComponent(value, pathComponent.encoding ?? DEFAULT_ENCODING)}`
@@ -74,10 +85,9 @@ export const createURLPath = (pathTemplate:PathTemplate, pathVariables:PathVaria
   }, "")
 }
 
-export const createURL = (baseURL:string, pathTemplate:PathTemplate, pathVariables:PathVariables):string => {
-  const parsedBaseURL = new URL(baseURL);
-  const baseURLPathVariables = parseURL(baseURL, pathTemplate);
-  const mergedPathVariables = Object.assign({}, baseURLPathVariables, pathVariables);
-  parsedBaseURL.pathname = (baseURLPathVariables["prefix"] ?? "") + createURLPath(pathTemplate, mergedPathVariables);
-  return parsedBaseURL.href;
+export const createURL = (baseURL: string, pathTemplate: PathTemplate, pathVariables: PathVariables): string => {
+  const parsedBaseURL = parseURL(baseURL, pathTemplate);
+  const mergedPathVariables = Object.assign({}, parsedBaseURL.pathVariables, pathVariables);
+  parsedBaseURL.url.pathname = parsedBaseURL.pathPrefix + createURLPath(pathTemplate, mergedPathVariables);
+  return parsedBaseURL.url.href;
 }
