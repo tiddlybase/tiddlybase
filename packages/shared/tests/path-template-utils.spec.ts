@@ -3,8 +3,8 @@ import { createURL, encodePathComponent, parseURL } from "../src/path-template-u
 
 const getPrefixAndVariables = (href: string) => {
   const parsed = parseURL(
-    href,
-    DEFAULT_URL_CONFIG.pathTemplate
+    DEFAULT_URL_CONFIG.pathTemplate,
+    href
   );
   return [parsed.pathPrefix, parsed.pathVariables];
 }
@@ -105,8 +105,8 @@ describe("createURL", function () {
   it("can encode tiddler name", async () => {
     expect(
       createURL(
-        'https://tiddlybase.com',
         DEFAULT_URL_CONFIG.pathTemplate,
+        'https://tiddlybase.com',
         { tiddler: 'my favorite tiddler' }
       )
     ).toEqual("https://tiddlybase.com/t/my%20favorite%20tiddler");
@@ -115,8 +115,8 @@ describe("createURL", function () {
   it("can encode tiddler name with slashes", async () => {
     expect(
       createURL(
-        'https://tiddlybase.com',
         DEFAULT_URL_CONFIG.pathTemplate,
+        'https://tiddlybase.com',
         { tiddler: 'my/favorite/tiddler' }
       )
     ).toEqual("https://tiddlybase.com/t/my/favorite/tiddler");
@@ -125,8 +125,8 @@ describe("createURL", function () {
   it("preserves search params and hash", async () => {
     expect(
       createURL(
-        'https://tiddlybase.com/?foo=bar#heading1',
         DEFAULT_URL_CONFIG.pathTemplate,
+        'https://tiddlybase.com/?foo=bar#heading1',
         { tiddler: 'my/favorite/tiddler' }
       )
     ).toEqual("https://tiddlybase.com/t/my/favorite/tiddler?foo=bar#heading1");
@@ -136,8 +136,8 @@ describe("createURL", function () {
     expect(
       // Note that prefix should only be preserved if it's not a recognized path parameter!
       createURL(
-        'https://tiddlybase.com/some/super/prefix',
         DEFAULT_URL_CONFIG.pathTemplate,
+        'https://tiddlybase.com/some/super/prefix',
         { tiddler: 'my/favorite/tiddler' }
       )
     ).toEqual("https://tiddlybase.com/some/super/prefix/t/my/favorite/tiddler");
@@ -145,8 +145,8 @@ describe("createURL", function () {
     expect(
       // Recognized postfix of path will be overridden by path variables
       createURL(
-        'https://tiddlybase.com/some/super/prefix/t/tid1',
         DEFAULT_URL_CONFIG.pathTemplate,
+        'https://tiddlybase.com/some/super/prefix/t/tid1',
         { tiddler: 'tid2' }
       )
     ).toEqual("https://tiddlybase.com/some/super/prefix/t/tid2");
@@ -154,8 +154,8 @@ describe("createURL", function () {
     expect(
       // ...unless different pathvariables were passed in
       createURL(
-        'https://tiddlybase.com/some/super/prefix/lc/lc1',
         DEFAULT_URL_CONFIG.pathTemplate,
+        'https://tiddlybase.com/some/super/prefix/lc/lc1',
         { tiddler: 'tid2' }
       )
     ).toEqual("https://tiddlybase.com/some/super/prefix/lc/lc1/t/tid2");
@@ -163,14 +163,38 @@ describe("createURL", function () {
     expect(
       // passing in an empty string erases the original path var
       createURL(
-        'https://tiddlybase.com/some/super/prefix/lc/lc1',
         DEFAULT_URL_CONFIG.pathTemplate,
+        'https://tiddlybase.com/some/super/prefix/lc/lc1',
         {
           tiddler: 'tid2',
           launchConfig: ''
         }
       )
     ).toEqual("https://tiddlybase.com/some/super/prefix/t/tid2");
+  });
+
+  it("supports setting new seach params", async () => {
+    expect(
+      createURL(
+        DEFAULT_URL_CONFIG.pathTemplate,
+        'https://tiddlybase.com/?foo=bar#heading1',
+        { tiddler: 'my/favorite/tiddler' },
+        { bar: 'baz' }
+      )
+    ).toEqual("https://tiddlybase.com/t/my/favorite/tiddler?bar=baz#heading1");
+  });
+
+  it("supports setting new hash", async () => {
+    expect(
+      createURL(
+        DEFAULT_URL_CONFIG.pathTemplate,
+        'https://tiddlybase.com/?foo=bar',
+        { tiddler: 'my/favorite/tiddler' },
+        undefined,
+        "heading5"
+
+      )
+    ).toEqual("https://tiddlybase.com/t/my/favorite/tiddler?foo=bar#heading5");
   });
 
 

@@ -1,8 +1,6 @@
 import { TiddlerStorageChangeListener, TiddlerCollection, TiddlerProvenance, TiddlerStorageWithSpec, TiddlerStorage } from "@tiddlybase/shared/src/tiddler-storage";
 import { LaunchConfig, LaunchParameters, TiddlerStorageSpec } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import { FirestoreTiddlerStorage } from "./firestore-tiddler-storage";
-import { APIClient } from "@tiddlybase/rpc/src/types";
-import { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
 import { RoutingProxyTiddlerStorage } from "./routing-proxy-tiddler-storage";
 import { BrowserTiddlerStorage } from "./browser-tiddler-storage";
 import { TiddlyWebTiddlerStorage } from "./tiddlyweb-tiddler-storage";
@@ -13,54 +11,36 @@ import { Lazy } from "@tiddlybase/shared/src/lazy";
 import { HttpFileStorage } from "../file-storage/http-file-source";
 import { FileStorageTiddlerStorage } from "./file-storage-tiddler-storage";
 import { FirebaseStorageFileStorage } from "../file-storage/firebase-storage-file-storage";
-import { RPC } from "../types";
-import { TIDDLYBASE_LOCAL_STATE_PREFIX } from "@tiddlybase/shared/src/constants";
 import { LiteralTiddlerStorage } from "./literal-tiddler-storage";
 import { evaluateTiddlerStorageUseCondition } from "@tiddlybase/shared/src/tiddler-storage-conditions";
 import { ReadOnlyTiddlerStorageWrapper } from "./tiddler-storage-base";
+import { RPCCallbackManager } from "@tiddlybase/rpc/src/rpc-callback-manager";
 
 
-export class ProxyToSandboxedIframeChangeListener implements TiddlerStorageChangeListener {
-  sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>;
-
-  constructor(sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>) {
-    this.sandboxedAPIClient = sandboxedAPIClient;
-  }
-
-  onSetTiddler(tiddler: $tw.TiddlerFields): void {
-    if (tiddler.title.startsWith(TIDDLYBASE_LOCAL_STATE_PREFIX)) {
-      console.log(`Ignoring update to tiddler ${tiddler.title} due to TIDDLYBASE_LOCAL_STATE_PREFIX title prefix`, tiddler)
-      return;
-    }
-    this.sandboxedAPIClient('onSetTiddler', [tiddler]);
-  }
-  onDeleteTiddler(title: string): void {
-    if (title.startsWith(TIDDLYBASE_LOCAL_STATE_PREFIX)) {
-      console.log(`Ignoring delete tiddler ${title} due to TIDDLYBASE_LOCAL_STATE_PREFIX title prefix`)
-      return;
-    }
-    this.sandboxedAPIClient('onDeleteTiddler', [title]);
-  }
-}
-
-const getTiddlerStorage = async (launchParameters: LaunchParameters, spec: TiddlerStorageSpec, lazyFirebaseApp: Lazy<FirebaseApp>, rpc: RPC): Promise<TiddlerStorage> => {
+const getTiddlerStorage = async (
+  launchParameters: LaunchParameters,
+  spec: TiddlerStorageSpec,
+  lazyFirebaseApp: Lazy<FirebaseApp>,
+  rpcCallbackManager: RPCCallbackManager,
+  tiddlerStorageChangeListener: TiddlerStorageChangeListener
+): Promise<TiddlerStorage> => {
   switch (spec.type) {
     case "http":
       return new ReadOnlyTiddlerStorageWrapper(
-      new FileStorageTiddlerStorage(
-        new HttpFileStorage(spec.url), ''));
+        new FileStorageTiddlerStorage(
+          new HttpFileStorage(spec.url), ''));
     case "firebase-storage":
       const gcpStorage = getStorage(lazyFirebaseApp());
       return new ReadOnlyTiddlerStorageWrapper(
         new FileStorageTiddlerStorage(
-        new FirebaseStorageFileStorage(
-          launchParameters,
-          gcpStorage,
-          rpc.rpcCallbackManager,
-          spec.collection,
-          spec.pathTemplate
-        ),
-        spec.filename));
+          new FirebaseStorageFileStorage(
+            launchParameters,
+            gcpStorage,
+            rpcCallbackManager,
+            spec.collection,
+            spec.pathTemplate
+          ),
+          spec.filename));
     case "browser-storage":
       const browserStorage = spec.useLocalStorage === true ? window.localStorage : window.sessionStorage;
       return new BrowserTiddlerStorage(
@@ -82,7 +62,8 @@ const getTiddlerStorage = async (launchParameters: LaunchParameters, spec: Tiddl
         spec.options,
         // TODO: only notify the client if the affected tiddler is not overridden
         // by another TiddlerStorage according to tiddler provenance.
-        new ProxyToSandboxedIframeChangeListener(rpc.sandboxedAPIClient));
+        tiddlerStorageChangeListener
+      );
       await firestoreTiddlerStore.startListening();
       return firestoreTiddlerStore;
     case "literal":
@@ -104,13 +85,24 @@ type TiddlerSourcePromiseWithSpec = {
 }
 
 
-export const readTiddlerSources = async (launchParameters: LaunchParameters, launchConfig: LaunchConfig, lazyFirebaseApp: Lazy<FirebaseApp>, rpc: RPC): Promise<MergedSources> => {
+export const readTiddlerSources = async (
+  launchParameters: LaunchParameters,
+  launchConfig: LaunchConfig,
+  lazyFirebaseApp: Lazy<FirebaseApp>,
+  rpcCallbackManager: RPCCallbackManager,
+  tiddlerStorageChangeListener: TiddlerStorageChangeListener
+): Promise<MergedSources> => {
   const sourcePromisesWithSpecs = launchConfig.tiddlers.storage.reduce(
     (sourcePromisesWithSpecs, spec) => {
       if (evaluateTiddlerStorageUseCondition(spec.useCondition, launchParameters)) {
         sourcePromisesWithSpecs.push({
           spec,
-          storage: getTiddlerStorage(launchParameters, spec, lazyFirebaseApp, rpc)
+          storage: getTiddlerStorage(
+            launchParameters,
+            spec,
+            lazyFirebaseApp,
+            rpcCallbackManager,
+            tiddlerStorageChangeListener)
         });
       } else {
         console.log("Disabling tiddler storage due to useCondition", spec);

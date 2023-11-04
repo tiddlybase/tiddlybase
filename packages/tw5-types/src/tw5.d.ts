@@ -9,7 +9,7 @@
 declare namespace $tw {
 
   // standard tiddler definition, but every field except title is optional, allowing any custom field
-  export type TiddlerFields = {title: string} & Partial<{
+  export type TiddlerFields = { title: string } & Partial<{
     tags: string[];
     text: string;
     type: string;
@@ -77,12 +77,20 @@ declare namespace $tw {
     readonly tree: ParseTree[]
   }
 
-  // TODO, what's an event in Widget context?
-  export type Event = any;
-
   export type ChangedTiddlers = Record<string, boolean>;
 
   // Widget documentation: https://tiddlywiki.com/dev/static/WidgetModules.html
+
+  type WidgetDOMEventField = { event: Event }
+  // based on: https://stackoverflow.com/a/73057552
+  type WidgetEventForType<T, K> = T extends $tw.Widget.WidgetEvent
+    ? K extends T["type"]
+    ? T
+    : never
+    : never
+
+  type WidgetEventListener<K extends $tw.Widget.WidgetEvent["type"]> = (event: WidgetEventForType<$tw.Widget.WidgetEvent, K> & WidgetDOMEventField) => boolean | undefined | void
+  type WidgetEventListeners = { [K in $tw.Widget.WidgetEvent["type"]]?: WidgetEventListener<K>; }
 
   export class Widget {
     parentDomNode: HTMLElement;
@@ -93,17 +101,17 @@ declare namespace $tw {
     attributes: Record<string, string>;
     children: Widget[];
     domNodes: HTMLElement[];
-    eventListeners: Partial<Record<$tw.Widget.MessageType, (event: any) => boolean>>;
     constructor(parseTreeNode: ParseTree, options: {
       wiki: Wiki; // mandatory reference to wiki associated with this render tree
       parentWidget?: Widget; // optional reference to a parent renderer node for the context chain
       document?: Document; // optional document object to use instead of global document
       variables?: Record<string, any>
     });
-    addEventListener<T extends $tw.Widget.WidgetEvent>(type: T["type"], handler: $tw.Widget.WidgetEventHandler<T>): void;
-    // TODO: don't know how to type this properly
-    // Can likely be solved using: https://instil.co/blog/crazy-powerful-typescript-tuple-types/
-    // addEventListeners<T extends [...any[]]>(listeners: ConvertEventListeners<T>): void;
+    addEventListener: <K extends $tw.Widget.WidgetEvent["type"]>(
+      eventType: K,
+      listener: WidgetEventListener<K>
+    ) => void;
+    eventListeners: WidgetEventListeners
 
     dispatchEvent(event: $tw.Widget.WidgetEvent): void;
 
@@ -153,9 +161,9 @@ declare namespace $tw {
     addEventListener: (...args: WikiAddEventListenerArgs) => void;
     // addIndexer: (indexer,name)  => void;
     // addIndexersToWiki: ()  => void;
-    addTiddler: (tiddler:Tiddler|TiddlerFields)  => void;
+    addTiddler: (tiddler: Tiddler | TiddlerFields) => void;
     // addTiddlers: (tiddlers)  => void;
-    // addToHistory: (title,fromPageRect,historyTitle)  => void;
+    addToHistory: (title: string, fromPageRect?: any, historyTitle?: string) => void; // TODO: any
     // addToStory: (title,fromTitle,storyTitle,options)  => void;
     allShadowTitles: () => string[];
     allTitles: () => string[];
@@ -180,21 +188,21 @@ declare namespace $tw {
     // enqueueTiddlerEvent: (title,isDeleted)  => void;
     // extractLinks: (parseTreeRoot)  => void;
     // extractTiddlerDataItem: (titleOrTiddler,index,defaultText)  => void;
-    filterTiddlers: (filterString:string, widget?:$tw.Widget, source?:string[]|Record<string, any>)  => string[];
+    filterTiddlers: (filterString: string, widget?: $tw.Widget, source?: string[] | Record<string, any>) => string[];
     // findDraft: (targetTitle)  => void;
     // findListingsOfTiddler: (targetTitle,fieldName)  => void;
     // forEachTiddler: (/* [options,]callback */)  => void;
     // generateDraftTitle: (title)  => void;
     // generateNewTitle: (baseTitle,options)  => void;
     // getCacheForTiddler: (title,cacheName,initializer)  => void;
-    getChangeCount: (title:string) => number;
-    getCreationFields: ()  => Partial<TiddlerFields>;
+    getChangeCount: (title: string) => number;
+    getCreationFields: () => Partial<TiddlerFields>;
     // getFilterOperators: ()  => void;
     // getFilterRunPrefixes: ()  => void;
     // getGlobalCache: (cacheName,initializer)  => void;
     // getIndexer: (name)  => void;
     getMissingTitles: () => string[];
-    getModificationFields: ()  => Partial<TiddlerFields>;
+    getModificationFields: () => Partial<TiddlerFields>;
     getOrphanTitles: () => string[];
     // getPluginInfo: (title)  => void;
     getPluginTypes: () => string[];
@@ -211,7 +219,7 @@ declare namespace $tw {
     // getTiddlerData: (titleOrTiddler,defaultData)  => void;
     // getTiddlerDataCached: (titleOrTiddler,defaultData)  => void;
     // getTiddlerLinks: (title)  => void;
-    // getTiddlerList: (title,field,index)  => void;
+    getTiddlerList: (title: string, field: string, index: number) => string[];
     // getTiddlerRelinkBackreferences: (title)  => void;
     // getTiddlerRelinkReferences: (title)  => void;
     getTiddlerText: (title: string, fallback?: string) => string | undefined;
@@ -242,7 +250,7 @@ declare namespace $tw {
     // readPluginInfo: (titles)  => void;
     // registerPluginTiddlers: (pluginType,titles)  => void;
     // relinkTiddler:  relinkTiddler(fromTitle, toTitle, options)  => void;
-    removeEventListener: (...args: WikiAddEventListenerArgs)  => void;
+    removeEventListener: (...args: WikiAddEventListenerArgs) => void;
     // renameTiddler:  renameTiddler(fromTitle,toTitle,options)  => void;
     // renderText: (outputType,textType,text,options)  => void;
     // renderTiddler: (outputType,title,options)  => void;
@@ -256,6 +264,28 @@ declare namespace $tw {
     tiddlerExists: (title: string) => boolean;
     // unpackPluginTiddlers: ()  => void;
     // unregisterPluginTiddlers: (pluginType,titles)  => void;
+  }
+
+  export class Story {
+    constructor (options:{
+      wiki: Wiki,
+      storyTitle: string,
+      historyTitle: string});
+    addToHistory: (navigateTo: string /*, navigateFromClientRect*/) => void
+    /*
+    addToStory: (navigateTo,navigateFromTitle,options) =>
+    getStoryList()
+    navigateTiddler (navigateTo,navigateFromTitle,navigateFromClientRect) =>
+    saveStoryList (storyList)
+    storyCancelTiddler (targetTitle)
+    storyCloseAllTiddlers ()
+    storyCloseOtherTiddlers (targetTitle)
+    storyCloseTiddler (targetTitle)
+    storyDeleteTiddler (targetTitle)
+    storyEditTiddler (targetTitle)
+    storyNewTiddler (targetTitle)
+    storySaveTiddler (targetTitle)
+    */
   }
 
   export interface SyncAdaptorTiddlerInfo {
@@ -304,54 +334,56 @@ declare namespace $tw {
   // https://tiddlywiki.com/dev/static/HookMechanism.html
   // Full list of documented hooks:
   // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/
+  type HOOK_PLACEHOLDER = () => {};
+
   export type AddHookArguments =
     // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook_%20th-before-importing.tid
-    | ['th-before-importing']
+    | ['th-before-importing', HOOK_PLACEHOLDER]
 
     // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook_%20th-closing-tiddler.tid
-    | ['th-closing-tiddler']
+    | ['th-closing-tiddler', HOOK_PLACEHOLDER]
 
     // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook__th-deleting-tiddler.tid
-    | ['th-deleting-tiddler']
+    | ['th-deleting-tiddler', HOOK_PLACEHOLDER]
 
     // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook__th-editing-tiddler.tid
-    | ['th-editing-tiddler']
+    | ['th-editing-tiddler', HOOK_PLACEHOLDER]
 
     // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook__th-importing-file.tid
     | ['th-importing-file', /* importFunction*/ (info: ImportFileInfo) => boolean]
 
     // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook__th-importing-tiddler.tid
-    | ['th-importing-tiddler']
+    | ['th-importing-tiddler', HOOK_PLACEHOLDER]
 
     // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook_th-make-tiddler-path.tid
-    | ['th-make-tiddler-path']
+    | ['th-make-tiddler-path', HOOK_PLACEHOLDER]
 
     // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook__th-navigating.tid
-    | ['th-navigating']
+    | ['th-navigating', (event: $tw.Widget.NavigateEvent) => $tw.Widget.NavigateEvent]
 
     // https://tiddlywiki.com/dev/static/Hook%253A%2520th-opening-default-tiddlers-list.html
     | ['th-opening-default-tiddlers-list', /* getDefaultList */ (tiddlerTitles: string[]) => string[]]
 
     // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook_%20th-page-refreshed.tid
-    | ['th-page-refreshed']
+    | ['th-page-refreshed', HOOK_PLACEHOLDER]
 
     // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook_%20th-page-refreshing.tid
-    | ['th-page-refreshing']
+    | ['th-page-refreshing', HOOK_PLACEHOLDER]
 
     // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook__th-relinking-tiddler.tid
-    | ['th-relinking-tiddler']
+    | ['th-relinking-tiddler', HOOK_PLACEHOLDER]
 
     // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook__th-renaming-tiddler.tid
-    | ['th-renaming-tiddler', /*newTiddlerTitle*/ string, /*oldTiddlerTitle*/ string]
+    | ['th-renaming-tiddler', (newTiddlerTitle: string, oldTiddlerTitle: string) => string]
 
     // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook__th-rendering-element.tid
-    | ['th-rendering-element']
+    | ['th-rendering-element', HOOK_PLACEHOLDER]
 
     // https://tiddlywiki.com/dev/static/Hook%253A%2520th-saving-tiddler.html
-    | ['th-saving-tiddler']
+    | ['th-saving-tiddler', HOOK_PLACEHOLDER]
 
     // https://github.com/Jermolene/TiddlyWiki5/tree/master/editions/dev/tiddlers/new/Hook__th-server-command-post-start.tid
-    | ['th-server-command-post-start'];
+    | ['th-server-command-post-start', HOOK_PLACEHOLDER];
 
   export interface DomMakerOptions {
     document: Document;
@@ -396,13 +428,13 @@ declare namespace $tw {
   export interface TW5Modules {
     titles: Record<string, TW5Module>;
     types: Partial<Record<ModuleType, Record<string, TW5Module>>>
-    define: (moduleName: string, moduleType: ModuleType, definition: string|ModuleExports) => void;
+    define: (moduleName: string, moduleType: ModuleType, definition: string | ModuleExports) => void;
     execute: (moduleName: string, moduleRoot?: string) => ModuleExports;
     applyMethods: (moduleType: ModuleType, targetObject?: any) => any;
-    createClassFromModule: (moduleExports:ModuleExports,baseClass:ClassConstructor) => any;
-    createClassesFromModules: (moduleType:ModuleType,subType:string,baseClass:ClassConstructor) => any;
-    forEachModuleOfType: (moduleType:ModuleType, callback:(title:string, exports:ModuleExports) => void) => any;
-    getModulesByTypeAsHashmap: (moduleType:any, nameField:any) => any;
+    createClassFromModule: (moduleExports: ModuleExports, baseClass: ClassConstructor) => any;
+    createClassesFromModules: (moduleType: ModuleType, subType: string, baseClass: ClassConstructor) => any;
+    forEachModuleOfType: (moduleType: ModuleType, callback: (title: string, exports: ModuleExports) => void) => any;
+    getModulesByTypeAsHashmap: (moduleType: any, nameField: any) => any;
   }
 
   export namespace utils {
@@ -425,7 +457,9 @@ declare namespace $tw {
     export const domMaker: (tag: string, options: DomMakerOptions) => HTMLElement;
     export const formatDateString: (date: Date, format: string) => string;
     export let getLocationPath: () => string;
-    export const resolvePath: (sourcepath:string, rootpath?: string) => string;
+    export const resolvePath: (sourcepath: string, rootpath?: string) => string;
+    export const copyToClipboard: (text: string, options?: {doNotNotify?: boolean}) => void;
+    export const stringifyList: (list: string[]) => string;
   }
 
   export namespace boot {
@@ -440,7 +474,14 @@ declare namespace $tw {
   export const preloadTiddlerArray: (tiddlerFields: TiddlerFields[]) => void;
   export const language: undefined | Translator;
   export namespace hooks {
-    export const addHook: (...args: AddHookArguments) => void;
+    // based on: https://stackoverflow.com/a/73057552
+    type ValueFor<T, K> = T extends [any, any]
+      ? K extends T[0]
+      ? T[1]
+      : never
+      : never
+    export const addHook: <K extends AddHookArguments[0]>(hookName: K, handler: ValueFor<AddHookArguments, K>) => void;
+    export const invokeHook: <K extends AddHookArguments[0]>(hookName: K, ...hookArgs: Parameters<ValueFor<AddHookArguments, K>>) => ReturnType<ValueFor<AddHookArguments, K>>;
   }
   export const browser: undefined | {
     isIE: boolean,

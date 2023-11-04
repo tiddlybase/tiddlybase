@@ -81,19 +81,19 @@ export const install = () => {
     // we should use addEventListeners(), but we don't have a
     // typescript type for that function yet.
     const originalHandleCloseAllTiddlerEvent = navigator.eventListeners["tm-close-all-tiddlers"];
-    navigator.addEventListener("tm-close-all-tiddlers", function (this:any, event: $tw.Widget.CloseAllTiddlersEvent) {
+    navigator.addEventListener("tm-close-all-tiddlers", function (this:any, event) {
       dispatchAndRemove(Object.keys(registeredCallbacks), event);
       originalHandleCloseAllTiddlerEvent?.call(this, event);
       return true;
     });
     const originalHandleCloseTiddlerEvent = navigator.eventListeners["tm-close-tiddler"];
-    navigator.addEventListener("tm-close-tiddler", function (this:any, event:$tw.Widget.CloseTiddlerEvent) {
+    navigator.addEventListener("tm-close-tiddler", function (this:any, event) {
       dispatchAndRemove([event.tiddlerTitle!], event);
       originalHandleCloseTiddlerEvent?.call(this, event);
       return true;
     });
     const originalHandleCloseOtherTiddlersEvent = navigator.eventListeners["tm-close-other-tiddlers"];
-    navigator.addEventListener("tm-close-other-tiddlers", function (this:any, event:$tw.Widget.CloseOtherTiddlersEvent) {
+    navigator.addEventListener("tm-close-other-tiddlers", function (this:any, event) {
       dispatchAndRemove(Object.keys(registeredCallbacks).filter(t => t !== event.tiddlerTitle), event);
       originalHandleCloseOtherTiddlersEvent?.call(this, event);
       return true;

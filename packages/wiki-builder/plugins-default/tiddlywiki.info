@@ -5,6 +5,7 @@
     },
     "plugins": [
         "tiddlybase/tiddlybase-utils",
+        "tiddlybase/tiddlybase-urls",
         "tiddlybase/react",
         "tiddlybase/embed-media",
         "tiddlybase/mdx",

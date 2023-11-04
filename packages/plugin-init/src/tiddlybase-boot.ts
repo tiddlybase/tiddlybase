@@ -16,10 +16,11 @@ import { TIDDLYBASE_INIT_SINGLETONS_TITLE } from "@tiddlybase/shared/src/constan
   const bootTiddlyWiki = () => {
 
     $tw.modules = new PatchedModules($tw.modules.titles, $tw.modules.types);
-    $tw.boot.boot();
+    const bootPromise = new Promise<boolean>(resolve => $tw.boot.boot(() => resolve(true)));
     if (runningIniOSChrome()) {
       window.onerror = null;
     }
+    return bootPromise
   }
 
   /**
@@ -60,7 +61,8 @@ import { TIDDLYBASE_INIT_SINGLETONS_TITLE } from "@tiddlybase/shared/src/constan
       window.$tw.modules.define(TIDDLYBASE_INIT_SINGLETONS_TITLE, "library", window.$tw.tiddlybase);
       try {
         $tw.preloadTiddlerArray(tiddlers);
-        bootTiddlyWiki();
+        await bootTiddlyWiki();
+        await topLevelClient('tiddlywikiBootComplete', []);
       } catch (e) {
         console.dir(e);
         if (typeof e === 'object') {

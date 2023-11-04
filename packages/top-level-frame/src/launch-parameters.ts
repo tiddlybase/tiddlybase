@@ -14,4 +14,4 @@ export const parseLaunchParameters = (
   DEFAULT_LAUNCH_PARAMETERS,
   defaults,
   {searchParameters: parseSearchParameters(url.search)},
-  parseURLPath(url.pathname, pathTemplate));
+  parseURLPath(pathTemplate, url.pathname));

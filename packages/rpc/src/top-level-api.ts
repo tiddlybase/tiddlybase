@@ -21,6 +21,11 @@ export interface BackendFunctions {
 export interface TopLevelUIAPI {
   loadError: (message: string) => Promise<void>;
   loginScreen: () => Promise<void>;
+  changeURL: (
+    pathVariables: Record<string, string>,
+    searchVariables?: Record<string, string>,
+    hash?: string
+  ) => Promise<string>;
 }
 
 export interface TopLevelAPIForSandboxedWiki extends ParentAPIBase<ChildInitProps>, TiddlerStorage, FileStorage, AuthAPI, BackendFunctions, TopLevelUIAPI {}

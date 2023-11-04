@@ -7,7 +7,6 @@ export type LaunchParameters = {
   instance: string;
   launchConfig: string;
   userId?: string;
-  tiddler?: string;
   searchParameters?: Record<string, string>;
 };
 

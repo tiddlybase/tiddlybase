@@ -6,6 +6,7 @@ const IDENTIFIER_REGEXP = "[^\\s\\/\\\\]+";
 const DEFAULT_ENCODING: PathTemplateComponentEncoding = 'encodeURIComponent';
 
 export type PathVariables = Record<string, string>;
+export type SearchVariables = Record<string, string>;
 
 export const encodePathComponent = (value: string, encoding: PathTemplateComponentEncoding): string => {
   switch (encoding) {
@@ -36,7 +37,7 @@ export const createPathRegExp = (pathTemplate: PathTemplate): RegExp => {
   return new RegExp(re);
 }
 
-export const parseURLPath = (path: string, pathTemplate: PathTemplate): [string, PathVariables] => {
+export const parseURLPath = (pathTemplate: PathTemplate, path: string): [string, PathVariables] => {
   let prefix = "";
   const pathRegExp: RegExp = createPathRegExp(pathTemplate);
   const componentsByVariable = pathTemplate.reduce((acc, component) => {
@@ -65,9 +66,9 @@ export type ParsedURL = {
   pathVariables: PathVariables
 }
 
-export const parseURL = (url: string, pathTemplate: PathTemplate): ParsedURL => {
+export const parseURL = (pathTemplate: PathTemplate, url: string): ParsedURL => {
   const parsedURL = new URL(url);
-  const [pathPrefix, pathVariables] = parseURLPath(parsedURL.pathname, pathTemplate);
+  const [pathPrefix, pathVariables] = parseURLPath(pathTemplate, parsedURL.pathname);
   return {
     url: parsedURL,
     pathPrefix,
@@ -85,9 +86,20 @@ export const createURLPath = (pathTemplate: PathTemplate, pathVariables: PathVar
   }, "")
 }
 
-export const createURL = (baseURL: string, pathTemplate: PathTemplate, pathVariables: PathVariables): string => {
-  const parsedBaseURL = parseURL(baseURL, pathTemplate);
-  const mergedPathVariables = Object.assign({}, parsedBaseURL.pathVariables, pathVariables);
-  parsedBaseURL.url.pathname = parsedBaseURL.pathPrefix + createURLPath(pathTemplate, mergedPathVariables);
-  return parsedBaseURL.url.href;
+export const createURL = (
+  pathTemplate: PathTemplate,
+  baseURL: string,
+  pathVariables: PathVariables,
+  searchVariables?: SearchVariables,
+  hash?: string): string => {
+  const {url, pathPrefix, pathVariables: basePathVariables} = parseURL(pathTemplate, baseURL);
+  const mergedPathVariables = Object.assign({}, basePathVariables, pathVariables);
+  url.pathname = pathPrefix + createURLPath(pathTemplate, mergedPathVariables);
+  if (searchVariables) {
+    url.search = new URLSearchParams(searchVariables).toString();
+  }
+  if (hash) {
+    url.hash = hash;
+  }
+  return url.href;
 }

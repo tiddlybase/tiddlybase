@@ -23,7 +23,9 @@ import { replaceChildrenWithText, toggleVisibleDOMSection } from "./dom-utils";
 import { makeFileStorage } from "./file-storage/file-storage-factory";
 import { getNormalizedLaunchConfig } from './launch-config';
 import { readTiddlerSources } from "./tiddler-storage/tiddler-storage-factory";
-import { TIDDLYBASE_TITLE_LAUNCH_PARAMETERS, TIDDLYBASE_TITLE_PARENT_LOCATION, TIDDLYBASE_TITLE_USER_PROFILE } from "@tiddlybase/shared/src/constants";
+import { TIDDLYBASE_TITLE_LAUNCH_PARAMETERS, TIDDLYBASE_TITLE_PARENT_LOCATION, TIDDLYBASE_TITLE_PATH_TEMPLATE, TIDDLYBASE_TITLE_USER_PROFILE } from "@tiddlybase/shared/src/constants";
+import { OptionallyEnabledChangeListenerWrapper, makeChangeListener, makeFilteringChangeListener } from './change-listener';
+import { createURL } from 'packages/shared/src/path-template-utils';
 
 
 const initRPC = (childIframe: Window): RPC => {
@@ -37,9 +39,11 @@ const initRPC = (childIframe: Window): RPC => {
 }
 
 export class TopLevelApp {
+  tiddlywikiBootComplete = false;
   config: TiddlybaseClientConfig;
   tiddlerStorage?: TiddlerStorage;
-  rpc?: RPC
+  rpc?: RPC;
+  tiddlerStorageChangeListener?: OptionallyEnabledChangeListenerWrapper;
   launchParameters: LaunchParameters;
   launchConfig: LaunchConfig;
   lazyFirebaseApp: Lazy<FirebaseApp>;
@@ -48,7 +52,7 @@ export class TopLevelApp {
   fileStorage: ReadOnlyFileStorage | FileStorage | undefined;
 
   constructor(config: TiddlybaseClientConfig) {
-    const {tiddlybaseConfig, defaultLaunchParameters} = mergeConfigDefaults(config, window.location.hostname);
+    const { tiddlybaseConfig, defaultLaunchParameters } = mergeConfigDefaults(config, window.location.hostname);
     this.config = tiddlybaseConfig;
     this.launchParameters = parseLaunchParameters(
       window.location,
@@ -93,9 +97,20 @@ export class TopLevelApp {
     return iframe.contentWindow!;
   };
 
+  attachDOMEventListeners() {
+    window.addEventListener("popstate", event => {
+      this.tiddlerStorageChangeListener?.onSetTiddler({
+        text: window.location.href,
+        title: TIDDLYBASE_TITLE_PARENT_LOCATION
+      })
+    });
+  }
+
   async loadWiki(user?: TiddlyBaseUser) {
     const iframe = this.createWikiIframe(this.getIframeURL());
     this.rpc = initRPC(iframe);
+    this.tiddlerStorageChangeListener = makeChangeListener(this.rpc.sandboxedAPIClient);
+    this.attachDOMEventListeners()
     await this.createParentAPI(this.rpc, user);
   }
 
@@ -153,11 +168,23 @@ export class TopLevelApp {
       toggleVisibleDOMSection('login');
     }
 
+    rpc.toplevelAPIDefiner('tiddlywikiBootComplete', async () => {
+      this.tiddlywikiBootComplete = true;
+      if (this.tiddlerStorageChangeListener) {
+        this.tiddlerStorageChangeListener.enable(true);
+      }
+    });
+
     // tiddler and file data sources are initialized in childIframeReady() so the parent frame can
     // listen to the child iframe's RPC request as soon as possible.
     rpc.toplevelAPIDefiner('childIframeReady', async () => {
       try {
-        const { tiddlers, writeStore } = await readTiddlerSources(this.launchParameters, this.launchConfig, this.lazyFirebaseApp, rpc);
+        const { tiddlers, writeStore } = await readTiddlerSources(
+          this.launchParameters,
+          this.launchConfig,
+          this.lazyFirebaseApp,
+          rpc.rpcCallbackManager,
+          makeFilteringChangeListener(this.tiddlerStorageChangeListener!));
         this.tiddlerStorage = writeStore;
         this.fileStorage = makeFileStorage(this.launchParameters, rpc, this.lazyFirebaseApp, this.launchConfig.files);
         this.exposeStorageAPIs(rpc);
@@ -168,11 +195,14 @@ export class TopLevelApp {
               ...user,
               title: TIDDLYBASE_TITLE_USER_PROFILE,
             }, {
-              ...JSON.parse(JSON.stringify(window.location)),
+              text: window.location.href,
               title: TIDDLYBASE_TITLE_PARENT_LOCATION
             }, {
               ...this.launchParameters,
               title: TIDDLYBASE_TITLE_LAUNCH_PARAMETERS
+            }, {
+              pathTemplate: this.config.urls!.pathTemplate,
+              title: TIDDLYBASE_TITLE_PATH_TEMPLATE
             }
           ]
         }
@@ -191,11 +221,29 @@ export class TopLevelApp {
 
     rpc.toplevelAPIDefiner('loadError', loadError);
     rpc.toplevelAPIDefiner('loginScreen', displayLoginScreen);
+    rpc.toplevelAPIDefiner('changeURL', async (
+        pathVariables: Record<string, string>,
+        searchVariables?: Record<string, string>,
+        hash?: string
+      ) => {
+        // don't allow launchConfig and instance to be specified
+        const {launchConfig: _1, instance: _2, ...safePathVariables} = pathVariables;
+        const newURL = createURL(
+          this.config.urls?.pathTemplate!,
+          window.location.href,
+          safePathVariables,
+          searchVariables,
+          hash
+        );
+        window.history.pushState({}, '', newURL);
+        return newURL
+      });
 
   }
 
   private onAuthChange(user?: TiddlyBaseUser) {
     this.launchParameters.userId = user?.userId;
+    this.tiddlywikiBootComplete = false;
     if (this.rpc) {
       // wiki has been loaded
       this.rpc.rpc.close();
