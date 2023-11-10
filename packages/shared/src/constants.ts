@@ -40,3 +40,11 @@ export const TIDDLYBASE_TITLE_USER_PROFILE = `${TIDDLYBASE_LOCAL_STATE_PREFIX}/u
 export const TIDDLYBASE_TITLE_PARENT_LOCATION = `${TIDDLYBASE_LOCAL_STATE_PREFIX}/parent-location`
 export const TIDDLYBASE_TITLE_LAUNCH_PARAMETERS = `${TIDDLYBASE_LOCAL_STATE_PREFIX}/launch-parameters`
 export const TIDDLYBASE_TITLE_PATH_TEMPLATE = `${TIDDLYBASE_LOCAL_STATE_PREFIX}/path-template`
+export const TIDDLYBASE_TITLE_PREFIX_PERSISTED_STATE = "$:/state/persisted-state/"
+
+// Default story and history lists
+export const TW5_TITLE_STORY_LIST = "$:/StoryList";
+export const TW5_TITLE_HISTORY_LIST = "$:/HistoryList";
+export const TW5_TITLE_DEFAULT_TIDDLERS = "$:/DefaultTiddlers";
+export const TW5_TITLE_SIDEBAR = "$:/state/sidebar";
+export const TW5_TITLE_PREFIX_FOLDED = "$:/state/folded/";

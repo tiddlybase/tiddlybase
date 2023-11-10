@@ -3,6 +3,7 @@ import type { AddNumbers, NotifyAdmin } from "@tiddlybase/functions/src/apis";
 import { ParentAPIBase } from "./base";
 import type { TiddlerStorage } from "@tiddlybase/shared/src/tiddler-storage";
 import type { FileStorage } from "@tiddlybase/shared/src/file-storage";
+import type { WikiViewState } from "@tiddlybase/shared/src/wiki-view-state";
 
 export interface ChildInitProps {
   tiddlers: $tw.TiddlerFields[]
@@ -22,6 +23,7 @@ export interface TopLevelUIAPI {
   loadError: (message: string) => Promise<void>;
   loginScreen: () => Promise<void>;
   changeURL: (
+    wikiViewState: WikiViewState,
     pathVariables: Record<string, string>,
     searchVariables?: Record<string, string>,
     hash?: string

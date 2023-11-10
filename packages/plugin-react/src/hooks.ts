@@ -95,7 +95,7 @@ export const reducerMerge: TiddlerReducerFn<Partial<$tw.TiddlerFields>> = (prevS
 const getTiddlerFields = (title: string): $tw.TiddlerFields | undefined => $tw.wiki.getTiddler(title)?.fields;
 
 export const useTiddlerReducer = <A extends Partial<$tw.TiddlerFields>>(title: string, reducer: TiddlerReducerFn<A> = reducerMerge): [$tw.TiddlerFields | undefined, (action: A) => void] => {
-  // https://reactjs.org/docs/hooks-faq.html#is-there-something-like-forceupdate
+  // from: https://reactjs.org/docs/hooks-faq.html#is-there-something-like-forceupdate
   const [_, forceUpdate] = useReducer((x) => x + 1, 0);
   const dispatch = useMemo(() => (action: A) => {
     const nextState = reducer(getTiddlerFields(title) ?? { title }, action);

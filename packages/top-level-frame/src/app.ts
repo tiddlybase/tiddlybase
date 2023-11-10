@@ -2,6 +2,7 @@ import type { } from '@tiddlybase/tw5-types/src/index';
 import type { FirebaseApp } from '@firebase/app';
 import type { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
 import type { TopLevelAPIForSandboxedWiki } from "@tiddlybase/rpc/src/top-level-api";
+import type { WikiViewState } from "@tiddlybase/shared/src/wiki-view-state";
 import type { ReadOnlyFileStorage, FileStorage } from "@tiddlybase/shared/src/file-storage";
 import type { TiddlerStorage } from "@tiddlybase/shared/src/tiddler-storage";
 import type { LaunchConfig, LaunchParameters, TiddlerStorageSpec, TiddlybaseClientConfig } from "@tiddlybase/shared/src/tiddlybase-config-schema";
@@ -100,6 +101,7 @@ export class TopLevelApp {
   attachDOMEventListeners() {
     window.addEventListener("popstate", event => {
       this.tiddlerStorageChangeListener?.onSetTiddler({
+        wikiViewState: event.state,
         text: window.location.href,
         title: TIDDLYBASE_TITLE_PARENT_LOCATION
       })
@@ -222,6 +224,7 @@ export class TopLevelApp {
     rpc.toplevelAPIDefiner('loadError', loadError);
     rpc.toplevelAPIDefiner('loginScreen', displayLoginScreen);
     rpc.toplevelAPIDefiner('changeURL', async (
+        wikiViewState:WikiViewState,
         pathVariables: Record<string, string>,
         searchVariables?: Record<string, string>,
         hash?: string
@@ -235,7 +238,8 @@ export class TopLevelApp {
           searchVariables,
           hash
         );
-        window.history.pushState({}, '', newURL);
+        console.log("pushState", wikiViewState);
+        window.history.pushState(wikiViewState, '', newURL);
         return newURL
       });
 

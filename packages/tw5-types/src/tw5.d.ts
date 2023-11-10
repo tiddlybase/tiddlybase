@@ -8,6 +8,13 @@
 
 declare namespace $tw {
 
+  // based on: https://stackoverflow.com/a/73057552
+  type ValueFor<T, K> = T extends [any, any]
+  ? K extends T[0]
+  ? T[1]
+  : never
+  : never
+
   // standard tiddler definition, but every field except title is optional, allowing any custom field
   export type TiddlerFields = { title: string } & Partial<{
     tags: string[];
@@ -157,8 +164,10 @@ declare namespace $tw {
 
   export interface Wiki {
     changeCount: Record<string, number>;
-
-    addEventListener: (...args: WikiAddEventListenerArgs) => void;
+    addEventListener: <K extends WikiAddEventListenerArgs[0]>(
+      eventType: K,
+      handler: ValueFor<WikiAddEventListenerArgs, K>
+      ) => void;
     // addIndexer: (indexer,name)  => void;
     // addIndexersToWiki: ()  => void;
     addTiddler: (tiddler: Tiddler | TiddlerFields) => void;
@@ -460,6 +469,7 @@ declare namespace $tw {
     export const resolvePath: (sourcepath: string, rootpath?: string) => string;
     export const copyToClipboard: (text: string, options?: {doNotNotify?: boolean}) => void;
     export const stringifyList: (list: string[]) => string;
+    export const getScrollPosition: () => {x: number, y: number};
   }
 
   export namespace boot {
@@ -474,12 +484,7 @@ declare namespace $tw {
   export const preloadTiddlerArray: (tiddlerFields: TiddlerFields[]) => void;
   export const language: undefined | Translator;
   export namespace hooks {
-    // based on: https://stackoverflow.com/a/73057552
-    type ValueFor<T, K> = T extends [any, any]
-      ? K extends T[0]
-      ? T[1]
-      : never
-      : never
+
     export const addHook: <K extends AddHookArguments[0]>(hookName: K, handler: ValueFor<AddHookArguments, K>) => void;
     export const invokeHook: <K extends AddHookArguments[0]>(hookName: K, ...hookArgs: Parameters<ValueFor<AddHookArguments, K>>) => ReturnType<ValueFor<AddHookArguments, K>>;
   }
