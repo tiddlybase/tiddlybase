@@ -1,11 +1,11 @@
-import { PathTemplate, PathTemplateComponent, PathTemplateComponentEncoding } from "./path-template";
+import { PathTemplate, PathTemplateComponent, PathTemplateComponentEncoding, PathTemplateVariable } from "./path-template";
 
 // Regxp for at least on character, no spaces or slashes:
 const IDENTIFIER_REGEXP = "[^\\s\\/\\\\]+";
 
 const DEFAULT_ENCODING: PathTemplateComponentEncoding = 'encodeURIComponent';
 
-export type PathVariables = Record<string, string>;
+export type PathVariables = Partial<Record<PathTemplateVariable, string>>;
 export type SearchVariables = Record<string, string>;
 
 export const encodePathComponent = (value: string, encoding: PathTemplateComponentEncoding): string => {
@@ -43,17 +43,20 @@ export const parseURLPath = (pathTemplate: PathTemplate, path: string): [string,
   const componentsByVariable = pathTemplate.reduce((acc, component) => {
     acc[component.variableName] = component;
     return acc;
-  }, {} as Record<string, PathTemplateComponent>);
+  }, {} as Record<PathTemplateVariable, PathTemplateComponent>);
   const match = path.match(pathRegExp);
   const pathVariables: PathVariables = {};
   if ((match?.index ?? 0) > 0) {
     prefix = path.substring(0, match!.index);
   }
   return [prefix, Object.entries(match?.groups ?? {}).reduce(
-    (acc: PathVariables, [variableName, value]) => {
-      if (!!value) {
-        const component = componentsByVariable[variableName]
-        acc[variableName] = decodePathComponent(value, component.encoding ?? DEFAULT_ENCODING);
+    (acc: PathVariables, [variableName, value]:[string, string]) => {
+      if (!!value && (variableName in componentsByVariable)) {
+        // cast is safe, as variableName must be a PathTemplateVariable to be
+        // a key in componentsByVariable.
+        const pathVariableName = variableName as PathTemplateVariable;
+        const component = componentsByVariable[pathVariableName]
+        acc[pathVariableName] = decodePathComponent(value, component.encoding ?? DEFAULT_ENCODING);
       }
       return acc;
     },

@@ -1,8 +1,10 @@
 export type PathTemplateComponentEncoding = 'encodeURI' | 'base64' | 'encodeURIComponent'
 
+export type PathTemplateVariable = 'launchConfig' | 'instance' | 'filter' | 'tiddler';
+
 export interface PathTemplateComponent {
   shortName: string;
-  variableName: string;
+  variableName: PathTemplateVariable;
   pattern?: string; // RegExp pattern
   encoding?: PathTemplateComponentEncoding;
 }
