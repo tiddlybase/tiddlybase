@@ -1,5 +1,15 @@
-import { PathVariables, createURL, parseURL } from "@tiddlybase/shared/src/path-template-utils"
-import { WikiViewState, TiddlerViewState, TIDDLER_ARGUMENTS_FIELDNAME, getTiddlerArgumentsTitle, TiddlerArguments } from "@tiddlybase/shared/src/wiki-view-state"
+import {
+  PathVariables,
+  createURL,
+  parseURL
+} from "@tiddlybase/shared/src/path-template-utils"
+import {
+  WikiViewState,
+  TiddlerViewState,
+  TIDDLER_ARGUMENTS_FIELDNAME,
+  getTiddlerArgumentsTitle,
+  TiddlerArguments
+} from "@tiddlybase/shared/src/wiki-view-state"
 
 import { PathTemplate } from "@tiddlybase/shared/src/path-template";
 import {
@@ -43,13 +53,18 @@ export const onNavigation = (tiddler: string, hash?: string) => {
   waitForAnimation(() => {
     updateAddressBar(
       { tiddler },
-      getTiddlerArguments(tiddler),
+      // empty object passed so search params are cleared
+      // of no tiddler arguments exist for target tiddler
+      getTiddlerArguments(tiddler) ?? {},
       hash
     );
   });
 };
 
-type HistoryListItem = {title: string}
+type HistoryListItem = { title: string }
+
+const getHistoryListTiddlers = () => JSON.parse(
+    $tw.wiki.getTiddlerText(TW5_TITLE_HISTORY_LIST) ?? "null") as null | HistoryListItem[];
 
 export const getActiveTiddler = (): string | undefined => {
   const storyList = getStoryList();
@@ -68,9 +83,9 @@ export const getActiveTiddler = (): string | undefined => {
   // At this point, storyList is not empty, but does not contain navigateTo
   // (probably because that tiddler was closed). The active tiddler is the
   // last tiddler in the history list which is still in storylist.
-  const historyList = JSON.parse($tw.wiki.getTiddlerText(TW5_TITLE_HISTORY_LIST) ?? "null") as null | HistoryListItem[];
+  const historyList = getHistoryListTiddlers();
   if (historyList) {
-    for (let {title} of historyList.reverse()) {
+    for (let { title } of historyList.reverse()) {
       if (storyListSet.has(title)) {
         return title;
       }
@@ -107,38 +122,51 @@ export const setTiddlerArguments = (tiddler: string, tiddlerArguments: TiddlerAr
 }
 
 export const applyWikiViewState = (wikiViewState: WikiViewState): Promise<boolean> => {
-  setTiddlerText(TW5_TITLE_SIDEBAR, wikiViewState.sidebar ? "yes" : "no");
+  const tiddlersToSet = [{
+    title: TW5_TITLE_SIDEBAR,
+    text: wikiViewState.sidebar ? "yes" : "no"
+  }] as $tw.TiddlerFields[];
   const storyList: string[] = []
   for (let tiddlerViewState of wikiViewState.openTiddlers) {
     storyList.push(tiddlerViewState.title);
-    setTiddlerText(getFoldStateTitle(tiddlerViewState.title), tiddlerViewState.folded ? "hide" : "show");
+    if (tiddlerViewState.folded) {
+      tiddlersToSet.push({
+        title: getFoldStateTitle(tiddlerViewState.title),
+        text: "hide"
+      })
+    }
     if (tiddlerViewState.tiddlerArguments) {
-      setTiddlerArguments(
-        tiddlerViewState.title,
-        tiddlerViewState.tiddlerArguments);
+      tiddlersToSet.push({
+        [TIDDLER_ARGUMENTS_FIELDNAME]: tiddlerViewState.tiddlerArguments,
+        // prevent arbitrary code execution by setting tiddler args and then
+        // open the tiddler arguments tiddler as eg. mdx
+        type: "text/plain",
+        text: "",
+        title: getTiddlerArgumentsTitle(tiddlerViewState.title)
+      });
     }
   }
-  $tw.wiki.addTiddler({
+  tiddlersToSet.push({
     title: TW5_TITLE_STORY_LIST,
-    list: wikiViewState.openTiddlers.map(t => t.title)
+    list: wikiViewState.openTiddlers.map(t => t.title),
+    setFromWikiViewState: true
   })
   if (wikiViewState.activeTiddler) {
-    saveNavigatingToTiddlerTitle(wikiViewState.activeTiddler);
+    tiddlersToSet.push({
+      title: TIDDLYBASE_TITLE_LAST_NAVIGATE_TO,
+      text: wikiViewState.activeTiddler
+    })
   }
+  $tw.wiki.addTiddlers(tiddlersToSet);
   // TODO: do we need to save / manually update historylist?
-  if (wikiViewState?.scrollPosition !== undefined) {
-    return waitForAnimation(() => {
+  return wikiViewState?.scrollPosition !== undefined ?
+    waitForAnimation(() => {
       window.scrollTo({
         left: wikiViewState.scrollPosition!.x,
         top: wikiViewState.scrollPosition!.y
       });
       return true;
-    });
-  }
-  // if there's no scrolling, we can resolve the resulting promise immediately
-  return Promise.resolve(true);
-
-
+    }) : Promise.resolve(true); // if there's no scrolling, we can resolve the resulting promise immediately
 }
 
 const setTiddlerText = (title: string, text: string) => {
@@ -173,12 +201,22 @@ export const createPermaURL = (
 
 export const copyURLToClipboard = (url: string) => $tw.utils.copyToClipboard(url);
 
-export const updateAddressBar = (
+export const updateAddressBar = async (
   pathVariables: PathVariables,
   searchVariables?: SearchVariables,
-  hash?: string) => $tw.tiddlybase?.topLevelClient!(
-    'changeURL',
-    [getWikiViewState(), pathVariables, searchVariables, hash]);
+  hash?: string) => {
+    const wikiViewState = getWikiViewState();
+    const newURL = await $tw.tiddlybase?.topLevelClient!(
+      'changeURL',
+      [wikiViewState, pathVariables, searchVariables, hash]);
+    // update parent url tiddler
+    $tw.wiki.addTiddler({
+      title: TIDDLYBASE_TITLE_PARENT_LOCATION,
+      text: newURL,
+      wikiViewState,
+      setFromWiki: true
+    })
+  }
 
 export const saveNavigatingToTiddlerTitle = (tiddlerTitle: string) => {
   setTiddlerText(

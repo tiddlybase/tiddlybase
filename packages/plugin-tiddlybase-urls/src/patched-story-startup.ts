@@ -60,18 +60,28 @@ class PatchStoryStartup {
   handleWikiChange(wikiChange: $tw.WikiChange) {
     // Update the wiki when the user clicks the browser's Back/Forward buttons
     if (TIDDLYBASE_TITLE_PARENT_LOCATION in wikiChange) {
-      const wikiViewState = this.getWikiViewStateFromParentLocationTiddler()
-      if (wikiViewState) {
-        applyWikiViewState(wikiViewState);
-        return
+      // if current parent location was set from within the wiki, do not update
+      // the view state.
+      if (this.tw.wiki.getTiddler(TIDDLYBASE_TITLE_PARENT_LOCATION)?.fields?.['setFromWiki'] !== true) {
+        const wikiViewState = this.getWikiViewStateFromParentLocationTiddler()
+        if (wikiViewState) {
+          applyWikiViewState(wikiViewState);
+          return
+        }
       }
     }
     let updateAddressBarRequired = false;
+    // the address bar should be updated if the StoryList changed (unless it was changed
+    // by us).
     if (TW5_TITLE_STORY_LIST in wikiChange) {
+      // don't do anything if the change to StoryList was triggered by this code
+      if ($tw.wiki.getTiddler(TW5_TITLE_STORY_LIST)?.fields?.setFromWikiViewState === true) {
+        return;
+      }
       updateAddressBarRequired = true
     }
     // Update the address bar URL if the currently active tiddler's TiddlerArguments
-    // change
+    // changed
     const activeTiddler = getActiveTiddler();
     if (!updateAddressBarRequired && activeTiddler) {
       const argumentsTiddler = getTiddlerArgumentsTitle(activeTiddler)
@@ -195,14 +205,8 @@ class PatchStoryStartup {
     return wikiViewState
   }
 
-  updateStoryAndHistory(storyList: string[], activeTiddler?: string) {
+  updateHistory(storyList: string[], activeTiddler?: string) {
     // Save the story list
-    this.tw.wiki.addTiddler({
-      title: TW5_TITLE_STORY_LIST,
-      text: "",
-      list: storyList,
-      ...this.tw.wiki.getModificationFields()
-    });
     // Update history
     var story = new this.tw.Story({
       wiki: this.tw.wiki,
@@ -226,7 +230,7 @@ export const startup = function () {
     const patchStoryStartup = new PatchStoryStartup();
     patchStoryStartup.registerHandlers()
     patchStoryStartup.initStory().then(wikiViewState => {
-      patchStoryStartup.updateStoryAndHistory(
+      patchStoryStartup.updateHistory(
         wikiViewState.openTiddlers.map(t => t.title),
         wikiViewState.activeTiddler
       );

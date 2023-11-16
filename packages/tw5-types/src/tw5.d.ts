@@ -171,7 +171,7 @@ declare namespace $tw {
     // addIndexer: (indexer,name)  => void;
     // addIndexersToWiki: ()  => void;
     addTiddler: (tiddler: Tiddler | TiddlerFields) => void;
-    // addTiddlers: (tiddlers)  => void;
+    addTiddlers: (tiddlers: (Tiddler | TiddlerFields)[])  => void;
     addToHistory: (title: string, fromPageRect?: any, historyTitle?: string) => void; // TODO: any
     // addToStory: (title,fromTitle,storyTitle,options)  => void;
     allShadowTitles: () => string[];
