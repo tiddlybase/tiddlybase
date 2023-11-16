@@ -1,6 +1,6 @@
 export type PathTemplateComponentEncoding = 'encodeURI' | 'base64' | 'encodeURIComponent'
 
-export type PathTemplateVariable = 'launchConfig' | 'instance' | 'filter' | 'tiddler';
+export type PathTemplateVariable = 'launchConfig' | 'instance' | 'viewState' | 'tiddler';
 
 export interface PathTemplateComponent {
   shortName: string;

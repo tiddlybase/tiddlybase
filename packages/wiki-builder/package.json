@@ -17,6 +17,7 @@
         "@tiddlybase/plugin-mdx": "workspace:*",
         "@tiddlybase/plugin-mui": "workspace:*",
         "@tiddlybase/plugin-react": "workspace:*",
+        "@tiddlybase/plugin-tiddlybase-urls": "workspace:*",
         "@tiddlybase/plugin-tiddlybase-utils": "workspace:*"
     }
 }

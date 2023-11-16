@@ -1,6 +1,8 @@
 import { useReducer, useEffect, useMemo } from "react";
 import type { } from "@tiddlybase/tw5-types/src/index"
 import { merge } from "@tiddlybase/plugin-tiddlybase-utils/src/lodash";
+import type { TiddlerArguments } from "@tiddlybase/shared/src/wiki-view-state";
+import { TIDDLER_ARGUMENTS_FIELDNAME, getTiddlerArgumentsTitle } from "@tiddlybase/shared/src/wiki-view-state";
 
 export const DEFAULT_IGNORE_TEST = (title: string) => title.startsWith('Draft of ')
 
@@ -113,3 +115,17 @@ export const useTiddlerReducer = <A extends Partial<$tw.TiddlerFields>>(title: s
   }, [title]);
   return [getTiddlerFields(title), dispatch];
 };
+
+const tiddlerArgumentsReducer: TiddlerReducerFn<TiddlerArguments> = (
+  prevState: $tw.TiddlerFields,
+  newTiddlerArguments: TiddlerArguments): $tw.TiddlerFields => ({
+    ...prevState,
+    [TIDDLER_ARGUMENTS_FIELDNAME]: newTiddlerArguments
+  });
+
+export const useTiddlerArguments = (title: string): [TiddlerArguments | undefined, (action: TiddlerArguments) => void] => {
+  const [argumentsTiddler, updateFn] = useTiddlerReducer(
+    getTiddlerArgumentsTitle(title),
+    tiddlerArgumentsReducer);
+  return [argumentsTiddler?.[TIDDLER_ARGUMENTS_FIELDNAME], updateFn]
+}

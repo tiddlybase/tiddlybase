@@ -78,5 +78,12 @@ export const invokeTiddlyWiki = (
     '.',
     "--verbose"].concat(args)
   $twInstance.preloadTiddlerArray(preloadedTiddlers);
-  return new Promise((resolve) => $twInstance.boot.boot(() => resolve($twInstance)));
+  return new Promise((resolve, reject) => {
+    try {
+      $twInstance.boot.boot(() => resolve($twInstance));
+    } catch (e) {
+      console.error(e);
+      reject(e);
+    }
+  });
 }

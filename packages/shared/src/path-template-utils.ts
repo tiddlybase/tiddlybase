@@ -1,4 +1,5 @@
 import { PathTemplate, PathTemplateComponent, PathTemplateComponentEncoding, PathTemplateVariable } from "./path-template";
+import { SearchVariables } from "./tiddlybase-config-schema";
 
 // Regxp for at least on character, no spaces or slashes:
 const IDENTIFIER_REGEXP = "[^\\s\\/\\\\]+";
@@ -6,7 +7,6 @@ const IDENTIFIER_REGEXP = "[^\\s\\/\\\\]+";
 const DEFAULT_ENCODING: PathTemplateComponentEncoding = 'encodeURIComponent';
 
 export type PathVariables = Partial<Record<PathTemplateVariable, string>>;
-export type SearchVariables = Record<string, string>;
 
 export const encodePathComponent = (value: string, encoding: PathTemplateComponentEncoding): string => {
   switch (encoding) {
@@ -67,7 +67,10 @@ export type ParsedURL = {
   url: URL,
   pathPrefix: string,
   pathVariables: PathVariables
+  searchVariables: SearchVariables
 }
+
+export const parseSearchVariables = (rawSearchParams: string): Record<string, string> => Object.fromEntries((new URLSearchParams(rawSearchParams)).entries());
 
 export const parseURL = (pathTemplate: PathTemplate, url: string): ParsedURL => {
   const parsedURL = new URL(url);
@@ -75,7 +78,8 @@ export const parseURL = (pathTemplate: PathTemplate, url: string): ParsedURL => 
   return {
     url: parsedURL,
     pathPrefix,
-    pathVariables
+    pathVariables,
+    searchVariables: parseSearchVariables(parsedURL.search)
   }
 }
 

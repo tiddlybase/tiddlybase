@@ -2382,7 +2382,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@tiddlybase/plugin-tiddlybase-urls@workspace:packages/plugin-tiddlybase-urls":
+"@tiddlybase/plugin-tiddlybase-urls@workspace:*, @tiddlybase/plugin-tiddlybase-urls@workspace:packages/plugin-tiddlybase-urls":
   version: 0.0.0-use.local
   resolution: "@tiddlybase/plugin-tiddlybase-urls@workspace:packages/plugin-tiddlybase-urls"
   dependencies:
@@ -2525,6 +2525,7 @@ __metadata:
     "@tiddlybase/plugin-mdx": "workspace:*"
     "@tiddlybase/plugin-mui": "workspace:*"
     "@tiddlybase/plugin-react": "workspace:*"
+    "@tiddlybase/plugin-tiddlybase-urls": "workspace:*"
     "@tiddlybase/plugin-tiddlybase-utils": "workspace:*"
   languageName: unknown
   linkType: soft

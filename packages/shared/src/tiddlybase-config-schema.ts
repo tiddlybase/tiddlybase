@@ -3,11 +3,13 @@ import type { TiddlyBaseUser } from "./users";
 import type { Expression } from "./expressions";
 import { PathTemplate } from "./path-template";
 
+export type SearchVariables = Record<string, string>;
+
 export type LaunchParameters = {
   instance: string;
   launchConfig: string;
   userId?: string;
-  searchParameters?: Record<string, string>;
+  searchParameters?: SearchVariables;
 };
 
 export type TiddlerCollectionPathSpec = {
