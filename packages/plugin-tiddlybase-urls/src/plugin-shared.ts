@@ -149,7 +149,7 @@ export const applyWikiViewState = (wikiViewState: WikiViewState): Promise<boolea
   tiddlersToSet.push({
     title: TW5_TITLE_STORY_LIST,
     list: wikiViewState.openTiddlers.map(t => t.title),
-    setFromWikiViewState: true
+    setFromWikiViewState: ($tw.wiki.changeCount[TW5_TITLE_STORY_LIST] ?? 0) + 1
   })
   if (wikiViewState.activeTiddler) {
     tiddlersToSet.push({

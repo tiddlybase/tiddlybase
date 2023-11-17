@@ -75,7 +75,7 @@ class PatchStoryStartup {
     // by us).
     if (TW5_TITLE_STORY_LIST in wikiChange) {
       // don't do anything if the change to StoryList was triggered by this code
-      if ($tw.wiki.getTiddler(TW5_TITLE_STORY_LIST)?.fields?.setFromWikiViewState === true) {
+      if ($tw.wiki.getTiddler(TW5_TITLE_STORY_LIST)?.fields?.setFromWikiViewState === $tw.wiki.changeCount[TW5_TITLE_STORY_LIST]) {
         return;
       }
       updateAddressBarRequired = true

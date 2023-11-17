@@ -36,8 +36,8 @@ const mappings = Object.fromEntries([
     ["^\/lc\/.*$", OUTER_HTML_PATH],
     // tiddler 
     ["^\/t\/.*$", OUTER_HTML_PATH],
-    // filter
-    ["^\/f\/.*$", OUTER_HTML_PATH],
+    // viewstate
+    ["^\/vs\/.*$", OUTER_HTML_PATH],
     // a file in the public directory, careful not to match tiddlyweb paths like /status
     ["^\/([^\/]+\\.[^\/]+)$", PUBLIC_DIR],
     ...(PUBLIC_SUBDIRS.map(subdir => [
