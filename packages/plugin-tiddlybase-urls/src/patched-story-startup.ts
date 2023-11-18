@@ -11,6 +11,8 @@ import {
   getWikiViewState,
   updateAddressBar,
   getActiveTiddler,
+  getClickedTiddlerTitle,
+  setActiveTiddlerTitle,
 } from "./plugin-shared"
 import {
   TIDDLYBASE_TITLE_PARENT_LOCATION,
@@ -114,6 +116,11 @@ class PatchStoryStartup {
       return event;
     });
 
+    // listen for any clicks in case it originates from a tiddler element
+    document.addEventListener('click', e => {
+      this.handleClickEvent(e);
+    }, true);
+
     // Listen for tm-open-external-window message
     this.tw.rootWidget.addEventListener("tm-open-external-window", (event: $tw.Widget.OpenExternalWindowEvent) => {
       var paramObject = event.paramObject || {},
@@ -150,6 +157,20 @@ class PatchStoryStartup {
     this.tw.rootWidget.addEventListener("tm-permaview", () => {
       this.handleCopyPermaview()
     });
+  }
+
+  handleClickEvent(e: MouseEvent) {
+    if (e.target instanceof HTMLElement) {
+      const clickedTiddlerTitle = getClickedTiddlerTitle(e.target);
+      if (clickedTiddlerTitle && (getActiveTiddler() !== clickedTiddlerTitle)) {
+        setActiveTiddlerTitle(clickedTiddlerTitle);
+        updateAddressBar(
+          { tiddler: clickedTiddlerTitle },
+          getTiddlerArguments(clickedTiddlerTitle)
+          // TODO: hash
+        );
+      }
+    }
   }
 
   defaultTiddlersViewState(activeTiddler?: string): WikiViewState {
