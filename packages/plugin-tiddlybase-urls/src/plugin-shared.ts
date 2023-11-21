@@ -49,22 +49,29 @@ export const onNavigation = (tiddler: string, hash?: string) => {
   to which we are navigating. Since the scroll position is only final afterwards,
   we should wait until the animation is over.
   */
-  setActiveTiddlerTitle(tiddler);
-  waitForAnimation(() => {
-    updateAddressBar(
-      { tiddler },
-      // empty object passed so search params are cleared
-      // of no tiddler arguments exist for target tiddler
-      getTiddlerArguments(tiddler) ?? {},
-      hash
-    );
-  });
+  if (getActiveTiddler() !== tiddler) {
+    waitForAnimation(() => {
+      // There's a race condition here, as the address bar may have been updated
+      // already while this function was waiting for the animation to comlete
+      if (getActiveTiddler() !== tiddler) {
+        console.log("address bar update triggered by navigation", tiddler);
+        setActiveTiddlerTitle(tiddler);
+        updateAddressBar(
+          { tiddler },
+          // empty object passed so search params are cleared
+          // of no tiddler arguments exist for target tiddler
+          getTiddlerArguments(tiddler) ?? {},
+          hash
+        );
+      }
+    });
+  }
 };
 
 type HistoryListItem = { title: string }
 
 const getHistoryListTiddlers = () => JSON.parse(
-    $tw.wiki.getTiddlerText(TW5_TITLE_HISTORY_LIST) ?? "null") as null | HistoryListItem[];
+  $tw.wiki.getTiddlerText(TW5_TITLE_HISTORY_LIST) ?? "null") as null | HistoryListItem[];
 
 export const getActiveTiddler = (): string | undefined => {
   const storyList = getStoryList();
@@ -205,18 +212,18 @@ export const updateAddressBar = async (
   pathVariables: PathVariables,
   searchVariables?: SearchVariables,
   hash?: string) => {
-    const wikiViewState = getWikiViewState();
-    const newURL = await $tw.tiddlybase?.topLevelClient!(
-      'changeURL',
-      [wikiViewState, pathVariables, searchVariables ?? {}, hash]);
-    // update parent url tiddler
-    $tw.wiki.addTiddler({
-      title: TIDDLYBASE_TITLE_PARENT_LOCATION,
-      text: newURL,
-      wikiViewState,
-      setFromWiki: true
-    })
-  }
+  const wikiViewState = getWikiViewState();
+  const newURL = await $tw.tiddlybase?.topLevelClient!(
+    'changeURL',
+    [wikiViewState, pathVariables, searchVariables ?? {}, hash]);
+  // update parent url tiddler
+  $tw.wiki.addTiddler({
+    title: TIDDLYBASE_TITLE_PARENT_LOCATION,
+    text: newURL,
+    wikiViewState,
+    setFromWiki: true
+  })
+}
 
 export const setActiveTiddlerTitle = (tiddlerTitle: string) => {
   setTiddlerText(
@@ -226,16 +233,16 @@ export const setActiveTiddlerTitle = (tiddlerTitle: string) => {
 
 const DATA_TIDDLER_TITLE = 'data-tiddler-title'
 
-export const findTiddlerDOMParent = (elem?:HTMLElement) => {
-  for(
+export const findTiddlerDOMParent = (elem?: HTMLElement) => {
+  for (
     let currentElement = elem;
     !!currentElement;
     currentElement = currentElement.parentElement ?? undefined) {
-      if (currentElement.getAttribute(DATA_TIDDLER_TITLE)) {
-          return currentElement;
-      }
+    if (currentElement.getAttribute(DATA_TIDDLER_TITLE)) {
+      return currentElement;
+    }
   }
   return undefined;
 }
 
-export const getClickedTiddlerTitle = (elem?:HTMLElement) => findTiddlerDOMParent(elem)?.getAttribute(DATA_TIDDLER_TITLE) ?? undefined;
+export const getClickedTiddlerTitle = (elem?: HTMLElement) => findTiddlerDOMParent(elem)?.getAttribute(DATA_TIDDLER_TITLE) ?? undefined;

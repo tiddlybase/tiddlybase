@@ -92,6 +92,10 @@ class PatchStoryStartup {
       }
     }
     if (updateAddressBarRequired) {
+      console.log("address bar update triggered by wiki change", activeTiddler, wikiChange);
+      if (activeTiddler) {
+        setActiveTiddlerTitle(activeTiddler);
+      }
       updateAddressBar(
         { tiddler: activeTiddler ?? '' },
         activeTiddler ? getTiddlerArguments(activeTiddler) : undefined
