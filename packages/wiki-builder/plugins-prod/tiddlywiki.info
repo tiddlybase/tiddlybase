@@ -1,0 +1,12 @@
+{
+    "includeWikis": [
+    ],
+    "config": {
+    },
+    "plugins": [
+        "tiddlybase/production-view"
+    ],
+    "themes": [
+    ],
+    "build": {}
+}
