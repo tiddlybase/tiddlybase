@@ -22,7 +22,7 @@ code-body: yes
 
 <$dropzone enable=<<tv-enable-drag-and-drop>>>
 
-<$list filter="[all[shadows+tiddlers]tag[$:/tags/PageTemplate]!has[draft.of]remove[$:/core/ui/PageTemplate/story]]" variable="listItem">
+<$list filter="[[$:/plugins/tiddlybase/production-view/PageTemplate/story]]" variable="listItem">
 
 <$transclude tiddler=<<listItem>>/>
 
