@@ -1,7 +1,6 @@
 import {
   PathVariables,
   createURL,
-  parseURL
 } from "@tiddlybase/shared/src/path-template-utils"
 import {
   WikiViewState,
@@ -19,7 +18,8 @@ import {
   TW5_TITLE_STORY_LIST,
   TW5_TITLE_HISTORY_LIST,
   TW5_TITLE_SIDEBAR,
-  TW5_TITLE_PREFIX_FOLDED
+  TW5_TITLE_PREFIX_FOLDED,
+  TW5_TITLE_DEFAULT_TIDDLERS
 } from "@tiddlybase/shared/src/constants";
 import { SearchVariables } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 
@@ -186,13 +186,19 @@ const setTiddlerText = (title: string, text: string) => {
 
 export const TIDDLYBASE_TITLE_ACTIVE_TIDDLER = `${TIDDLYBASE_LOCAL_STATE_PREFIX}/active-tiddler`;
 
-export const getStoryList = () => $tw.wiki.getTiddler(TW5_TITLE_STORY_LIST)?.fields.list as string[] ?? [];
+export const getStoryList = (wiki: $tw.Wiki = globalThis.$tw.wiki) => wiki.getTiddler(TW5_TITLE_STORY_LIST)?.fields.list as string[] ?? [];
 
-export const getParentURL = () => $tw.wiki.getTiddlerText(TIDDLYBASE_TITLE_PARENT_LOCATION)!;
+export const getParentURL = (wiki: $tw.Wiki = globalThis.$tw.wiki) => wiki.getTiddlerText(TIDDLYBASE_TITLE_PARENT_LOCATION)!;
 
-export const getPathTemplate = () => $tw.wiki.getTiddler(TIDDLYBASE_TITLE_PATH_TEMPLATE)?.fields.pathTemplate as PathTemplate
+export const getPathTemplate = (wiki: $tw.Wiki = globalThis.$tw.wiki) => wiki.getTiddler(TIDDLYBASE_TITLE_PATH_TEMPLATE)?.fields.pathTemplate as PathTemplate
 
-export const parseParentURL = () => parseURL(getPathTemplate(), getParentURL());
+export const getDefaultTiddlers = (wiki: $tw.Wiki = globalThis.$tw.wiki) => {
+  const filter = wiki.getTiddler(TW5_TITLE_DEFAULT_TIDDLERS)?.fields?.text;
+  if (filter) {
+    return wiki.filterTiddlers(filter);
+  }
+  return [];
+}
 
 export const createPermaURL = (
   pathVariables: PathVariables,

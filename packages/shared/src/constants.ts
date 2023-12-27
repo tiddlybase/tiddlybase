@@ -48,3 +48,4 @@ export const TW5_TITLE_HISTORY_LIST = "$:/HistoryList";
 export const TW5_TITLE_DEFAULT_TIDDLERS = "$:/DefaultTiddlers";
 export const TW5_TITLE_SIDEBAR = "$:/state/sidebar";
 export const TW5_TITLE_PREFIX_FOLDED = "$:/state/folded/";
+export const TW5_DEFAULT_START_TIDDLER = "GettingStarted"
