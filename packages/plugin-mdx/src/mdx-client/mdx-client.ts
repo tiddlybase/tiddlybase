@@ -1,17 +1,20 @@
 /// <reference types="./types" />
 // MDX and remark stuff
 import { compile as compileMDX } from '@mdx-js/mdx'
+
 import remarkGfm from 'remark-gfm' // Tables, footnotes, strikethrough, task lists, literal URLs.
 import wikiLinkPlugin from 'remark-wiki-link';
 import remarkToc from 'remark-toc';
 import * as ReactJSXRuntime from 'react/jsx-runtime';
+/*
 import remarkPresetLintConsistent from 'remark-preset-lint-consistent'
 import remarkPresetLintRecommended from 'remark-preset-lint-recommended'
 import remarkLintListItemIndent from 'remark-lint-list-item-indent'
 import remarkLintFinalNewline from 'remark-lint-final-newline'
+*/
 import { MDXErrorDetails } from './mdx-error-details';
 import type {Handler} from 'mdast-util-to-hast';
-import type {Properties} from 'hast';
+import type {Properties, Element} from 'hast';
 import normalize from 'mdurl/encode.js'
 
 export type CompilationResult = {error: MDXErrorDetails|Error} | {warnings: Array<MDXErrorDetails>, compiledFn: any};
@@ -36,27 +39,31 @@ export const getExports = async (compiledJSX: any, importFn: any, contextValues:
 }
 
 // based on: https://github.com/syntax-tree/mdast-util-to-hast/blob/main/lib/handlers/image.js
-const mdastImageHandler:Handler = (h, node, parent) => {
-  const props:Properties = {src: normalize(node.url), alt: node.alt}
+const mdastImageHandler:Handler = (state, node) => {
+  const properties:Properties = {src: normalize(node.url), alt: node.alt}
 
   if (node.title !== null && node.title !== undefined) {
-    props.title = node.title
+    properties.title = node.title
   }
-  props["data-from-md"] = "true";
+  properties["data-from-md"] = "true";
 
-  return h(node, 'img', props);
+  const result:Element = {type: 'element', tagName: 'img', properties, children: []}
+  state.patch(node, result)
+  return state.applyData(node, result)
 }
 
 export const compile = async (name: string, mdx: string, contextKeys: string[] = []):Promise<CompilationResult> => {
   try {
     // trimStart() is needed because mdx doesn't tolerate leading newlines
     const compilerOutput = await compileMDX(mdx.trimStart(), {
+      development: false,
       remarkRehypeOptions: {
         handlers: {
           image: mdastImageHandler
         }
       },
       remarkPlugins: [
+        /*
         remarkPresetLintConsistent,
         remarkPresetLintRecommended,
         // override the "consistent" config for this rule,
@@ -64,6 +71,7 @@ export const compile = async (name: string, mdx: string, contextKeys: string[] =
         // for details
         [remarkLintListItemIndent, 'space'],
         [remarkLintFinalNewline, false],
+        */
         remarkGfm,
         [wikiLinkPlugin, {
           pageResolver: (x: string) => [x],
@@ -72,16 +80,17 @@ export const compile = async (name: string, mdx: string, contextKeys: string[] =
         }],
         [remarkToc, {tight: true, ordered: true, prefix: 'toc-anchor-link-'}]
       ],
-      useDynamicImport: true,
       jsx: false,
       outputFormat: 'function-body',
       format: 'mdx',
       jsxRuntime: 'automatic',
-      jsxImportSource: 'react'
+      jsxImportSource: 'react',
+      // baseUrl is ignored anyway since we override the import function to use MDXModuleLoader
+      baseUrl: '/'
     });
     const jsSource = wrap(name, String(compilerOutput.value));
     const compiledFn = makeFunction(jsSource, contextKeys);
-    return {compiledFn, warnings: compilerOutput.messages as MDXErrorDetails[]};
+    return {compiledFn, warnings: compilerOutput.messages as any[] as MDXErrorDetails[]};
   } catch (e) {
     return {error: Object.assign({}, e as Error)};
   }
