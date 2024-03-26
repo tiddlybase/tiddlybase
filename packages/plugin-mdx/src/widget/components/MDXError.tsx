@@ -105,7 +105,7 @@ export const MDXError = (props: MDXErrorProps) => {
         <code>
           {props.mdx.substring(
             props.details.position.start.offset ?? 0,
-            props.details.position.end.offset
+            props.details.position?.end?.offset ?? props.mdx.length
           )}
         </code>
       )}

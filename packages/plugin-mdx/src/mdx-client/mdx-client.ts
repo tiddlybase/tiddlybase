@@ -6,12 +6,13 @@ import remarkGfm from 'remark-gfm' // Tables, footnotes, strikethrough, task lis
 import wikiLinkPlugin from 'remark-wiki-link';
 import remarkToc from 'remark-toc';
 import * as ReactJSXRuntime from 'react/jsx-runtime';
-/*
+
 import remarkPresetLintConsistent from 'remark-preset-lint-consistent'
 import remarkPresetLintRecommended from 'remark-preset-lint-recommended'
 import remarkLintListItemIndent from 'remark-lint-list-item-indent'
 import remarkLintFinalNewline from 'remark-lint-final-newline'
-*/
+import remarkLintTableCellPadding from 'remark-lint-table-cell-padding'
+
 import { MDXErrorDetails } from './mdx-error-details';
 import type {Handler} from 'mdast-util-to-hast';
 import type {Properties, Element} from 'hast';
@@ -63,15 +64,14 @@ export const compile = async (name: string, mdx: string, contextKeys: string[] =
         }
       },
       remarkPlugins: [
-        /*
-        remarkPresetLintConsistent,
-        remarkPresetLintRecommended,
-        // override the "consistent" config for this rule,
-        // see https://github.com/remarkjs/remark-lint/tree/main/packages/remark-lint-list-item-indent#recommendation
-        // for details
-        [remarkLintListItemIndent, 'space'],
-        [remarkLintFinalNewline, false],
-        */
+        // The casts to any are required because mdxjs3 breaks the typescript types
+        // used by the plugins. The interface remains mostly the same on the JS level
+        // for presets, however.
+        remarkPresetLintConsistent as any,
+        remarkPresetLintRecommended as any,
+        [remarkLintListItemIndent as any, 'space'],
+        [remarkLintFinalNewline as any, false],
+        [remarkLintTableCellPadding as any, false],
         remarkGfm,
         [wikiLinkPlugin, {
           pageResolver: (x: string) => [x],
@@ -90,7 +90,14 @@ export const compile = async (name: string, mdx: string, contextKeys: string[] =
     });
     const jsSource = wrap(name, String(compilerOutput.value));
     const compiledFn = makeFunction(jsSource, contextKeys);
-    return {compiledFn, warnings: compilerOutput.messages as any[] as MDXErrorDetails[]};
+    return {compiledFn, warnings: compilerOutput.messages.map((w) => {
+      return {
+        ...w,
+        position: {
+          start: (w as any)?.['place']
+        }
+      } as any as MDXErrorDetails
+    })};
   } catch (e) {
     return {error: Object.assign({}, e as Error)};
   }
