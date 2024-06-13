@@ -6,6 +6,7 @@ import { RPCCallbackManager } from "@tiddlybase/rpc/src/rpc-callback-manager";
 import { LaunchParameters } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import mustache from 'mustache'
 import { uriEncodeLaunchParameters } from "../tiddler-storage/tiddler-storage-utils";
+import { CacheAPIWrapper } from "./cache-api-wrapper";
 
 // TODO: this files prefix should be configurable in the future!
 const FILES_PREFIX = "files/"
@@ -16,6 +17,7 @@ export class FirebaseStorageFileStorage implements FileStorage {
   collectionPath: string;
   rpcCallbackManager: RPCCallbackManager;
   launchParameters: LaunchParameters;
+  cache: CacheAPIWrapper;
 
   constructor(
     launchParameters:LaunchParameters,
@@ -31,6 +33,7 @@ export class FirebaseStorageFileStorage implements FileStorage {
       ...this.launchParameters,
       collection: encodeURIComponent(collection ?? "")
     });
+    this.cache = new CacheAPIWrapper(launchParameters.instance)
   }
 
   private stripFilesPrefix(pathpart:string):string {
@@ -44,14 +47,24 @@ export class FirebaseStorageFileStorage implements FileStorage {
     let normalizedFilename = this.stripFilesPrefix(filename);
     return `${this.collectionPath}/${normalizedFilename}`;
   }
+
   async readFile(filename: string, referenceType?: FileReferenceType): Promise<FileReference> {
     try {
       const fileRef = ref(this.storage, this.getFullPath(filename));
-      const url = await getDownloadURL(fileRef)
+      // Used as a cache key, not the real endpoint URL
+      const fakeDownloadUrlRequestEndpoint = `https://${fileRef.bucket}/${fileRef.fullPath}`;
+      // check if the file download URL is cached
+      let downloadUrlResponse = await this.cache.resolve(
+        fakeDownloadUrlRequestEndpoint,
+        async () => await getDownloadURL(fileRef),
+        60 * 60 * 24 // one day
+      )
+      const url = await downloadUrlResponse.text();
       if (referenceType === 'url') {
         return { type: 'url', url }
       }
-      return { type: 'blob', blob: await (await fetch(url)).blob() };
+      const response = await this.cache.resolve(url);
+      return { type: 'blob', blob: await response.blob() };
     } catch (e: any) {
       throw normalizeFirebaseReadError(e, this.launchParameters.instance, this.collectionPath, 'firebase-storage');
     }
