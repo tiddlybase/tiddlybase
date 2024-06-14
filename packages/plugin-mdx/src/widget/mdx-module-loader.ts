@@ -10,7 +10,7 @@ import { MDXErrorDetails } from "../mdx-client/mdx-error-details";
 import { getMdxTagFn } from "./mdx-tag-function";
 import { withContextHelpers } from "./with-context-helpers";
 import { MDXTiddlybaseAPIImpl } from "./mdx-tiddlybase-api-impl";
-import { depthFirstSearch} from "@tiddlybase/shared/src/depth-first-search";
+import { depthFirstSearch } from "@tiddlybase/shared/src/depth-first-search";
 import type { MDXTiddlybaseAPI } from "./mdx-tiddlybase-api";
 
 
@@ -120,6 +120,25 @@ export class MDXModuleLoader {
     };
   }
 
+  private wrapExports(moduleName: string, moduleExports: $tw.ModuleExports) {
+    // https://stackoverflow.com/a/45322399/22709529
+    const handler = {
+      get(target: $tw.ModuleExports, property: string) {
+        if (property in target) {
+          return target[property];
+        }
+        if (property == 'then')  {
+          // not Thenable
+          return null;
+        }
+
+        throw new Error(`Export '${property}' is not defined on module ${moduleName}`);
+      }
+    };
+
+    return new Proxy(moduleExports, handler);
+  }
+
   private getRequireAsync(
     loadContext: ModuleLoaderContext,
   ): RequireAsync {
@@ -138,7 +157,7 @@ export class MDXModuleLoader {
         });
       }
       loadContext.dependencies.add(requiredModuleName);
-      return maybeExports.moduleExports;
+      return this.wrapExports(requiredModuleName, maybeExports.moduleExports);
     };
   }
 
@@ -319,7 +338,7 @@ export class MDXModuleLoader {
 
     // Save promise to compilationResults before it's value is available to
     // avoid simulatenous invocations for the same module.
-    this.compilationResults[tiddler] = {result: compilationResultPromise, changeCount: this.wikiChangeEventCounter}
+    this.compilationResults[tiddler] = { result: compilationResultPromise, changeCount: this.wikiChangeEventCounter }
     // await literal MDX compilation (if any)
     await Promise.all(loadContext.mdxLiteralCompilationResults ?? []);
     const result = await compilationResultPromise;
@@ -424,7 +443,7 @@ export class MDXModuleLoader {
     }
     // update invalidationChangeCount for dependents asynchronously
     this.lastInvalidationTask = this.getTransitiveConsumers(tiddler).then(modules => {
-      modules.forEach(dependent =>  {
+      modules.forEach(dependent => {
         this.updateInvalidationChangeCount(dependent, changeCount);
       })
       return true;
@@ -465,26 +484,26 @@ export class MDXModuleLoader {
   }
 
   // NOTE: includes the module itself in the set of dependencies
-  async getTransitiveDependencies (moduleName: string, visited: Set<string> = new Set<string>([])): Promise<ModuleSet> {
-  if (this.hasModule(moduleName)) {
-    await depthFirstSearch(
-      (moduleName: string) => this.getDependencies(moduleName),
-      moduleName,
-      visited);
+  async getTransitiveDependencies(moduleName: string, visited: Set<string> = new Set<string>([])): Promise<ModuleSet> {
+    if (this.hasModule(moduleName)) {
+      await depthFirstSearch(
+        (moduleName: string) => this.getDependencies(moduleName),
+        moduleName,
+        visited);
+    }
+    return visited;
   }
-  return visited;
-}
 
-// NOTE: includes the module itself in the set of consumers
-  async getTransitiveConsumers (moduleName: string, visited: Set<string> = new Set<string>([])): Promise<ModuleSet> {
-  if (this.hasModule(moduleName)) {
-    await depthFirstSearch(
-      (moduleName: string) => this.getConsumers(moduleName),
-      moduleName,
-      visited);
+  // NOTE: includes the module itself in the set of consumers
+  async getTransitiveConsumers(moduleName: string, visited: Set<string> = new Set<string>([])): Promise<ModuleSet> {
+    if (this.hasModule(moduleName)) {
+      await depthFirstSearch(
+        (moduleName: string) => this.getConsumers(moduleName),
+        moduleName,
+        visited);
+    }
+    return visited;
   }
-  return visited;
-}
 
 
 } // end class MDXModuleLoader
