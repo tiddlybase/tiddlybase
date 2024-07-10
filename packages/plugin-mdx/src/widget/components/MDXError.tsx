@@ -3,40 +3,15 @@
 import type {
   MDXErrorDetails,
   Position,
+  Range
 } from "../../mdx-client/mdx-error-details";
 
-const mandatoryMDXErrorDetailsFields = [
-  "name",
-  "message",
-  "position",
-  "reason",
-  "ruleId",
-  "source",
-];
-const POSITION_RE = new RegExp("\\((\\d+):(\\d+)\\-(\\d+):(\\d+)\\)$");
-
-export const isMDXErrorDetails = (o: any): o is MDXErrorDetails => {
-  return mandatoryMDXErrorDetailsFields.every((p) => p in o);
-};
-
-const getPosition = (
-  reason: string
-): MDXErrorDetails["position"] | undefined => {
-  const match = reason.match(POSITION_RE);
-  if (match) {
-    return {
-      start: {
-        line: parseInt(match[1], 10),
-        column: parseInt(match[2], 10),
-      },
-      end: {
-        line: parseInt(match[3], 10),
-        column: parseInt(match[4], 10),
-      },
-    };
-  }
-  return undefined;
-};
+export interface MDXErrorProps {
+  fatal?: boolean,
+  mdx?: string;
+  title?: string;
+  details: MDXErrorDetails;
+}
 
 const positionToOffset = (fullText: string, pos: Position): number => {
   const lines = fullText.split("\n");
@@ -49,39 +24,47 @@ const positionToOffset = (fullText: string, pos: Position): number => {
   return offset;
 };
 
-export interface MDXErrorProps {
-  fatal?: boolean,
-  mdx?: string;
-  title?: string;
-  details: MDXErrorDetails;
+export const extractErrorCause = (range: Range, fullMDXSource:string): string => {
+  const startOffset = positionToOffset(fullMDXSource, range.start)
+  const endOffset = range.end ? positionToOffset(fullMDXSource, range.end) : fullMDXSource.length
+  return fullMDXSource.substring(
+    startOffset,
+    endOffset
+  ).trim();
 }
 
-export const extractPosition = (
-  mdx: string,
-  reason: string
-): MDXErrorDetails["position"] | undefined => {
-  const position = getPosition(reason);
-  if (position) {
-    if (typeof position.start.offset !== "number") {
-      position.start.offset = positionToOffset(mdx, position.start);
-    }
-    if (typeof position.end.offset !== "number") {
-      position.end.offset = positionToOffset(mdx, position.end);
-    }
+export const extractErrorRange = (
+  errorDetails: MDXErrorDetails
+): Range => {
+  /**
+   * Extract a (start, end?) range from the errorDetails object.
+   */
+  // Simple case, we have start and maybe end in errorDetails.place
+  if (errorDetails.place && ('start' in errorDetails.place)) {
+    return {
+      start: errorDetails.place.start,
+      // end might be undefined, that's OK
+      end: errorDetails.place.end,
+    };
   }
-  return position;
+  // 'place' may also be a Position, in this case that will be the start of the
+  // Range.
+  if (errorDetails.place && ('line' in errorDetails.place)) {
+    return {start: errorDetails.place};
+  }
+
+  // We don't know where the error is, so the range is the whole mdx text
+  return {start: {column: 0, line: 0, offset: 0}}
 };
 
+export const parseError = (err: MDXErrorProps) => {
+  const range = extractErrorRange(err.details);
+  const cause = err.mdx ? extractErrorCause(range, err.mdx) : null;
+  return {range, cause}
+}
+
 export const MDXError = (props: MDXErrorProps) => {
-  // compile errors don't get the position recorded in the `position` field,
-  // but it's included in the `reason` field.
-  if (props.mdx && props.details.position.start.line === null) {
-    const newPosition = extractPosition(props.mdx, props.details.reason);
-    if (newPosition) {
-      props.details.position = newPosition;
-    }
-  }
-  console.dir(props);
+  const {range, cause} = parseError(props);
   const title = props.title ?? props.details.ruleId
   return (
     <div style={{
@@ -95,18 +78,13 @@ export const MDXError = (props: MDXErrorProps) => {
     }}>
       {title && (<h3>{title }</h3>)}
       <div>
-      {props.details.position.start.line && (
-        <>On line {props.details.position.start.line} column {props.details.position.start.column || 0}: </>
-      )}
+      On line {range.start.line} column {range.start.column}:
       {props.details.message}{" "}
       {props.details.url && (<a href={props.details.url} rel="noopener noreferrer" target="_blank">See explanation.</a>)}
       </div>
-      {props.mdx && (
+      {cause && (
         <code>
-          {props.mdx.substring(
-            props.details.position.start.offset ?? 0,
-            props.details.position?.end?.offset ?? props.mdx.length
-          )}
+          {cause}
         </code>
       )}
     </div>

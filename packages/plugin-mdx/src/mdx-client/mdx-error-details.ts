@@ -4,16 +4,26 @@ export interface Position {
   offset?: number;
 }
 
+export interface Range {
+  start: Position;
+  end?: Position;
+}
+
+export interface Cause {
+  pos: number,
+  loc: Position,
+  raisedAt: number
+}
+
 export interface MDXErrorDetails {
   line?: number;
   column?: number;
   fatal?: boolean;
   name: string;
   message: string;
-  position: {
-    start: Position;
-    end: Position;
-  };
+  // place used to be called 'position'
+  place?: Range | Position;
+  cause?: Cause;
   reason: string;
   ruleId: string;
   source: string;
