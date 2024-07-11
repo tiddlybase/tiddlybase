@@ -1,8 +1,10 @@
-import { useReducer, useEffect, useMemo } from "react";
+import { useReducer, useEffect, useMemo, useContext } from "react";
 import type { } from "@tiddlybase/tw5-types/src/index"
 import { merge } from "@tiddlybase/plugin-tiddlybase-utils/src/lodash";
 import type { TiddlerArguments } from "@tiddlybase/shared/src/wiki-view-state";
 import { TIDDLER_ARGUMENTS_FIELDNAME, getTiddlerArgumentsTitle } from "@tiddlybase/shared/src/wiki-view-state";
+import { TW5ReactContext } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
+import { objFilter } from '@tiddlybase/shared/src/obj-utils';
 
 export const DEFAULT_IGNORE_TEST = (title: string) => title.startsWith('Draft of ')
 
@@ -119,13 +121,25 @@ export const useTiddlerReducer = <A extends Partial<$tw.TiddlerFields>>(title: s
 const tiddlerArgumentsReducer: TiddlerReducerFn<TiddlerArguments> = (
   prevState: $tw.TiddlerFields,
   newTiddlerArguments: TiddlerArguments): $tw.TiddlerFields => ({
-    ...prevState,
-    [TIDDLER_ARGUMENTS_FIELDNAME]: newTiddlerArguments
-  });
+      ...prevState,
+      [TIDDLER_ARGUMENTS_FIELDNAME]: objFilter(
+            (_k, v) => v !== undefined,
+            {
+              ...(prevState?.[TIDDLER_ARGUMENTS_FIELDNAME] ?? {}),
+              ...newTiddlerArguments
+            }
+      )
+    });
 
-export const useTiddlerArguments = (title: string): [TiddlerArguments | undefined, (action: TiddlerArguments) => void] => {
+export const useCurrentTiddlerTitle = (): string => {
+  const context = useContext(TW5ReactContext);
+  return context!.parentWidget?.getVariable("currentTiddler");
+}
+
+export const useTiddlerArguments = (title?: string): [TiddlerArguments | undefined, (action: TiddlerArguments) => void] => {
+  const currentTiddlerTitle = useCurrentTiddlerTitle();
   const [argumentsTiddler, updateFn] = useTiddlerReducer(
-    getTiddlerArgumentsTitle(title),
+    getTiddlerArgumentsTitle(title ?? currentTiddlerTitle),
     tiddlerArgumentsReducer);
   return [argumentsTiddler?.[TIDDLER_ARGUMENTS_FIELDNAME], updateFn]
 }

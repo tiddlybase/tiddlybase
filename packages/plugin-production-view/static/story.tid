@@ -14,7 +14,7 @@ tags: $:/tags/PageTemplate
 
 </section>
 
-<$list filter="[list[$:/state/tiddlybase/local/active-tiddler!!text]]" history="$:/HistoryList" template="$:/plugins/tiddlybase/production-view/ViewTemplate" storyview={{$:/view}} emptyMessage={{$:/config/EmptyStoryMessage}}/>
+<$list filter="[[$:/state/tiddlybase/local/active-tiddler]get[text]]" history="$:/HistoryList" template="$:/plugins/tiddlybase/production-view/ViewTemplate" storyview={{$:/view}} emptyMessage={{$:/config/EmptyStoryMessage}}/>
 
 <section class="story-frontdrop">
 
