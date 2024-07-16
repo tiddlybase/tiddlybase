@@ -1,0 +1,5 @@
+title: $:/config/EmptyStoryMessage
+type: text/vnd.tiddlywiki
+
+
+404: The requested content cannot be found.
