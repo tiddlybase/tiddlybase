@@ -12,7 +12,7 @@ import { withContextHelpers } from "./with-context-helpers";
 import { MDXTiddlybaseAPIImpl } from "./mdx-tiddlybase-api-impl";
 import { depthFirstSearch } from "@tiddlybase/shared/src/depth-first-search";
 import type { MDXTiddlybaseAPI } from "./mdx-tiddlybase-api";
-
+import { absPath } from "@tiddlybase/plugin-tiddlybase-utils/src/path-utils";
 
 export type ModuleSet = Set<string>;
 
@@ -144,9 +144,11 @@ export class MDXModuleLoader {
   ): RequireAsync {
     return async (requiredModuleName: string) => {
 
+      const absTiddlerName = requiredModuleName.startsWith('.') ? absPath(`${loadContext.mdxContext.definingTiddlerTitle}/../${requiredModuleName}`) : requiredModuleName;
+
       const maybeExports = await this.getModuleExports({
         loadContext,
-        tiddler: requiredModuleName,
+        tiddler: absTiddlerName,
       });
 
       if ("error" in maybeExports) {
@@ -156,8 +158,8 @@ export class MDXModuleLoader {
           loadContext: maybeExports.loadContext
         });
       }
-      loadContext.dependencies.add(requiredModuleName);
-      return this.wrapExports(requiredModuleName, maybeExports.moduleExports);
+      loadContext.dependencies.add(absTiddlerName);
+      return this.wrapExports(absTiddlerName, maybeExports.moduleExports);
     };
   }
 

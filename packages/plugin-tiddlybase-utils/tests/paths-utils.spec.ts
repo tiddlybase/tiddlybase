@@ -1,4 +1,4 @@
-import {joinPaths} from '../src/join-paths'
+import {absPath, joinPaths} from '../src/path-utils'
 
 describe('joinPaths', function () {
 
@@ -24,5 +24,21 @@ describe('joinPaths', function () {
     expect(joinPaths('/')).toBe('/');
     expect(joinPaths('/', '/')).toBe('/');
   });
+});
+
+describe('absPath', function () {
+
+  it('basic cases', async () => {
+    expect(absPath('')).toBe('');
+    expect(absPath('/')).toBe('/');
+    expect(absPath('/.')).toBe('/');
+    expect(absPath('./')).toBe('');
+    expect(absPath('a')).toBe('a');
+    expect(absPath('/a')).toBe('a');
+    expect(absPath('./a')).toBe('a');
+    expect(absPath('a/./b')).toBe('a/b');
+    expect(absPath('a/../b')).toBe('b');
+  });
+
 });
 

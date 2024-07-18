@@ -1,6 +1,6 @@
 // use full package path so the import is externalized
 import type {} from '@tiddlybase/tw5-types/src/index'
-import { joinPaths } from './join-paths'
+import { joinPaths } from './path-utils'
 
 // TODO: make these configurable
 const FILES_URL_PREFIX = "files/";

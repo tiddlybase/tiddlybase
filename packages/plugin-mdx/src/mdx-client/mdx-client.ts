@@ -21,7 +21,7 @@ import normalize from 'mdurl/encode.js'
 export type CompilationResult = {error: MDXErrorDetails|Error} | {warnings: Array<MDXErrorDetails>, compiledFn: any};
 
 // replace async import expression with call to sync importFn()
-const fixImports = (body: string) => body.replace(/= await import\(/mg, "= await importFn(");
+const fixImports = (body: string) => body.replace(/= await import\(_resolveDynamicMdxSpecifier\(/mg, "= await importFn((");
 
 // based on: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncFunction
 const AsyncFunction = (async function () {}).constructor;
