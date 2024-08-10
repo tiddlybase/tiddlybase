@@ -5,3 +5,4 @@ title: ExportFilter
 type: text/vnd.tiddlywiki
 
 [[$:/plugins/tiddlybase/production-view]]
+[[$:/config/SyncThrottleInterval]]

@@ -13,6 +13,10 @@ export interface AuthAPI {
   signOut: () => Promise<void>;
 }
 
+export interface CompletionAPI {
+  generateCompletion: (prompt:string) => Promise<string>;
+}
+
 export interface BackendFunctions {
   // exposed firebase functions
   addNumbers: AddNumbers;
@@ -30,4 +34,4 @@ export interface TopLevelUIAPI {
   ) => Promise<string>;
 }
 
-export interface TopLevelAPIForSandboxedWiki extends ParentAPIBase<ChildInitProps>, TiddlerStorage, FileStorage, AuthAPI, BackendFunctions, TopLevelUIAPI {}
+export interface TopLevelAPIForSandboxedWiki extends ParentAPIBase<ChildInitProps>, TiddlerStorage, FileStorage, AuthAPI, BackendFunctions, CompletionAPI, TopLevelUIAPI {}

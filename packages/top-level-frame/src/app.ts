@@ -28,6 +28,7 @@ import { TIDDLYBASE_TITLE_LAUNCH_PARAMETERS, TIDDLYBASE_TITLE_PARENT_LOCATION, T
 import { OptionallyEnabledChangeListenerWrapper, makeChangeListener, makeFilteringChangeListener } from './change-listener';
 import { createURL } from 'packages/shared/src/path-template-utils';
 
+import { getVertexAI, getGenerativeModel, GenerativeModel } from "firebase/vertexai-preview";
 
 const initRPC = (childIframe: Window): RPC => {
   const rpc = makeRPC();
@@ -51,6 +52,7 @@ export class TopLevelApp {
   authProvider: AuthProvider;
   firebaseFunctions?: Functions
   fileStorage: ReadOnlyFileStorage | FileStorage | undefined;
+  model?: GenerativeModel
 
   constructor(config: TiddlybaseClientConfig) {
     const { tiddlybaseConfig, defaultLaunchParameters } = mergeConfigDefaults(config, window.location.hostname);
@@ -159,6 +161,26 @@ export class TopLevelApp {
     }
   }
 
+  exposeGemini(rpc: RPC, lazyFirebaseApp: Lazy<FirebaseApp>) {
+    //  based on: https://firebase.google.com/docs/vertex-ai/get-started?platform=web&hl=en&authuser=0#add-sdk
+    rpc.rpc.register('generateCompletion', async (prompt:string) : Promise<string> => {
+      if (!this.model) {
+        const vertexAI = getVertexAI(lazyFirebaseApp());
+
+        // Initialize the generative model with a model that supports your use case
+        // Gemini 1.5 models are versatile and can be used with all API capabilities
+        this.model = getGenerativeModel(vertexAI, { model: "gemini-1.5-flash" });
+      }
+      try {
+        const result = await this.model!.generateContent(prompt);
+        const response = result.response;
+        return response.text();
+      } catch (e) {
+        throw Error((e as Error).message);
+      }
+    });
+  }
+
   async createParentAPI(rpc: RPC, user?: TiddlyBaseUser) {
 
     const loadError = async (message: string) => {
@@ -190,6 +212,7 @@ export class TopLevelApp {
         this.tiddlerStorage = writeStore;
         this.fileStorage = makeFileStorage(this.launchParameters, rpc, this.lazyFirebaseApp, this.launchConfig.files);
         this.exposeStorageAPIs(rpc);
+        this.exposeGemini(rpc, this.lazyFirebaseApp)
         return {
           tiddlers: [
             ...Object.values(tiddlers),
