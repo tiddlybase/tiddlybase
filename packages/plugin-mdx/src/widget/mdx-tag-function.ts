@@ -15,7 +15,7 @@ export const constructMDXContent = (stringParts: string[]): string => stringPart
   (content, part, partIx) => {
     const parts: string[] = [content, part];
     if (partIx < stringParts.length - 1) {
-      parts.push(`props.literalBoundValues[${partIx}]`);
+      parts.push(`{props.literalBoundValues[${partIx}]}`);
     }
     return parts.join('');
   }, "").trim();

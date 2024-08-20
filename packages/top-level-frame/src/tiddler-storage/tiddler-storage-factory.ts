@@ -125,8 +125,12 @@ export const readTiddlerSources = async (
   const mergedSources: MergedSources = { tiddlers: {}, provenance: {} };
   for (let sourceIx = 0; sourceIx < sourcePromisesWithSpecs.length; sourceIx++) {
     for (let [title, tiddler] of Object.entries(collections[sourceIx])) {
-      mergedSources.tiddlers[title] = tiddler;
-      mergedSources.provenance[title] = sourcesWithSpecs[sourceIx];
+      if (!(title in mergedSources.tiddlers)) {
+        // don't allow tiddlers available in earlier collections to be overridden
+        // by later collections.
+        mergedSources.tiddlers[title] = tiddler;
+        mergedSources.provenance[title] = sourcesWithSpecs[sourceIx];
+      }
     }
   }
 
