@@ -1,6 +1,7 @@
 import yargs from 'yargs';
 import { getuser, listusers, adduser, setCollectionRole, getCollectionRoles, updateUserProfile } from './users';
 import { cmdGenerateFirebaseJson, cmdGenerateStorageRules, cmdGenerateFirestoreRules, cmdGenerateOuterHTML, cmdGenerateTiddlybaseConfigJson } from './generate';
+import { createInstance } from './instances';
 import { buildwiki } from './wikibuilder';
 import {runTWCommand} from './run-tw-command'
 
@@ -16,6 +17,7 @@ const main = async (argv:string[]) => {
   .nargs('k', 1)
   .describe('k', 'path to service account key JSON')
   .default('k', 'etc/service-account-key.json')
+  .command(createInstance)
   .command(setCollectionRole)
   .command(getCollectionRoles)
   .command(getuser)

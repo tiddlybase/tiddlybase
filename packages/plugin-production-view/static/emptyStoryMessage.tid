@@ -1,5 +1,4 @@
 title: $:/config/EmptyStoryMessage
 type: text/vnd.tiddlywiki
 
-
-404: The requested content cannot be found.
+404: Tiddler not found: <$text text={{$:/state/tiddlybase/local/active-tiddler!!text}} /><br /><$link to="public/Main">Back to Home</$link>

@@ -45,12 +45,18 @@ export class FirestoreTiddlerStorage extends TiddlerStorageBase {
   launchParameters: LaunchParameters;
   clientId: number;
 
-  private async createCollectionSentinel(): Promise<DocumentReference<DocumentData>> {
+  private async createCollectionSentinel(creator: string): Promise<DocumentReference<DocumentData>> {
     const docRef = doc(this.firestore, this.collectionPath, SENTINEL_DOC_ID);
     // No transaction, so possible but unlikely race condition, but that doesn't really matter too much,
     // because the worst case scenario is that multiple writers write the same empty sentinel doc
     if (!(await getDoc(docRef)).exists()) {
-      await setDoc(docRef, {});
+      await setDoc(
+        docRef,
+        // setting creator tiddler field required by firestore rules
+        {
+          tiddler: {creator}
+        }
+      );
     }
     return docRef;
   };
@@ -93,7 +99,11 @@ export class FirestoreTiddlerStorage extends TiddlerStorageBase {
 
   async startListening() {
     try {
-      await this.createCollectionSentinel();
+      await this.createCollectionSentinel(this.launchParameters.userId!);
+    } catch (e: any) {
+      throw normalizeFirebaseReadError(e, this.launchParameters.instance, this.collectionPath, 'firestore', 'createCollectionSentinel');
+    }
+    try {
       this.unsubscribe = onSnapshot(collection(this.firestore, this.collectionPath), (snapshot) => {
         // from: https://firebase.google.com/docs/firestore/query-data/listen#view_changes_between_snapshots
         snapshot.docChanges().forEach((change) => {
@@ -131,7 +141,7 @@ export class FirestoreTiddlerStorage extends TiddlerStorageBase {
         });
       });
     } catch (e: any) {
-      throw normalizeFirebaseReadError(e, this.launchParameters.instance, this.collectionPath, 'firestore');
+      throw normalizeFirebaseReadError(e, this.launchParameters.instance, this.collectionPath, 'firestore', 'onSnapshot');
     }
   }
 

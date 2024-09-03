@@ -1,6 +1,6 @@
 import { InstanceSpec, PERMISSIONED_DATA_STORAGE, PermissionedStorage } from '@tiddlybase/shared/src/instance-spec-schema';
 import { objFilter } from '@tiddlybase/shared/src/obj-utils';
-import { makeInstanceUserPermissionsUpdate, instanceSpecPath, makeInstanceUnauthenticatedPermissionsUpdate } from '@tiddlybase/shared/src/permissions';
+import { makeInstanceUserPermissionsUpdate, instanceConfigurationPath, makeInstanceUnauthenticatedPermissionsUpdate } from '@tiddlybase/shared/src/permissions';
 import { TiddlyBaseUser, USER_ROLES } from '@tiddlybase/shared/src/users';
 import * as crypto from "crypto";
 import * as admin from 'firebase-admin';
@@ -23,7 +23,7 @@ const doSetUserCollectionRole = async (
   resourceType: PermissionedStorage,
   collectionName: string,
   roleNumber: number): Promise<InstanceSpec> => {
-  const docPath = instanceSpecPath(launchParameters.instance);
+  const docPath = instanceConfigurationPath(launchParameters.instance);
   const firestore = app.firestore();
   const instanceSpec = (await firestore.doc(docPath).get()).data()?.tiddler ?? {};
   merge(instanceSpec, makeInstanceUserPermissionsUpdate(resourceType, launchParameters.userId!, encodeURIComponent(collectionName), roleNumber));
@@ -44,7 +44,7 @@ const doSetUnauthenticatedCollectionRole = async (
   instance: string,
   collectionName: string,
   roleNumber: number): Promise<InstanceSpec> => {
-  const docPath = instanceSpecPath(instance);
+  const docPath = instanceConfigurationPath(instance);
   const firestore = app.firestore();
   const instanceSpec = (await firestore.doc(docPath).get()).data()?.tiddler ?? {};
   merge(instanceSpec, makeInstanceUnauthenticatedPermissionsUpdate(resourceType, encodeURIComponent(collectionName), roleNumber));
@@ -91,7 +91,7 @@ export const getCollectionRoles: CommandModule = {
         type: 'string',
       }),
   handler: withCLIContext(async (cliContext: CLIContext) => {
-    const docPath = instanceSpecPath(cliContext.args.instance as string);
+    const docPath = instanceConfigurationPath(cliContext.args.instance as string);
     const firestore = cliContext.app.firestore();
     const instanceSpec = (await firestore.doc(docPath).get()).data()?.tiddler ?? {};
     console.log(JSON.stringify(instanceSpec, null, 4));
