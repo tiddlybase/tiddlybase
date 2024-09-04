@@ -14,13 +14,14 @@ const SEARCH_PARAMETER_SIGN_IN_FLOW = 'auth:signInFlow';
 export const writeUserProfile = async (launchParameters: LaunchParameters, lazyFirebaseApp:Lazy<FirebaseApp>, user:TiddlyBaseUser) => {
   const firestore = getFirestore(lazyFirebaseApp());
     return await (new FirestoreTiddlerStorage(
+      0,
+      firestore,
       undefined,
       {
         ...launchParameters,
         instance: ADMIN_INSTANCE_NAME,
         userId: user.userId
       },
-      firestore,
       "users",
       undefined,
       {

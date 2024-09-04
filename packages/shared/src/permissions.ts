@@ -30,7 +30,6 @@ export const makeInstanceUnauthenticatedPermissionsUpdate = (
   });
 
 export const makeInstanceConfiguration = (
-  instance: string,
   userId: UserId,
 ): InstanceConfiguration => ({
   roles: {
@@ -143,5 +142,6 @@ export const makeInstanceConfiguration = (
     "user-roles": {},
     "authenticated-role": "authenticated-visitor",
     "unauthenticated-role": "unauthenticated-visitor"
-  }
+  },
+  "users-with-access": [userId]
 });

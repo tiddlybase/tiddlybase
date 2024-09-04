@@ -24,7 +24,7 @@ import { replaceChildrenWithText, toggleVisibleDOMSection } from "./dom-utils";
 import { makeFileStorage } from "./file-storage/file-storage-factory";
 import { getNormalizedLaunchConfig } from './launch-config';
 import { readTiddlerSources } from "./tiddler-storage/tiddler-storage-factory";
-import { TIDDLYBASE_TITLE_LAUNCH_PARAMETERS, TIDDLYBASE_TITLE_PARENT_LOCATION, TIDDLYBASE_TITLE_PATH_TEMPLATE, TIDDLYBASE_TITLE_USER_PROFILE } from "@tiddlybase/shared/src/constants";
+import { TIDDLYBASE_TITLE_LAUNCH_PARAMETERS, TIDDLYBASE_TITLE_PARENT_LOCATION, TIDDLYBASE_TITLE_PATH_TEMPLATE, TIDDLYBASE_TITLE_TIDDLER_PROVENANCE, TIDDLYBASE_TITLE_TIDDLER_SOURCES, TIDDLYBASE_TITLE_USER_PROFILE } from "@tiddlybase/shared/src/constants";
 import { OptionallyEnabledChangeListenerWrapper, makeChangeListener, makeFilteringChangeListener } from './change-listener';
 import { createURL } from 'packages/shared/src/path-template-utils';
 
@@ -203,7 +203,7 @@ export class TopLevelApp {
     // listen to the child iframe's RPC request as soon as possible.
     rpc.toplevelAPIDefiner('childIframeReady', async () => {
       try {
-        const { tiddlers, writeStore } = await readTiddlerSources(
+        const { tiddlers, writeStore, provenance, sourcesWithSpecs } = await readTiddlerSources(
           this.launchParameters,
           this.launchConfig,
           this.lazyFirebaseApp,
@@ -216,6 +216,14 @@ export class TopLevelApp {
         return {
           tiddlers: [
             ...Object.values(tiddlers),
+            {
+              "tiddler-sources": sourcesWithSpecs.filter(x => x).map(s => ({sourceIndex: s!.sourceIndex, spec: s!.spec})),
+              title: TIDDLYBASE_TITLE_TIDDLER_SOURCES,
+            },
+            { // TODO: update provenance value when it's contents changes!
+              provenance,
+              title: TIDDLYBASE_TITLE_TIDDLER_PROVENANCE,
+            },
             {
               ...user,
               title: TIDDLYBASE_TITLE_USER_PROFILE,

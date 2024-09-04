@@ -38,6 +38,8 @@ export const DEFAULT_LAUNCH_PARAMETER_DOMAIN = "*";
 
 export const TIDDLYBASE_LOCAL_STATE_PREFIX = "$:/state/tiddlybase/local"
 export const TIDDLYBASE_INIT_SINGLETONS_TITLE = "$:/plugins/tiddlybase/init/singletons";
+export const TIDDLYBASE_TITLE_TIDDLER_SOURCES = `${TIDDLYBASE_LOCAL_STATE_PREFIX}/tiddler-sources`;
+export const TIDDLYBASE_TITLE_TIDDLER_PROVENANCE = `${TIDDLYBASE_LOCAL_STATE_PREFIX}/tiddler-provenance`;
 export const TIDDLYBASE_TITLE_USER_PROFILE = `${TIDDLYBASE_LOCAL_STATE_PREFIX}/user`
 export const TIDDLYBASE_TITLE_PARENT_LOCATION = `${TIDDLYBASE_LOCAL_STATE_PREFIX}/parent-location`
 export const TIDDLYBASE_TITLE_LAUNCH_PARAMETERS = `${TIDDLYBASE_LOCAL_STATE_PREFIX}/launch-parameters`

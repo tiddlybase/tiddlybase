@@ -16,7 +16,7 @@ const maybeTrimPrefix = (title: string, options: FirestoreTiddlerStorageOptions 
   return title;
 }
 
-const convertTimestamps = (tiddler: $tw.TiddlerFields): $tw.TiddlerFields => {
+export const convertTimestamps = (tiddler: $tw.TiddlerFields): $tw.TiddlerFields => {
   // TODO: this is a hack, we should walk the entire object to find any date types in need of conversion
   if (tiddler.created instanceof Timestamp) {
     tiddler.created = (tiddler.created as Timestamp).toDate();
@@ -76,9 +76,10 @@ export class FirestoreTiddlerStorage extends TiddlerStorageBase {
   }
 
   constructor(
+    clientId: number,
+    firestore: Firestore,
     writeCondition: TiddlerStorageWriteCondition|undefined,
     launchParameters: LaunchParameters,
-    firestore: Firestore,
     collection?: string,
     pathTemplate?: string,
     options?: FirestoreTiddlerStorageOptions,
@@ -94,7 +95,7 @@ export class FirestoreTiddlerStorage extends TiddlerStorageBase {
     this.options = options;
     this.changeListener = changeListener;
     this.initialReadState = this.getInitialReadState();
-    this.clientId = Math.ceil(Math.random() * 1000000)
+    this.clientId = clientId;
   }
 
   async startListening() {

@@ -1,4 +1,4 @@
-import type {} from "@tiddlybase/tw5-types/src/index";
+import type { } from "@tiddlybase/tw5-types/src/index";
 import type { TiddlyBaseUser } from "./users";
 import type { Expression } from "./expressions";
 import { PathTemplate } from "./path-template";
@@ -32,22 +32,49 @@ export type FirestoreTiddlerStorageOptions = Partial<{
   stripDocIDPrefix: string;
 }>;
 
+export type FirestoreWhereFilterOp =
+    | '<'
+    | '<='
+    | '=='
+    | '!='
+    | '>='
+    | '>'
+    | 'array-contains'
+    | 'in'
+    | 'not-in'
+    | 'array-contains-any';
+
+export type FirestoreWhereClause = {
+  path: string | string[],
+  operator: FirestoreWhereFilterOp,
+  value: any
+}
+
+export type FireStoreQuery = {
+  from: {"collection": string} | {"collectionGroup": string},
+  where: FirestoreWhereClause | FirestoreWhereClause[]
+}
+
 type TiddlerStorageTypeSpec =
   | { type: "http"; url: string }
   | ({
-      type: "firebase-storage";
-      filename: string;
-    } & TiddlerCollectionPathSpec)
+    type: "firebase-storage";
+    filename: string;
+  } & TiddlerCollectionPathSpec)
   | { type: "tiddlyweb" }
   | ({
-      type: "firestore";
-      options?: FirestoreTiddlerStorageOptions;
-    } & TiddlerCollectionPathSpec)
+    type: "firestore";
+    options?: FirestoreTiddlerStorageOptions;
+  } & TiddlerCollectionPathSpec)
   | ({
-      type: "browser-storage";
-      collection: string;
-      useLocalStorage?: boolean;
-    } & TiddlerCollectionPathSpec)
+    type: "firestore-query";
+    query: FireStoreQuery
+  })
+  | ({
+    type: "browser-storage";
+    collection: string;
+    useLocalStorage?: boolean;
+  } & TiddlerCollectionPathSpec)
   | {
     type: "literal";
     tiddlers: $tw.TiddlerFields[]
@@ -67,14 +94,14 @@ export type FileStorageSpec =
 
 export type AuthProviderSpec =
   | {
-      type: "firebase";
-      writeToFirestore?: boolean;
-      // this would actually be the type
-      // import type * as firebaseui from 'firebaseui';
-      // firebaseui.auth.Config
-      // but that seems like an unnecessary dependency here
-      firebaseui?: any;
-    }
+    type: "firebase";
+    writeToFirestore?: boolean;
+    // this would actually be the type
+    // import type * as firebaseui from 'firebaseui';
+    // firebaseui.auth.Config
+    // but that seems like an unnecessary dependency here
+    firebaseui?: any;
+  }
   | { type: "trivial"; user?: TiddlyBaseUser };
 
 export type FunctionsEndpoint =

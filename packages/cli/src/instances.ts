@@ -4,7 +4,7 @@ import * as admin from 'firebase-admin';
 import { Argv, CommandModule } from 'yargs';
 import { CLIContext, withCLIContext } from './cli-context';
 import { getUser } from './users'
-import { writeFirestoreDocument } from './firestore-utils';
+import { writeFirestoreDocument } from './firestore';
 
 // doSetRole(cliContext.app, user.uid, config.instanceName, cliContext.args.collection, roleNumber);
 const doUpsertInstanceConfiguration = async (
@@ -13,7 +13,7 @@ const doUpsertInstanceConfiguration = async (
   userId: string
 ): Promise<InstanceConfiguration> => {
   const docPath = instanceConfigurationPath(instance);
-  const instanceConfiguration = makeInstanceConfiguration(instance, userId)
+  const instanceConfiguration = makeInstanceConfiguration(userId)
   await writeFirestoreDocument(
     app,
     userId,

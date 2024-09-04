@@ -1,5 +1,5 @@
 import { TIDDLYBASE_LOCAL_STATE_PREFIX } from "@tiddlybase/shared/src/constants";
-import { TiddlerStorageChangeListener } from "@tiddlybase/shared/src/tiddler-storage";
+import { TiddlerStorageChangeListener, TiddlerProvenance } from "@tiddlybase/shared/src/tiddler-storage";
 import { SandboxedWikiAPIForTopLevel } from "@tiddlybase/rpc/src/sandboxed-wiki-api";
 import { APIClient } from "@tiddlybase/rpc/src/types";
 
@@ -13,6 +13,35 @@ export class ProxyToSandboxedIframeChangeListener implements TiddlerStorageChang
 
   onDeleteTiddler(title: string): void {
     this.sandboxedAPIClient('onDeleteTiddler', [title]);
+  }
+}
+
+export class ProvenanceUpdatingChangeListenerWrapper implements TiddlerStorageChangeListener {
+  constructor(
+    private wrappedListener: TiddlerStorageChangeListener,
+    private sourceIndex: number,
+    private tiddlerProvenance: TiddlerProvenance
+  ) { }
+
+  onSetTiddler(tiddler: $tw.TiddlerFields): void {
+    if (!(tiddler.title in this.tiddlerProvenance)
+      || this.tiddlerProvenance[tiddler.title] == this.sourceIndex
+    ) {
+      this.tiddlerProvenance[tiddler.title] = this.sourceIndex;
+      this.wrappedListener.onSetTiddler(tiddler);
+    } else {
+      console.log(`Ignoring update to ${tiddler.title} from source ${this.sourceIndex} since provenance is from ${this.tiddlerProvenance[tiddler.title]}`);
+    }
+
+  }
+  onDeleteTiddler(title: string): void {
+    if (this.tiddlerProvenance?.[title] === this.sourceIndex) {
+      delete this.tiddlerProvenance[title];
+      this.wrappedListener.onDeleteTiddler(title);
+    } else {
+      console.log(`Ignoring deletion of ${title} from source ${this.sourceIndex} since provenance is from ${this.tiddlerProvenance[title]}`)
+    }
+
   }
 }
 
@@ -36,7 +65,7 @@ export class OptionallyEnabledChangeListenerWrapper implements TiddlerStorageCha
     this.wrappedListener.onDeleteTiddler(title);
   }
 
-  enable(enabledValue:boolean) {
+  enable(enabledValue: boolean) {
     this._enabled = enabledValue;
   }
 }
@@ -61,24 +90,24 @@ export class FilteringChangeListenerWrapper implements TiddlerStorageChangeListe
 }
 
 export const makeFilteringChangeListener = (changeListener: TiddlerStorageChangeListener) => new FilteringChangeListenerWrapper(
-    changeListener,
-    tiddler => {
-      if (tiddler.title.startsWith(TIDDLYBASE_LOCAL_STATE_PREFIX)) {
-        console.log(`Ignoring set tiddler to tiddler ${tiddler.title} due to TIDDLYBASE_LOCAL_STATE_PREFIX title prefix`, tiddler)
-        return false;
-      }
-      return true;
-    },
-    title => {
-      if (title.startsWith(TIDDLYBASE_LOCAL_STATE_PREFIX)) {
-        console.log(`Ignoring delete tiddler ${title} due to TIDDLYBASE_LOCAL_STATE_PREFIX title prefix`)
-        return false;
-      }
-      return true;
+  changeListener,
+  tiddler => {
+    if (tiddler.title.startsWith(TIDDLYBASE_LOCAL_STATE_PREFIX)) {
+      console.log(`Ignoring set tiddler to tiddler ${tiddler.title} due to TIDDLYBASE_LOCAL_STATE_PREFIX title prefix`, tiddler)
+      return false;
     }
-  );
+    return true;
+  },
+  title => {
+    if (title.startsWith(TIDDLYBASE_LOCAL_STATE_PREFIX)) {
+      console.log(`Ignoring delete tiddler ${title} due to TIDDLYBASE_LOCAL_STATE_PREFIX title prefix`)
+      return false;
+    }
+    return true;
+  }
+);
 
 export const makeChangeListener = (
   sandboxedAPIClient: APIClient<SandboxedWikiAPIForTopLevel>
 ) => new OptionallyEnabledChangeListenerWrapper(
-      new ProxyToSandboxedIframeChangeListener(sandboxedAPIClient));
+  new ProxyToSandboxedIframeChangeListener(sandboxedAPIClient));

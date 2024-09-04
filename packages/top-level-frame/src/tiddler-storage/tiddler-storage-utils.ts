@@ -2,8 +2,9 @@ import type { TiddlerCollection } from "@tiddlybase/shared/src/tiddler-storage";
 import { LaunchParameters } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import mustache from 'mustache'
 
-export const DEFAULT_FIRESTORE_PATH_TEMPLATE = "tiddlybase-instances/{{instance}}/collections/{{collection}}/tiddlers"
-export const DEFAULT_FIRESTORE_COLLECTION_NAMED = "shared"
+export const DEFAULT_FIRESTORE_INSTANCE_PATH = "tiddlybase-instances/{{instance}}"
+export const DEFAULT_FIRESTORE_PATH_TEMPLATE = `${DEFAULT_FIRESTORE_INSTANCE_PATH}/collections/{{collection}}/tiddlers`
+export const DEFAULT_FIRESTORE_COLLECTION_NAMED = "internal"
 
 export const evaluateMustacheTemplate = (template: string, variables: Record<string, any>): string => mustache.render(template, variables);
 

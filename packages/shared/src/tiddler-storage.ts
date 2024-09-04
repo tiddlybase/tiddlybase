@@ -19,5 +19,6 @@ export interface TiddlerStorageChangeListener {
   onDeleteTiddler: (title: string) => void;
 }
 
-export type TiddlerStorageWithSpec = {storage: TiddlerStorage, spec: TiddlerStorageSpec};
-export type TiddlerProvenance = Record<string, TiddlerStorageWithSpec>;
+export type TiddlerStorageWithSpec = {sourceIndex: number, storage: TiddlerStorage, spec: TiddlerStorageSpec};
+// maps tiddler title to tiddler storage index
+export type TiddlerProvenance = Record<string, number>;

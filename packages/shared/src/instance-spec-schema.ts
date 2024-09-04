@@ -50,4 +50,5 @@ export type InstanceConfiguration = {
     "unauthenticated-role"?: string;
     "authenticated-role"?: string;
   }
+  "users-with-access": string[]
 }

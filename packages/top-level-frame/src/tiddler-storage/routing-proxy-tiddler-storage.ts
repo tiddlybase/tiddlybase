@@ -4,9 +4,9 @@ import type { } from '@tiddlybase/tw5-types/src/index';
 
 export class RoutingProxyTiddlerStorage implements TiddlerStorage {
   provenance: TiddlerProvenance;
-  storageWithSpecs: TiddlerStorageWithSpec[];
+  storageWithSpecs: Array<TiddlerStorageWithSpec|undefined>;
 
-  constructor(provenance: TiddlerProvenance, storageWithSpecs: TiddlerStorageWithSpec[]) {
+  constructor(provenance: TiddlerProvenance, storageWithSpecs: Array<TiddlerStorageWithSpec|undefined>) {
     this.provenance = provenance;
     this.storageWithSpecs = storageWithSpecs;
   }
@@ -14,7 +14,7 @@ export class RoutingProxyTiddlerStorage implements TiddlerStorage {
   private selectStorageForWrite(tiddler: $tw.TiddlerFields): TiddlerStorageWithSpec|undefined {
     // Select first candidate with a passing predicate function.
     for (let storageWithSpecs of this.storageWithSpecs) {
-      if (storageWithSpecs.storage.canAcceptTiddler(tiddler)) {
+      if (storageWithSpecs !== undefined && storageWithSpecs.storage.canAcceptTiddler(tiddler)) {
         return storageWithSpecs;
       }
     }
@@ -31,13 +31,13 @@ export class RoutingProxyTiddlerStorage implements TiddlerStorage {
     if (!candidateStorage) {
       throw new Error("Could not find a TiddlerStorage backend to write to!")
     }
-    this.provenance[tiddler.title] = candidateStorage;
+    this.provenance[tiddler.title] = candidateStorage.sourceIndex;
     return candidateStorage.storage.setTiddler(tiddler);
   }
   async deleteTiddler(title: string): Promise<void> {
-    let storage = this.provenance[title]?.storage;
-    if (storage) {
-      return storage.deleteTiddler(title);
+    let storageIndex = this.provenance[title];
+    if (storageIndex) {
+      return this.storageWithSpecs[storageIndex]!.storage.deleteTiddler(title);
     } else {
       // TODO: better handle missing tiddler case
       console.error(`Cannot delete ${title}, no provenance info`);

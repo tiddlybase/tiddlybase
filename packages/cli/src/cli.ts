@@ -2,6 +2,7 @@ import yargs from 'yargs';
 import { getuser, listusers, adduser, setCollectionRole, getCollectionRoles, updateUserProfile } from './users';
 import { cmdGenerateFirebaseJson, cmdGenerateStorageRules, cmdGenerateFirestoreRules, cmdGenerateOuterHTML, cmdGenerateTiddlybaseConfigJson } from './generate';
 import { createInstance } from './instances';
+import { firestoreQuery } from './firestore';
 import { buildwiki } from './wikibuilder';
 import {runTWCommand} from './run-tw-command'
 
@@ -24,6 +25,7 @@ const main = async (argv:string[]) => {
   .command(listusers)
   .command(adduser)
   .command(updateUserProfile)
+  .command(firestoreQuery)
   .command(cmdGenerateFirebaseJson)
   .command(cmdGenerateStorageRules)
   .command(cmdGenerateFirestoreRules)

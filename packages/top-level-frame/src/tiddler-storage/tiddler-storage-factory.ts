@@ -15,15 +15,21 @@ import { LiteralTiddlerStorage } from "./literal-tiddler-storage";
 import { evaluateTiddlerStorageUseCondition } from "@tiddlybase/shared/src/tiddler-storage-conditions";
 import { ReadOnlyTiddlerStorageWrapper } from "./tiddler-storage-base";
 import { RPCCallbackManager } from "@tiddlybase/rpc/src/rpc-callback-manager";
+import { FirestoreQueryTiddlerStorage } from "./firestore-query-tiddler-storage";
+import { ProvenanceUpdatingChangeListenerWrapper } from "../change-listener";
 
+const getClientId = () => Math.ceil(Math.random() * 1000000);
 
 const getTiddlerStorage = async (
+  sourceIndex: number,
+  provenance: TiddlerProvenance,
   launchParameters: LaunchParameters,
   spec: TiddlerStorageSpec,
   lazyFirebaseApp: Lazy<FirebaseApp>,
   rpcCallbackManager: RPCCallbackManager,
   tiddlerStorageChangeListener: TiddlerStorageChangeListener
 ): Promise<TiddlerStorage> => {
+  const clientId = getClientId()
   switch (spec.type) {
     case "http":
       return new ReadOnlyTiddlerStorageWrapper(
@@ -54,20 +60,37 @@ const getTiddlerStorage = async (
     case "firestore":
       const firestore = getFirestore(lazyFirebaseApp());
       const firestoreTiddlerStore = new FirestoreTiddlerStorage(
+        clientId,
+        firestore,
         spec.writeCondition,
         launchParameters,
-        firestore,
         spec.collection,
         spec.pathTemplate,
         spec.options,
-        // TODO: only notify the client if the affected tiddler is not overridden
-        // by another TiddlerStorage according to tiddler provenance.
-        tiddlerStorageChangeListener
+        new ProvenanceUpdatingChangeListenerWrapper(
+          tiddlerStorageChangeListener,
+          sourceIndex,
+          provenance
+        )
       );
       await firestoreTiddlerStore.startListening();
       return firestoreTiddlerStore;
     case "literal":
       return new ReadOnlyTiddlerStorageWrapper(new LiteralTiddlerStorage(spec.tiddlers));
+    case "firestore-query":
+      const storage = new FirestoreQueryTiddlerStorage(
+        clientId,
+        getFirestore(lazyFirebaseApp()),
+        launchParameters,
+        spec.query,
+        new ProvenanceUpdatingChangeListenerWrapper(
+          tiddlerStorageChangeListener,
+          sourceIndex,
+          provenance
+        )
+      )
+      await storage.startListening();
+      return new ReadOnlyTiddlerStorageWrapper(storage);
     default:
       throw new Error(`Tiddler source spec unrecognized!`)
   }
@@ -77,9 +100,11 @@ export type MergedSources = {
   tiddlers: TiddlerCollection;
   provenance: TiddlerProvenance;
   writeStore?: TiddlerStorage;
+  sourcesWithSpecs: (TiddlerStorageWithSpec | undefined)[];
 }
 
 type TiddlerSourcePromiseWithSpec = {
+  sourceIndex: number;
   storage: Promise<TiddlerStorage>;
   spec: TiddlerStorageSpec;
 }
@@ -92,12 +117,16 @@ export const readTiddlerSources = async (
   rpcCallbackManager: RPCCallbackManager,
   tiddlerStorageChangeListener: TiddlerStorageChangeListener
 ): Promise<MergedSources> => {
+  const provenance: TiddlerProvenance = {};
   const sourcePromisesWithSpecs = launchConfig.tiddlers.storage.reduce(
-    (sourcePromisesWithSpecs, spec) => {
+    (sourcePromisesWithSpecs, spec, sourceIndex) => {
       if (evaluateTiddlerStorageUseCondition(spec.useCondition, launchParameters)) {
         sourcePromisesWithSpecs.push({
+          sourceIndex,
           spec,
           storage: getTiddlerStorage(
+            sourceIndex,
+            provenance,
             launchParameters,
             spec,
             lazyFirebaseApp,
@@ -106,34 +135,48 @@ export const readTiddlerSources = async (
         });
       } else {
         console.log("Disabling tiddler storage due to useCondition", spec);
+        sourcePromisesWithSpecs.push(undefined)
       }
       return sourcePromisesWithSpecs;
-    }, [] as TiddlerSourcePromiseWithSpec[]);
+    }, [] as Array<TiddlerSourcePromiseWithSpec|undefined>);
   const collections = await Promise.all(sourcePromisesWithSpecs.map(async s => {
     try {
-      return await (await s.storage).getAllTiddlers();
+      return s ? await (await s.storage).getAllTiddlers() : Promise.resolve({});
     } catch (e: any) {
       // attach spec which failed to load to the exception for debugging purposes.
-      e.spec = s.spec;
+      if (s) {
+        e.spec = s.spec;
+      }
       throw (e);
     }
   }));
-  const sourcesWithSpecs: TiddlerStorageWithSpec[] = await Promise.all(sourcePromisesWithSpecs.map(async s => ({
-    ...s,
-    storage: await s.storage
-  })));
-  const mergedSources: MergedSources = { tiddlers: {}, provenance: {} };
-  for (let sourceIx = 0; sourceIx < sourcePromisesWithSpecs.length; sourceIx++) {
-    for (let [title, tiddler] of Object.entries(collections[sourceIx])) {
-      if (!(title in mergedSources.tiddlers)) {
-        // don't allow tiddlers available in earlier collections to be overridden
-        // by later collections.
-        mergedSources.tiddlers[title] = tiddler;
-        mergedSources.provenance[title] = sourcesWithSpecs[sourceIx];
+  const sourcesWithSpecs: Array<undefined|TiddlerStorageWithSpec> = await Promise.all(sourcePromisesWithSpecs.map(async s => {
+    if (s === undefined) {
+      return s
+    }
+    return {
+      sourceIndex: s.sourceIndex,
+      storage: await s.storage,
+      spec: s.spec,
+    }
+  }));
+  const mergedSources: MergedSources = { tiddlers: {}, provenance, sourcesWithSpecs};
+  for (let source of sourcesWithSpecs) {
+    if (source !== undefined) {
+      for (let [title, tiddler] of Object.entries(collections[source.sourceIndex])) {
+        if (!(title in mergedSources.tiddlers)) {
+          // don't allow tiddlers available in earlier collections to be overridden
+          // by later collections.
+          mergedSources.tiddlers[title] = tiddler;
+          mergedSources.provenance[title] = source.sourceIndex;
+        }
       }
     }
   }
 
-  mergedSources.writeStore = new RoutingProxyTiddlerStorage(mergedSources.provenance, sourcesWithSpecs);
+  mergedSources.writeStore = new RoutingProxyTiddlerStorage(
+    mergedSources.provenance,
+    sourcesWithSpecs
+  );
   return mergedSources;
 }
