@@ -86,7 +86,7 @@ export class FirestoreQueryTiddlerStorage implements ReadOnlyTiddlerStorage {
         (snapshot) => {
           // from: https://firebase.google.com/docs/firestore/query-data/listen#view_changes_between_snapshots
           snapshot.docChanges().forEach((change) => {
-            if (this.docInCurrentInstance(change.doc.id)) {
+            if (this.docInCurrentInstance(change.doc.ref.path)) {
               if (change.type === "added" || change.type === "modified") {
                 if (!change.doc.metadata.hasPendingWrites) {
                   // firestore triggers the update twice: once when it's updated locally
@@ -107,7 +107,11 @@ export class FirestoreQueryTiddlerStorage implements ReadOnlyTiddlerStorage {
               }
             }
           });
-        });
+        },
+        error => {
+          throw normalizeFirebaseReadError(error, this.launchParameters.instance, JSON.stringify(this.query), 'firestore-query', 'onSnapshot');
+        }
+      );
     } catch (e: any) {
       throw normalizeFirebaseReadError(e, this.launchParameters.instance, JSON.stringify(this.query), 'firestore-query', 'onSnapshot');
     }
