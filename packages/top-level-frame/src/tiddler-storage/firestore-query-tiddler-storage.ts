@@ -1,12 +1,12 @@
 
 import type { TiddlerCollection, ReadOnlyTiddlerStorage, TiddlerStorageChangeListener } from "@tiddlybase/shared/src/tiddler-storage";
-import { FireStoreQuery, FirestoreWhereClause, LaunchParameters } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import { FireStoreQuery, FirestoreWhereClause, LaunchParameters, FirestoreQueryTiddlerStorageOptions } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import { collection, collectionGroup, onSnapshot, query, where, Query, FieldPath, Unsubscribe } from "firebase/firestore";
 import type { Firestore } from '@firebase/firestore';
 import { asList } from "@tiddlybase/shared/src/obj-utils";
 import { convertTimestamps } from "./firestore-tiddler-storage"
 import { normalizeFirebaseReadError } from "../firebase-utils";
-import { DEFAULT_FIRESTORE_INSTANCE_PATH, evaluateMustacheTemplate, getFirestoreCollectionPath, uriEncodeLaunchParameters } from "./tiddler-storage-utils";
+import { evaluateMustacheTemplate, getFirestoreCollectionPath, uriEncodeLaunchParameters } from "./tiddler-storage-utils";
 
 export class FirestoreQueryTiddlerStorage implements ReadOnlyTiddlerStorage {
   /**
@@ -16,7 +16,7 @@ export class FirestoreQueryTiddlerStorage implements ReadOnlyTiddlerStorage {
    */
 
   unsubscribe: Unsubscribe | undefined;
-  instancePathPrefix: string;
+  pathPrefix: string | undefined;
   // Note that there is a slight race condition where some tiddler returned by
   // firestore may not be passed on to the wiki. The reason is that during the
   // boot sequence:
@@ -40,12 +40,14 @@ export class FirestoreQueryTiddlerStorage implements ReadOnlyTiddlerStorage {
     private firestore: Firestore,
     private launchParameters: LaunchParameters,
     private query: FireStoreQuery,
-    private changeListener: TiddlerStorageChangeListener) {
-      this.instancePathPrefix = getFirestoreCollectionPath(
+    private changeListener: TiddlerStorageChangeListener,
+    private options: FirestoreQueryTiddlerStorageOptions | undefined = undefined
+  ) {
+      this.pathPrefix = this.options?.pathPrefixTemplate ? getFirestoreCollectionPath(
         this.launchParameters,
         undefined,
-        DEFAULT_FIRESTORE_INSTANCE_PATH
-      )
+        this.options.pathPrefixTemplate
+      ) : undefined
   }
 
   private constructQueryValue(value: any): any {
@@ -75,8 +77,8 @@ export class FirestoreQueryTiddlerStorage implements ReadOnlyTiddlerStorage {
     return query(from, ...whereClauses);
   }
 
-  docInCurrentInstance(docId: string): boolean {
-    return docId.startsWith(this.instancePathPrefix);
+  pathCheck(docPath: string): boolean {
+    return this.pathPrefix ? docPath.startsWith(this.pathPrefix) : true;
   }
 
   async startListening() {
@@ -86,7 +88,7 @@ export class FirestoreQueryTiddlerStorage implements ReadOnlyTiddlerStorage {
         (snapshot) => {
           // from: https://firebase.google.com/docs/firestore/query-data/listen#view_changes_between_snapshots
           snapshot.docChanges().forEach((change) => {
-            if (this.docInCurrentInstance(change.doc.ref.path)) {
+            if (this.pathCheck(change.doc.ref.path)) {
               if (change.type === "added" || change.type === "modified") {
                 if (!change.doc.metadata.hasPendingWrites) {
                   // firestore triggers the update twice: once when it's updated locally

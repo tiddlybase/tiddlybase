@@ -55,6 +55,10 @@ export type FireStoreQuery = {
   where: FirestoreWhereClause | FirestoreWhereClause[]
 }
 
+export type FirestoreQueryTiddlerStorageOptions = Partial<{
+  pathPrefixTemplate: string
+}>
+
 type TiddlerStorageTypeSpec =
   | { type: "http"; url: string }
   | ({
@@ -68,7 +72,8 @@ type TiddlerStorageTypeSpec =
   } & TiddlerCollectionPathSpec)
   | ({
     type: "firestore-query";
-    query: FireStoreQuery
+    query: FireStoreQuery;
+    options?: FirestoreQueryTiddlerStorageOptions;
   })
   | ({
     type: "browser-storage";

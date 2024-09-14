@@ -36,7 +36,7 @@ export class RoutingProxyTiddlerStorage implements TiddlerStorage {
   }
   async deleteTiddler(title: string): Promise<void> {
     let storageIndex = this.provenance[title];
-    if (storageIndex) {
+    if (storageIndex !== undefined) {
       return this.storageWithSpecs[storageIndex]!.storage.deleteTiddler(title);
     } else {
       // TODO: better handle missing tiddler case

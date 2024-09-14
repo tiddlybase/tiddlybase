@@ -1,9 +1,9 @@
-import { INSTANCE_CONFIGURATION_TIDDLER_NAME, ADMIN_COLLECTION_NAME } from "./constants";
+import { INSTANCE_CONFIGURATION_TIDDLER_SUFFIX, ADMIN_COLLECTION_NAME } from "./constants";
 import type { PermissionedStorage, InstanceSpec, UserId, InstanceConfiguration } from "./instance-spec-schema"
 
-export const instanceConfigurationPath = (instance: string) => `tiddlybase-instances/${encodeURIComponent(instance)}/collections/${encodeURIComponent(ADMIN_COLLECTION_NAME)}/tiddlers/${encodeURIComponent(INSTANCE_CONFIGURATION_TIDDLER_NAME)}`
-export const instanceConfigurationTitle = `${ADMIN_COLLECTION_NAME}/${INSTANCE_CONFIGURATION_TIDDLER_NAME}`
-
+export const instanceConfigurationPath = (instance: string) => `tiddlybase-instances/${encodeURIComponent(instance)}/collections/${encodeURIComponent(ADMIN_COLLECTION_NAME)}/tiddlers/${encodeURIComponent(INSTANCE_CONFIGURATION_TIDDLER_SUFFIX)}`
+export const instanceConfigurationTitle = (instance: string) => `${ADMIN_COLLECTION_NAME}/${instance}/${INSTANCE_CONFIGURATION_TIDDLER_SUFFIX}`
+export const instanceConfigSchemaName = 'tiddlybase:instance-config';
 export const makeInstanceUserPermissionsUpdate = (
   resourceType: PermissionedStorage,
   userId: UserId,
@@ -30,8 +30,10 @@ export const makeInstanceUnauthenticatedPermissionsUpdate = (
   });
 
 export const makeInstanceConfiguration = (
+  instance: string,
   userId: UserId,
 ): InstanceConfiguration => ({
+  instance,
   roles: {
     // hardcoded for now, should be customizable in the future
     "role-definitions": {

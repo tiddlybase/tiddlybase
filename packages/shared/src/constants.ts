@@ -15,7 +15,7 @@ export const DEFAULT_AUTH: AuthProviderSpec = {
 
 export const ADMIN_INSTANCE_NAME = "admin";
 export const ADMIN_COLLECTION_NAME = "admin";
-export const INSTANCE_CONFIGURATION_TIDDLER_NAME = "instance-configuration";
+export const INSTANCE_CONFIGURATION_TIDDLER_SUFFIX = "instance-configuration";
 export const DEFAULT_INSTANCE_NAME = "welcome";
 
 export const DEFAULT_URL_CONFIG:URLConfig = {

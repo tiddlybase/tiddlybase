@@ -1,5 +1,5 @@
 import { InstanceConfiguration } from '@tiddlybase/shared/src/instance-spec-schema';
-import { instanceConfigurationPath, instanceConfigurationTitle, makeInstanceConfiguration } from '@tiddlybase/shared/src/permissions';
+import { instanceConfigSchemaName, instanceConfigurationPath, instanceConfigurationTitle, makeInstanceConfiguration } from '@tiddlybase/shared/src/permissions';
 import * as admin from 'firebase-admin';
 import { Argv, CommandModule } from 'yargs';
 import { CLIContext, withCLIContext } from './cli-context';
@@ -13,14 +13,15 @@ const doUpsertInstanceConfiguration = async (
   userId: string
 ): Promise<InstanceConfiguration> => {
   const docPath = instanceConfigurationPath(instance);
-  const instanceConfiguration = makeInstanceConfiguration(userId)
+  const instanceConfiguration = makeInstanceConfiguration(instance, userId)
   await writeFirestoreDocument(
     app,
     userId,
     docPath,
     {
       ...instanceConfiguration,
-      title: instanceConfigurationTitle
+      schema: instanceConfigSchemaName,
+      title: instanceConfigurationTitle(instance)
     },
     true
   );

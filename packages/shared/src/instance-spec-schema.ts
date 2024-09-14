@@ -42,6 +42,8 @@ export type AccessByStorageType = Partial<Record<PermissionedStorage, AccessConf
 
 
 export type InstanceConfiguration = {
+  instance: string,
+  subtitle?: string,
   roles: {
     // role name => access config
     "role-definitions": Record<string, AccessByStorageType>;
