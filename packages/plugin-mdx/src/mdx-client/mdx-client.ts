@@ -16,7 +16,7 @@ import remarkLintTableCellPadding from 'remark-lint-table-cell-padding'
 import { MDXErrorDetails } from './mdx-error-details';
 import type {Handler} from 'mdast-util-to-hast';
 import type {Properties, Element} from 'hast';
-import normalize from 'mdurl/encode.js'
+import {parse, format} from 'mdurl'
 
 export type CompilationResult = {error: MDXErrorDetails|Error} | {warnings: Array<MDXErrorDetails>, compiledFn: any};
 
@@ -41,7 +41,7 @@ export const getExports = async (compiledJSX: any, importFn: any, contextValues:
 
 // based on: https://github.com/syntax-tree/mdast-util-to-hast/blob/main/lib/handlers/image.js
 const mdastImageHandler:Handler = (state, node) => {
-  const properties:Properties = {src: normalize(node.url), alt: node.alt}
+  const properties:Properties = {src: format(parse(node.url)), alt: node.alt}
 
   if (node.title !== null && node.title !== undefined) {
     properties.title = node.title
@@ -69,7 +69,7 @@ export const compile = async (name: string, mdx: string, contextKeys: string[] =
         // for presets, however.
         remarkPresetLintConsistent as any,
         remarkPresetLintRecommended as any,
-        [remarkLintListItemIndent as any, 'space'],
+        [remarkLintListItemIndent as any, 'one'],
         [remarkLintFinalNewline as any, false],
         [remarkLintTableCellPadding as any, false],
         remarkGfm,

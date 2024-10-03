@@ -11,6 +11,6 @@
     },
     "devDependencies": {
         "puppeteer": "^13.6.0",
-        "tiddlywiki": "^5.3.1"
+        "tiddlywiki": "^5.3.5"
     }
 }

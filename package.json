@@ -4,13 +4,13 @@
   "description": "",
   "author": "neumark.peter@gmail.com",
   "license": "Apache-2.0",
-  "packageManager": "yarn@3.4.1",
+  "packageManager": "yarn@4.5.0",
   "scripts": {
     "move_sourcemaps": "yarn node ./scripts/move_sourcemaps.js",
-    "test": "yarn workspaces foreach -t run test",
-    "build": "MODE=production yarn workspaces foreach -p -t run build",
-    "build:dev": "MODE=development yarn workspaces foreach -t run build:dev",
-    "clean": "yarn workspaces foreach -t run clean && rm -rf dist/*",
+    "test": "yarn workspaces foreach --all -t run test",
+    "build": "MODE=production yarn workspaces foreach --all -p -t run build",
+    "build:dev": "MODE=development yarn workspaces foreach --all -t run build:dev",
+    "clean": "yarn workspaces foreach --all -t run clean && rm -rf dist/*",
     "version:bump": "yarn version -i patch && node scripts/set_version.js \"$(cat package.json | jq -r .version)\" \"$(yarn workspaces list --json)\"",
     "release": "yarn clean && yarn version:bump && yarn build && yarn workspaces foreach -t run publish && ./scripts/publish_tiddlybase_public.sh"
   },
@@ -20,6 +20,6 @@
     ]
   },
   "devDependencies": {
-    "glob": "^10.3.3"
+    "glob": "^11.0.0"
   }
 }
