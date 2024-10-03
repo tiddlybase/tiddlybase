@@ -1,6 +1,6 @@
 import { ReadOnlyTiddlerStorage, TiddlerCollection, TiddlerStorage } from "@tiddlybase/shared/src/tiddler-storage";
 import { getWriteConditionEvaluator } from "@tiddlybase/shared/src/tiddler-storage-conditions";
-import { TiddlerStorageWriteCondition } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import { LaunchParameters, TiddlerStorageWriteCondition } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 
 export type TiddlerStorageErrorType = 'unsupported-operation' | 'network-error' | 'unauthorized' | 'unknown';
 
@@ -35,12 +35,12 @@ export class ReadOnlyTiddlerStorageWrapper implements TiddlerStorage {
 
 
 export abstract class TiddlerStorageBase implements TiddlerStorage {
-  writeConditionEvaluator: (tiddler: $tw.TiddlerFields) => boolean;
-  constructor(writeCondition?: TiddlerStorageWriteCondition ) {
+  writeConditionEvaluator: (tiddler: $tw.TiddlerFields, launchParameters: LaunchParameters) => boolean;
+  constructor(protected launchParameters: LaunchParameters, writeCondition?: TiddlerStorageWriteCondition) {
     this.writeConditionEvaluator = getWriteConditionEvaluator(writeCondition)
   }
   canAcceptTiddler (tiddler: $tw.TiddlerFields): boolean {
-    return this.writeConditionEvaluator(tiddler);
+    return this.writeConditionEvaluator(tiddler, this.launchParameters);
   }
   abstract getTiddler (title: string): Promise<$tw.TiddlerFields | undefined>;
   abstract setTiddler (tiddler: $tw.TiddlerFields): Promise<$tw.TiddlerFields>;

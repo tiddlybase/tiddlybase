@@ -43,7 +43,7 @@ export const makeInstanceConfiguration = (
       // are not logged in.
       "unauthenticated-visitor": {
         "firestore": {
-          public: {
+          shared: {
             read: true,
             write: false
           }
@@ -63,7 +63,7 @@ export const makeInstanceConfiguration = (
       // private tiddlers can be stored on the backend using their user id
       "authenticated-visitor": {
         "firestore": {
-          public: {
+          shared: {
             read: true,
             write: false
           },
@@ -86,11 +86,7 @@ export const makeInstanceConfiguration = (
       // private tiddlers can be stored on the backend using their user id.
       "developer": {
         "firestore": {
-          public: {
-            read: true,
-            write: true
-          },
-          internal: {
+          shared: {
             read: true,
             write: true
           },
@@ -116,11 +112,7 @@ export const makeInstanceConfiguration = (
       // add users to the tiddlybase instance and change user roles
       "admin": {
         "firestore": {
-          public: {
-            read: true,
-            write: true
-          },
-          internal: {
+          shared: {
             read: true,
             write: true
           },

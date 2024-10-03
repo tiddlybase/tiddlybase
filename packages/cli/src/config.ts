@@ -5,6 +5,7 @@ import Ajv from 'ajv';
 import addFormats from "ajv-formats"
 import { default as tiddlybaseConfigSchema } from "@tiddlybase/shared/src/generated/tiddlybase-config-schema.json";
 import { mergeConfigDefaults } from "@tiddlybase/shared/src/config-defaults";
+import JSON5 from 'json5'
 
 export interface ParsedConfig {
   filename: string,
@@ -27,7 +28,7 @@ export const getValidator = () => {
 
 const validator = getValidator();
 
-export const rawReadJSON = (filename: string) => JSON.parse(readFileSync(filename, { encoding: 'utf-8' }));
+export const rawReadJSON = (filename: string) => JSON5.parse(readFileSync(filename, { encoding: 'utf-8' }));
 
 export const readJSON = (filename: string): ParsedConfig => {
   const config = rawReadJSON(filename);

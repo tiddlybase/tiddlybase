@@ -21,6 +21,7 @@ export type TiddlerStorageWriteConditionAssertion =
   | true
   | false
   | "private"
+  | "authenticated"
   | { titlePrefix: string };
 
 export type TiddlerStorageUseConditionAssertion =
@@ -91,6 +92,7 @@ export type TiddlerStorageWriteCondition = Expression<TiddlerStorageWriteConditi
 export type TiddlerStorageSpec = TiddlerStorageTypeSpec & {
   useCondition?: TiddlerStorageUseCondition;
   writeCondition?: TiddlerStorageWriteCondition;
+  allowWriteFallback?: boolean;
 };
 
 export type FileStorageSpec =

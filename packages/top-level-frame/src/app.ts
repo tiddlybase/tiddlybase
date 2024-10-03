@@ -29,6 +29,8 @@ import { OptionallyEnabledChangeListenerWrapper, makeChangeListener, makeFilteri
 import { createURL } from 'packages/shared/src/path-template-utils';
 
 import { getVertexAI, getGenerativeModel, GenerativeModel } from "firebase/vertexai-preview";
+import { writeFirestoreDoc } from './firebase-utils';
+import { makeInstanceConfiguration,  instanceConfigurationPath, instanceConfigurationTitle, instanceConfigSchemaName} from "@tiddlybase/shared/src/permissions";
 
 const initRPC = (childIframe: Window): RPC => {
   const rpc = makeRPC();
@@ -251,7 +253,19 @@ export class TopLevelApp {
     });
 
     exposeObjectMethod(rpc.toplevelAPIDefiner, 'signOut', this.authProvider);
-
+    rpc.toplevelAPIDefiner('createInstance', async (instanceName:string):Promise<boolean> => {
+      await writeFirestoreDoc(
+        this.lazyFirebaseApp,
+        this.launchParameters,
+        instanceConfigurationPath(instanceName),
+        {
+          ...(makeInstanceConfiguration(instanceName, this.launchParameters.userId!)),
+          schema: instanceConfigSchemaName,
+          title: instanceConfigurationTitle(instanceName)
+        }
+      )
+      return true;
+    });
     rpc.toplevelAPIDefiner('loadError', loadError);
     rpc.toplevelAPIDefiner('loginScreen', displayLoginScreen);
     rpc.toplevelAPIDefiner('changeURL', async (

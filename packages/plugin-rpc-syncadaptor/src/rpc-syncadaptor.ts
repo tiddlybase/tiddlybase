@@ -26,8 +26,14 @@ export class RPCSyncadaptor implements $tw.SyncAdaptor, TiddlerStorageChangeList
   onSetTiddler(tiddler: $tw.TiddlerFields): void {
     this.wiki.addTiddler(tiddler);
     // update syncer change count to wiki change count, since this change is coming from the server, so the tiddler isn't 'dirty'.
-    if (tiddler.title in globalThis.$tw.syncer.tiddlerInfo) {
-      globalThis.$tw.syncer.tiddlerInfo[tiddler.title].changeCount = globalThis.$tw.wiki.getChangeCount(tiddler.title);
+    const changeCount = globalThis.$tw.wiki.getChangeCount(tiddler.title) ?? 0;
+    if (!(tiddler.title in globalThis.$tw.syncer.tiddlerInfo)) {
+      globalThis.$tw.syncer.tiddlerInfo[tiddler.title] = {
+        adaptorInfo: {bag: undefined},
+        changeCount
+      };
+    } else {
+      globalThis.$tw.syncer.tiddlerInfo[tiddler.title].changeCount = changeCount;
     }
   }
 

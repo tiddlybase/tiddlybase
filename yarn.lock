@@ -2325,6 +2325,7 @@ __metadata:
     ajv-formats: ^2.1.1
     firebase: ^10.12.3
     firebase-admin: ^11.10.1
+    json5: ^2.2.3
     lodash.merge: ^4.6.2
     mustache: ^4.2.0
     tiddlywiki: ^5.3.1

@@ -1,14 +1,15 @@
 
-import type { TiddlerCollection, ReadOnlyTiddlerStorage, TiddlerStorageChangeListener } from "@tiddlybase/shared/src/tiddler-storage";
-import { FireStoreQuery, FirestoreWhereClause, LaunchParameters, FirestoreQueryTiddlerStorageOptions } from "@tiddlybase/shared/src/tiddlybase-config-schema";
-import { collection, collectionGroup, onSnapshot, query, where, Query, FieldPath, Unsubscribe } from "firebase/firestore";
+import type { TiddlerCollection, TiddlerStorageChangeListener } from "@tiddlybase/shared/src/tiddler-storage";
+import { FireStoreQuery, FirestoreWhereClause, LaunchParameters, FirestoreQueryTiddlerStorageOptions, TiddlerStorageWriteCondition } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import { collection, collectionGroup, onSnapshot, query, where, Query, FieldPath, Unsubscribe, setDoc, doc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import type { Firestore } from '@firebase/firestore';
 import { asList } from "@tiddlybase/shared/src/obj-utils";
 import { convertTimestamps } from "./firestore-tiddler-storage"
 import { normalizeFirebaseReadError } from "../firebase-utils";
 import { evaluateMustacheTemplate, getFirestoreCollectionPath, uriEncodeLaunchParameters } from "./tiddler-storage-utils";
+import { TiddlerStorageBase } from "./tiddler-storage-base";
 
-export class FirestoreQueryTiddlerStorage implements ReadOnlyTiddlerStorage {
+export class FirestoreQueryTiddlerStorage extends TiddlerStorageBase {
   /**
    * Read-Only tiddler storage for getting tiddlers using a FireStore query.
    * To make the result set dynamic, getAllTiddlers() returns an empty collection
@@ -34,24 +35,61 @@ export class FirestoreQueryTiddlerStorage implements ReadOnlyTiddlerStorage {
   // Leaving this as-is for now, because my hunch is this won't happen in
   // practice.
   tiddlerCollection: TiddlerCollection = {};
+  titleToFullDocPath: Record<string, string> = {};
 
   constructor(
     private clientId: number,
     private firestore: Firestore,
-    private launchParameters: LaunchParameters,
+    launchParameters: LaunchParameters,
     private query: FireStoreQuery,
     private changeListener: TiddlerStorageChangeListener,
+    writeCondition: TiddlerStorageWriteCondition | undefined,
     private options: FirestoreQueryTiddlerStorageOptions | undefined = undefined
   ) {
-      this.pathPrefix = this.options?.pathPrefixTemplate ? getFirestoreCollectionPath(
-        this.launchParameters,
-        undefined,
-        this.options.pathPrefixTemplate
-      ) : undefined
+    super(launchParameters, writeCondition);
+    this.pathPrefix = this.options?.pathPrefixTemplate ? getFirestoreCollectionPath(
+      this.launchParameters,
+      undefined,
+      this.options.pathPrefixTemplate
+    ) : undefined
+  }
+
+  async getTiddler(title: string): Promise<$tw.TiddlerFields | undefined> {
+    return this.tiddlerCollection[title];
+  }
+  canAcceptTiddler(tiddler: $tw.TiddlerFields): boolean {
+    return (tiddler.title in this.titleToFullDocPath) && this.writeConditionEvaluator(tiddler, this.launchParameters);
+  }
+  async setTiddler(tiddler: $tw.TiddlerFields): Promise<$tw.TiddlerFields> {
+    const fullPath = this.titleToFullDocPath[tiddler.title];
+    if (fullPath === undefined) {
+      console.log(`FirestoreQueryTiddlerStorage cannot write tiddler ${tiddler.title} as it is not in resultset.`);
+      return tiddler;
+    }
+    const docRef = doc(this.firestore, fullPath);
+    await setDoc(docRef, {
+      tiddler: {
+        ...tiddler,
+        created: tiddler.created || serverTimestamp(),
+        creator: tiddler.creator || this.launchParameters.userId,
+        modifier: this.launchParameters.userId,
+        modified: serverTimestamp(),
+      },
+      clientId: this.clientId
+    });
+    return tiddler;
+  }
+  async deleteTiddler(title: string): Promise<void> {
+    const fullPath = this.titleToFullDocPath[title];
+    if (fullPath === undefined) {
+      console.log(`FirestoreQueryTiddlerStorage cannot delete tiddler ${title} as it is not in resultset.`);
+    }
+    const docRef = doc(this.firestore, fullPath);
+    return await deleteDoc(docRef);
   }
 
   private constructQueryValue(value: any): any {
-    if (typeof(value) === 'string') {
+    if (typeof (value) === 'string') {
       return evaluateMustacheTemplate(
         value,
         uriEncodeLaunchParameters(this.launchParameters));
@@ -98,7 +136,13 @@ export class FirestoreQueryTiddlerStorage implements ReadOnlyTiddlerStorage {
                   // We don't want to trigger tiddler updates from our own writes
                   if (data.clientId !== this.clientId) {
                     const tiddler = convertTimestamps(change.doc.data().tiddler);
+                    // For collection groups, there could be several documents with the same title.
+                    // only add the first one.
+                    if ((tiddler.title in this.titleToFullDocPath) && (this.titleToFullDocPath[tiddler.title] !== change.doc.ref.path)) {
+                      return;
+                    }
                     this.tiddlerCollection[tiddler.title] = tiddler;
+                    this.titleToFullDocPath[tiddler.title] = change.doc.ref.path;
                     this.changeListener.onSetTiddler(tiddler);
                   }
                 }

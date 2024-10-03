@@ -2,7 +2,7 @@ import type { } from '@tiddlybase/tw5-types/src/index'
 import type {TiddlerCollection } from "@tiddlybase/shared/src/tiddler-storage";
 import { FileStorageTiddlerStorage } from './file-storage-tiddler-storage';
 import { HttpFileStorage } from '../file-storage/http-file-source';
-import { TiddlerStorageWriteCondition } from '@tiddlybase/shared/src/tiddlybase-config-schema';
+import { LaunchParameters, TiddlerStorageWriteCondition } from '@tiddlybase/shared/src/tiddlybase-config-schema';
 import { TiddlerStorageBase } from './tiddler-storage-base';
 
 const DEFAULT_FILTER_EXPRESSION = "[is[tiddler]]";
@@ -56,9 +56,10 @@ export class TiddlyWebTiddlerStorage extends TiddlerStorageBase {
   filterExpression: string;
 
   constructor(
+    launchParamters: LaunchParameters,
     writeCondition: TiddlerStorageWriteCondition|undefined,
     {urlPrefix, filterExpression}:{urlPrefix?:string, filterExpression?:string}={}) {
-    super(writeCondition);
+    super(launchParamters, writeCondition);
     this.urlPrefix = urlPrefix ?? DEFAULT_URL_PREFIX;
     this.filterExpression = filterExpression ?? DEFAULT_FILTER_EXPRESSION;
   }

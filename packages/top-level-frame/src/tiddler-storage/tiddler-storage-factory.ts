@@ -27,9 +27,9 @@ const getTiddlerStorage = async (
   spec: TiddlerStorageSpec,
   lazyFirebaseApp: Lazy<FirebaseApp>,
   rpcCallbackManager: RPCCallbackManager,
-  tiddlerStorageChangeListener: TiddlerStorageChangeListener
+  tiddlerStorageChangeListener: TiddlerStorageChangeListener,
+  clientId: number
 ): Promise<TiddlerStorage> => {
-  const clientId = getClientId()
   switch (spec.type) {
     case "http":
       return new ReadOnlyTiddlerStorageWrapper(
@@ -56,7 +56,7 @@ const getTiddlerStorage = async (
         spec.collection,
         spec.pathTemplate)
     case "tiddlyweb":
-      return new TiddlyWebTiddlerStorage(spec.writeCondition);
+      return new TiddlyWebTiddlerStorage(launchParameters, spec.writeCondition);
     case "firestore":
       const firestore = getFirestore(lazyFirebaseApp());
       const firestoreTiddlerStore = new FirestoreTiddlerStorage(
@@ -87,10 +87,12 @@ const getTiddlerStorage = async (
           tiddlerStorageChangeListener,
           sourceIndex,
           provenance
-        )
+        ),
+        spec.writeCondition,
+        spec.options
       )
       await storage.startListening();
-      return new ReadOnlyTiddlerStorageWrapper(storage);
+      return storage;
     default:
       throw new Error(`Tiddler source spec unrecognized!`)
   }
@@ -118,6 +120,7 @@ export const readTiddlerSources = async (
   tiddlerStorageChangeListener: TiddlerStorageChangeListener
 ): Promise<MergedSources> => {
   const provenance: TiddlerProvenance = {};
+  const clientId = getClientId()
   const sourcePromisesWithSpecs = launchConfig.tiddlers.storage.reduce(
     (sourcePromisesWithSpecs, spec, sourceIndex) => {
       if (evaluateTiddlerStorageUseCondition(spec.useCondition, launchParameters)) {
@@ -131,7 +134,9 @@ export const readTiddlerSources = async (
             spec,
             lazyFirebaseApp,
             rpcCallbackManager,
-            tiddlerStorageChangeListener)
+            tiddlerStorageChangeListener,
+            clientId
+          )
         });
       } else {
         console.log("Disabling tiddler storage due to useCondition", spec);

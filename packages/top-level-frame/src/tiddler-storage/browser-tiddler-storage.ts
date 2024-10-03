@@ -31,7 +31,7 @@ const parseKey = (key:string):KeyParts|undefined => {
 
 export class BrowserTiddlerStorage extends TiddlerStorageBase {
   storage: Storage;
-  launchParameters: LaunchParameters;
+  encodedLaunchParameters: LaunchParameters;
   collectionPath: string;
   collection: string;
 
@@ -41,12 +41,12 @@ export class BrowserTiddlerStorage extends TiddlerStorageBase {
     storage: Storage,
     collection?: string,
     pathTemplate?: string) {
-    super(writeCondition);
+    super(launchParameters, writeCondition);
     this.storage = storage;
-    this.launchParameters = uriEncodeLaunchParameters(launchParameters);
+    this.encodedLaunchParameters = uriEncodeLaunchParameters(launchParameters);
     this.collection = encodeURIComponent(collection ?? "");
     this.collectionPath = mustache.render(pathTemplate ?? DEFAULT_PATH_TEMPLATE, {
-      ...this.launchParameters,
+      ...this.encodedLaunchParameters,
       collection: this.collection
     })
   }
@@ -82,7 +82,7 @@ export class BrowserTiddlerStorage extends TiddlerStorageBase {
       const keyParts = parseKey(key);
       if (keyParts) {
         const [instance, collection, title] = keyParts;
-        if (instance === this.launchParameters.instance && collection === this.collection) {
+        if (instance === this.encodedLaunchParameters.instance && collection === this.collection) {
           const tiddler = this.getTiddlerSync(title);
           if (tiddler) {
             allTiddlers[tiddler.title] = tiddler

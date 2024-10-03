@@ -36,14 +36,9 @@ type InitialReadState = {
 
 export class FirestoreTiddlerStorage extends TiddlerStorageBase {
 
-  firestore: Firestore;
   collectionPath: string;
-  options: FirestoreTiddlerStorageOptions | undefined;
-  changeListener: TiddlerStorageChangeListener | undefined;
   initialReadState: InitialReadState;
   unsubscribe: Unsubscribe | undefined;
-  launchParameters: LaunchParameters;
-  clientId: number;
 
   private async createCollectionSentinel(creator: string): Promise<DocumentReference<DocumentData>> {
     const docRef = doc(this.firestore, this.collectionPath, SENTINEL_DOC_ID);
@@ -76,26 +71,21 @@ export class FirestoreTiddlerStorage extends TiddlerStorageBase {
   }
 
   constructor(
-    clientId: number,
-    firestore: Firestore,
+    private clientId: number,
+    private firestore: Firestore,
     writeCondition: TiddlerStorageWriteCondition|undefined,
     launchParameters: LaunchParameters,
     collection?: string,
     pathTemplate?: string,
-    options?: FirestoreTiddlerStorageOptions,
-    changeListener?: TiddlerStorageChangeListener,
+    private options?: FirestoreTiddlerStorageOptions,
+    private changeListener?: TiddlerStorageChangeListener,
   ) {
-    super(writeCondition);
-    this.launchParameters = launchParameters;
-    this.firestore = firestore;
+    super(launchParameters, writeCondition);
     this.collectionPath = getFirestoreCollectionPath(
       launchParameters,
       evaluateMustacheTemplate(collection ?? "", launchParameters),
       pathTemplate ?? DEFAULT_FIRESTORE_PATH_TEMPLATE)
-    this.options = options;
-    this.changeListener = changeListener;
     this.initialReadState = this.getInitialReadState();
-    this.clientId = clientId;
   }
 
   async startListening() {
@@ -164,17 +154,25 @@ export class FirestoreTiddlerStorage extends TiddlerStorageBase {
   }
   async setTiddler(tiddler: $tw.TiddlerFields): Promise<$tw.TiddlerFields> {
     const docRef = doc(this.firestore, this.collectionPath, this.getDocId(tiddler.title));
-    await setDoc(docRef, {
-      tiddler: {
-        ...tiddler,
-        created: tiddler.created || serverTimestamp(),
-        creator: tiddler.creator || this.launchParameters.userId,
-        modifier: this.launchParameters.userId,
-        modified: serverTimestamp(),
-      },
-      clientId: this.clientId
-    });
-    return tiddler;
+    const updatedTiddler:$tw.TiddlerFields = {
+      ...tiddler,
+      creator: tiddler.creator || this.launchParameters.userId,
+      modifier: this.launchParameters.userId,
+    };
+    try {
+      await setDoc(docRef, {
+        tiddler: {
+          ...updatedTiddler,
+          created: tiddler.created || serverTimestamp(),
+          modified: serverTimestamp(),
+        },
+        clientId: this.clientId
+      });
+    } catch (e) {
+      console.error(`Firestore write error to ${docRef.path}`, e, updatedTiddler);
+      throw(e);
+    }
+    return updatedTiddler;
   }
   async deleteTiddler(title: string): Promise<void> {
     const docRef = doc(this.firestore, this.collectionPath, this.getDocId(title));

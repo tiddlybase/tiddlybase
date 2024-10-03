@@ -6,9 +6,7 @@
     "author": "Peter Neumark",
     "license": "Apache-2.0",
     "scripts": {
-        "build": "./build.sh",
         "local": "./run.sh",
-        "build:dev": "MODE=development ./build.sh",
         "lint": "eslint --ext .js,.ts .",
         "serve": "npm run build && firebase emulators:start --only functions",
         "shell": "npm run build && firebase functions:shell",
