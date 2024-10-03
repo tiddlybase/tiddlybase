@@ -270,10 +270,13 @@ export class StoryStartup {
      * Applies a given wikiViewState to the current wiki.
      */
     // Set sidebar state
-    const tiddlersToSet = [{
-      title: TW5_TITLE_SIDEBAR,
-      text: wikiViewState.sidebar ? "yes" : "no"
-    }] as $tw.TiddlerFields[];
+    const tiddlersToSet:$tw.TiddlerFields[] = [];
+    if (typeof(wikiViewState.sidebar) === 'boolean') {
+      tiddlersToSet.push({
+        title: TW5_TITLE_SIDEBAR,
+        text: wikiViewState.sidebar ? "yes" : "no"
+      })
+    }
     const storyList: string[] = []
     for (let tiddlerViewState of wikiViewState.openTiddlers) {
       // Add each open tiddler to the story river
