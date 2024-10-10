@@ -1,6 +1,6 @@
 import { FileReference, FileReferenceType, UploadController, UploadEventHandler, FileStorage } from "@tiddlybase/shared/src/file-storage";
 import { FirebaseStorage, getDownloadURL, ref, uploadBytesResumable, deleteObject } from '@firebase/storage';
-import { normalizeFirebaseReadError } from "../firebase-utils";
+import { normalizeFirebaseError } from "../firebase-utils";
 import { CallbackMap } from "@tiddlybase/rpc/src/types";
 import { RPCCallbackManager } from "@tiddlybase/rpc/src/rpc-callback-manager";
 import { LaunchParameters } from "@tiddlybase/shared/src/tiddlybase-config-schema";
@@ -66,7 +66,7 @@ export class FirebaseStorageFileStorage implements FileStorage {
       const response = await this.cache.resolve(url);
       return { type: 'blob', blob: await response.blob() };
     } catch (e: any) {
-      throw normalizeFirebaseReadError(e, this.launchParameters.instance, this.collectionPath, 'firebase-storage');
+      throw normalizeFirebaseError(e, this.launchParameters.instance, this.collectionPath, 'firebase-storage');
     }
   }
 

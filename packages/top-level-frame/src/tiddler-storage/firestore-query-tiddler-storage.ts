@@ -1,11 +1,11 @@
 
 import type { TiddlerCollection, TiddlerStorageChangeListener } from "@tiddlybase/shared/src/tiddler-storage";
-import { FireStoreQuery, FirestoreWhereClause, LaunchParameters, FirestoreQueryTiddlerStorageOptions, TiddlerStorageWriteCondition } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import { FireStoreQuery, FirestoreWhereClause, LaunchParameters, FirestoreQueryTiddlerStorageOptions, TiddlerStorageWriteCondition, PinTiddlerToStorageCondition } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import { collection, collectionGroup, onSnapshot, query, where, Query, FieldPath, Unsubscribe, setDoc, doc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import type { Firestore } from '@firebase/firestore';
 import { asList } from "@tiddlybase/shared/src/obj-utils";
 import { convertTimestamps } from "./firestore-tiddler-storage"
-import { normalizeFirebaseReadError } from "../firebase-utils";
+import { normalizeFirebaseError } from "../firebase-utils";
 import { evaluateMustacheTemplate, getFirestoreCollectionPath, uriEncodeLaunchParameters } from "./tiddler-storage-utils";
 import { TiddlerStorageBase } from "./tiddler-storage-base";
 
@@ -38,15 +38,16 @@ export class FirestoreQueryTiddlerStorage extends TiddlerStorageBase {
   titleToFullDocPath: Record<string, string> = {};
 
   constructor(
+    launchParameters: LaunchParameters,
+    writeCondition: TiddlerStorageWriteCondition | undefined,
+    pinCondition: PinTiddlerToStorageCondition | undefined,
     private clientId: number,
     private firestore: Firestore,
-    launchParameters: LaunchParameters,
     private query: FireStoreQuery,
     private changeListener: TiddlerStorageChangeListener,
-    writeCondition: TiddlerStorageWriteCondition | undefined,
     private options: FirestoreQueryTiddlerStorageOptions | undefined = undefined
   ) {
-    super(launchParameters, writeCondition);
+    super(launchParameters, writeCondition, pinCondition);
     this.pathPrefix = this.options?.pathPrefixTemplate ? getFirestoreCollectionPath(
       this.launchParameters,
       undefined,
@@ -155,11 +156,11 @@ export class FirestoreQueryTiddlerStorage extends TiddlerStorageBase {
           });
         },
         error => {
-          throw normalizeFirebaseReadError(error, this.launchParameters.instance, JSON.stringify(this.query), 'firestore-query', 'onSnapshot');
+          throw normalizeFirebaseError(error, this.launchParameters.instance, JSON.stringify(this.query), 'firestore-query', 'onSnapshot');
         }
       );
     } catch (e: any) {
-      throw normalizeFirebaseReadError(e, this.launchParameters.instance, JSON.stringify(this.query), 'firestore-query', 'onSnapshot');
+      throw normalizeFirebaseError(e, this.launchParameters.instance, JSON.stringify(this.query), 'firestore-query', 'onSnapshot');
     }
   }
 

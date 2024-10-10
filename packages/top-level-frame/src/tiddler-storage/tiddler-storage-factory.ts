@@ -12,7 +12,7 @@ import { HttpFileStorage } from "../file-storage/http-file-source";
 import { FileStorageTiddlerStorage } from "./file-storage-tiddler-storage";
 import { FirebaseStorageFileStorage } from "../file-storage/firebase-storage-file-storage";
 import { LiteralTiddlerStorage } from "./literal-tiddler-storage";
-import { evaluateTiddlerStorageUseCondition } from "@tiddlybase/shared/src/tiddler-storage-conditions";
+import { evaluateTiddlerStorageUseCondition } from "./tiddler-storage-conditions";
 import { ReadOnlyTiddlerStorageWrapper } from "./tiddler-storage-base";
 import { RPCCallbackManager } from "@tiddlybase/rpc/src/rpc-callback-manager";
 import { FirestoreQueryTiddlerStorage } from "./firestore-query-tiddler-storage";
@@ -34,11 +34,17 @@ const getTiddlerStorage = async (
     case "http":
       return new ReadOnlyTiddlerStorageWrapper(
         new FileStorageTiddlerStorage(
-          new HttpFileStorage(spec.url), ''));
+          launchParameters,
+          spec.pinTiddlerCondition,
+          new HttpFileStorage(spec.url),
+          '',
+        ));
     case "firebase-storage":
       const gcpStorage = getStorage(lazyFirebaseApp());
       return new ReadOnlyTiddlerStorageWrapper(
         new FileStorageTiddlerStorage(
+          launchParameters,
+          spec.pinTiddlerCondition,
           new FirebaseStorageFileStorage(
             launchParameters,
             gcpStorage,
@@ -50,20 +56,21 @@ const getTiddlerStorage = async (
     case "browser-storage":
       const browserStorage = spec.useLocalStorage === true ? window.localStorage : window.sessionStorage;
       return new BrowserTiddlerStorage(
-        spec.writeCondition,
         launchParameters,
+        spec.writeCondition,
+        spec.pinTiddlerCondition,
         browserStorage,
         spec.collection,
         spec.pathTemplate)
     case "tiddlyweb":
-      return new TiddlyWebTiddlerStorage(launchParameters, spec.writeCondition);
+      return new TiddlyWebTiddlerStorage(launchParameters, spec.writeCondition, spec.pinTiddlerCondition);
     case "firestore":
-      const firestore = getFirestore(lazyFirebaseApp());
       const firestoreTiddlerStore = new FirestoreTiddlerStorage(
-        clientId,
-        firestore,
-        spec.writeCondition,
         launchParameters,
+        spec.writeCondition,
+        spec.pinTiddlerCondition,
+        clientId,
+        getFirestore(lazyFirebaseApp()),
         spec.collection,
         spec.pathTemplate,
         spec.options,
@@ -76,19 +83,25 @@ const getTiddlerStorage = async (
       await firestoreTiddlerStore.startListening();
       return firestoreTiddlerStore;
     case "literal":
-      return new ReadOnlyTiddlerStorageWrapper(new LiteralTiddlerStorage(spec.tiddlers));
+      return new ReadOnlyTiddlerStorageWrapper(
+        new LiteralTiddlerStorage(
+          launchParameters,
+          spec.pinTiddlerCondition,
+          spec.tiddlers));
     case "firestore-query":
       const storage = new FirestoreQueryTiddlerStorage(
+        launchParameters,
+        spec.writeCondition,
+        spec.pinTiddlerCondition,
         clientId,
         getFirestore(lazyFirebaseApp()),
-        launchParameters,
         spec.query,
         new ProvenanceUpdatingChangeListenerWrapper(
           tiddlerStorageChangeListener,
           sourceIndex,
           provenance
         ),
-        spec.writeCondition,
+
         spec.options
       )
       await storage.startListening();

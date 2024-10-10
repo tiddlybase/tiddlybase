@@ -1,25 +1,27 @@
 import { TiddlerCollection, TiddlerProvenance, TiddlerStorageWithSpec, TiddlerStorage } from "@tiddlybase/shared/src/tiddler-storage";
 import type { } from '@tiddlybase/tw5-types/src/index';
 
+export const exceptIndex = <T>(arr:T[], exceptIndex:number=-1):T[] => {
+  return arr.filter((_, ix) => ix != exceptIndex);
+}
 
 export class RoutingProxyTiddlerStorage implements TiddlerStorage {
-  provenance: TiddlerProvenance;
-  storageWithSpecs: Array<TiddlerStorageWithSpec|undefined>;
 
-  constructor(provenance: TiddlerProvenance, storageWithSpecs: Array<TiddlerStorageWithSpec|undefined>) {
-    this.provenance = provenance;
-    this.storageWithSpecs = storageWithSpecs;
+  constructor(private provenance: TiddlerProvenance, private storageWithSpecs: Array<TiddlerStorageWithSpec|undefined>) {
   }
 
-  private selectStorageForWrite(tiddler: $tw.TiddlerFields, blacklist: undefined | number[] = undefined): TiddlerStorageWithSpec|undefined {
+  isTiddlerPinned (tiddler: $tw.TiddlerFields) {
+    return false;
+  }
+
+  private selectStorageForWrite(tiddler: $tw.TiddlerFields, candidates: (TiddlerStorageWithSpec | undefined)[] | undefined = undefined): TiddlerStorageWithSpec|undefined {
     // Select first candidate with a passing predicate function.
-    for (let storageWithSpecs of this.storageWithSpecs) {
+    for (let storageCandidate of (candidates ?? this.storageWithSpecs)) {
       if (
-        storageWithSpecs !== undefined &&
-        storageWithSpecs.storage.canAcceptTiddler(tiddler) &&
-        ((blacklist === undefined) || (!(blacklist.includes(storageWithSpecs.sourceIndex))))
+        storageCandidate !== undefined &&
+        storageCandidate.storage.canAcceptTiddler(tiddler)
       ) {
-        return storageWithSpecs;
+        return storageCandidate;
       }
     }
     return undefined;
@@ -30,49 +32,44 @@ export class RoutingProxyTiddlerStorage implements TiddlerStorage {
     throw new Error('RoutingProxyTiddlerStore.getTiddler() unimplemented');
   }
 
-  async setTiddler(tiddler: $tw.TiddlerFields): Promise<$tw.TiddlerFields> {
-    const failedStorageIndexes:number[] = [];
-    // If tiddler already has a storage assigned according to provenance, attempt to write there
-    // TODO: cascade to another option if the write fails
-    let candidateStorage:TiddlerStorageWithSpec | undefined = undefined;
+  private getWriteCandidateStorageList(tiddler: $tw.TiddlerFields): (TiddlerStorageWithSpec | undefined)[] {
     if (tiddler.title in this.provenance) {
-      const storage = this.storageWithSpecs[this.provenance[tiddler.title]]
-      console.log("found tiddler in provenance, checking if existing storage can accept tiddler", storage, tiddler);
-      if (storage?.storage.canAcceptTiddler(tiddler)) {
-        // read only storages will not accept tiddlers, in this case candidateStorage should remain undefined
-        candidateStorage = storage;
+      // if tiddler already has a storage based on provenance info, attempt to
+      // write to this storage first
+      const storageIndex = this.provenance[tiddler.title];
+      const currentStorage = this.storageWithSpecs[storageIndex];
+      console.log("found tiddler in provenance, checking if existing storage can accept tiddler", currentStorage, tiddler);
+      let candidates = [currentStorage];
+      if (currentStorage && currentStorage.storage.isTiddlerPinned(tiddler)) {
+        console.log("tiddler pinned to storage", tiddler, currentStorage);
+      } else {
+        candidates = candidates.concat(exceptIndex(this.storageWithSpecs, storageIndex));
       }
+      return candidates
     }
-    while(true) {
-      if (candidateStorage === undefined) {
-        candidateStorage = this.selectStorageForWrite(tiddler, failedStorageIndexes);
-      }
-      if (!candidateStorage) {
-        let msg = "Could not find a TiddlerStorage backend to write to!";
-        if (failedStorageIndexes.length > 0) {
-          msg += ` Attempted storage indexes: ${failedStorageIndexes.join(", ")}`
-        }
-        throw new Error(msg)
-      }
+    return this.storageWithSpecs;
+  }
 
-      try {
-        const writeResponse = candidateStorage.storage.setTiddler(tiddler);
-        // write was successful, update provenance
-        this.provenance[tiddler.title] = candidateStorage.sourceIndex;
-        return writeResponse
-      } catch(e) {
-        // there was a write failure, note that this source didn't work and
-        // pick another one if the config allows it
-        if (candidateStorage.spec.allowWriteFallback === false) {
-          throw(e);
-        }
-        failedStorageIndexes.push(candidateStorage.sourceIndex)
-        // If all potential sources are already blacklisted, then the next
-        // iteration of the loop will throw an exception after calling
-        // selectStorageForWrite
-        console.log("Writing tiddler failed, retrying with next storage option", tiddler, candidateStorage);
-      }
+  async setTiddler(tiddler: $tw.TiddlerFields): Promise<$tw.TiddlerFields> {
+    const candidateStorages = this.getWriteCandidateStorageList(tiddler);
+    const candidateStorage = this.selectStorageForWrite(
+      tiddler,
+      candidateStorages
+      );
+
+    if (!candidateStorage) {
+      let msg = "Could not find a TiddlerStorage backend to write to!";
+      console.error(msg, candidateStorages);
+      // work around a mini-iframe-rpc error where an exception thrown in an
+      // rpc registered function is not always returned as failed promise to
+      // the caller.
+      return Promise.reject(new Error(msg))
     }
+
+    const writeResponse = await candidateStorage.storage.setTiddler(tiddler);
+    // write was successful, update provenance
+    this.provenance[tiddler.title] = candidateStorage.sourceIndex;
+    return writeResponse
   }
 
   async deleteTiddler(title: string): Promise<void> {

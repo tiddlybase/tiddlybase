@@ -5,6 +5,7 @@ export type Expression<Assertion> =
   | Assertion;
 
 export type EvalAssertion<Assertion, Context> = (assertion:Assertion, context:Context)=>boolean;
+export type EvalMaybeAssertion<Assertion, Context> = (assertion:Assertion, context:Context)=>boolean|undefined;
 
 export const evalExpression = <Assertion, Context>(
   evalAssertion:EvalAssertion<Assertion, Context>,

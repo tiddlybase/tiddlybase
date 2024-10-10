@@ -7,7 +7,7 @@ import { Lazy } from "@tiddlybase/shared/src/lazy";
 import { LaunchParameters } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 
-export const normalizeFirebaseReadError = (e: any, instance: string, collection: string, resourceType: PermissionedStorage, operation?: string): Partial<Error> => {
+export const normalizeFirebaseError = (e: any, instance: string, collection: string, resourceType: PermissionedStorage, operation?: string): Partial<Error> => {
   let message = `Error reading instance ${instance} ${resourceType} collection ${collection}`;
   if (operation) {
     message += ` during operation ${operation}`
@@ -42,7 +42,7 @@ export const writeFirestoreDoc = async (
       clientId
     });
   } catch (e) {
-    throw normalizeFirebaseReadError(e, "(none)", path, 'firestore', 'writeFirestoreDoc');
+    throw normalizeFirebaseError(e, "(none)", path, 'firestore', 'writeFirestoreDoc');
   }
 }
 

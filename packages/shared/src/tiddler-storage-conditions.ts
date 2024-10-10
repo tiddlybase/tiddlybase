@@ -1,21 +1,25 @@
 import { EvalAssertion, Expression, evalExpression } from "./expressions";
-import type { LaunchParameters, TiddlerStorageUseCondition, TiddlerStorageUseConditionAssertion, TiddlerStorageWriteCondition, TiddlerStorageWriteConditionAssertion } from "./tiddlybase-config-schema";
+import type { LaunchParameters, TiddlerStorageUseCondition, LaunchParametersConditionAssertion, TiddlerStorageWriteCondition, TiddlerConditionAssertion } from "./tiddlybase-config-schema";
 
 const KNOWN_PRIVATE = new Set<string>(['$:/StoryList', '$:/HistoryList', '$:/DefaultTiddlers'])
 const PRIVATE_PREFIX = '€:/'
-export const ALWAYS_TRUE_CONDITION: Expression<TiddlerStorageWriteConditionAssertion> = true;
+export const ALWAYS_TRUE_CONDITION: Expression<TiddlerConditionAssertion> = true;
 export type WriteConditionEvaluationContext = {
   tiddler: $tw.TiddlerFields;
   launchParameters: LaunchParameters;
 }
-export const _evalWriteCondition: EvalAssertion<TiddlerStorageWriteConditionAssertion, WriteConditionEvaluationContext> = (assertion, context) => {
+export const _evalWriteCondition: EvalAssertion<TiddlerConditionAssertion, WriteConditionEvaluationContext> = (assertion, context) => {
   if (typeof assertion === 'boolean') {
     return assertion;
   }
   if (typeof assertion === 'object') {
-    // TODO: titlePrefix is the only option right now, in the future
-    // we'll have to check the contents of the object of course :)
-    return context.tiddler.title.startsWith(assertion.titlePrefix);
+    if ('titlePrefix' in assertion) {
+      const expectedPrefix = evaluateMustacheTemplate(
+        assertion.titlePrefix,
+        context
+      )
+      return context.tiddler.title.startsWith();
+    }
   }
   if (assertion === 'private') {
     return KNOWN_PRIVATE.has(context.tiddler.title) || context.tiddler.title.startsWith(PRIVATE_PREFIX) || ('draft.of' in context.tiddler)
@@ -33,7 +37,7 @@ export const getWriteConditionEvaluator = (writeCondition?: TiddlerStorageWriteC
     {tiddler, launchParameters})
 };
 
-export const _evalUseCondition: EvalAssertion<TiddlerStorageUseConditionAssertion, LaunchParameters> = (assertion, launchParameters) => {
+export const _evalUseCondition: EvalAssertion<LaunchParametersConditionAssertion, LaunchParameters> = (assertion, launchParameters) => {
   if (typeof assertion === 'boolean') {
     return assertion;
   }

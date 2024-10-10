@@ -1,5 +1,5 @@
 import { TiddlerCollection } from "@tiddlybase/shared/src/tiddler-storage";
-import { LaunchParameters, TiddlerStorageWriteCondition } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import { LaunchParameters, PinTiddlerToStorageCondition, TiddlerStorageWriteCondition } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import { uriEncodeLaunchParameters } from "./tiddler-storage-utils";
 import mustache from 'mustache'
 import { TiddlerStorageBase } from "./tiddler-storage-base";
@@ -36,12 +36,13 @@ export class BrowserTiddlerStorage extends TiddlerStorageBase {
   collection: string;
 
   constructor(
-    writeCondition: TiddlerStorageWriteCondition|undefined,
     launchParameters: LaunchParameters,
+    writeCondition: TiddlerStorageWriteCondition|undefined,
+    pinCondition: PinTiddlerToStorageCondition|undefined,
     storage: Storage,
     collection?: string,
     pathTemplate?: string) {
-    super(launchParameters, writeCondition);
+    super(launchParameters, writeCondition, pinCondition);
     this.storage = storage;
     this.encodedLaunchParameters = uriEncodeLaunchParameters(launchParameters);
     this.collection = encodeURIComponent(collection ?? "");

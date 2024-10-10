@@ -3,8 +3,8 @@ import type { Firestore } from '@firebase/firestore';
 import { setDoc, doc, DocumentReference, DocumentData, collection, onSnapshot, Unsubscribe, getDoc, deleteDoc, Timestamp, serverTimestamp } from "firebase/firestore";
 import type { } from '@tiddlybase/tw5-types/src/index'
 import { getFirestoreCollectionPath, DEFAULT_FIRESTORE_PATH_TEMPLATE, evaluateMustacheTemplate } from "./tiddler-storage-utils";
-import type { FirestoreTiddlerStorageOptions, LaunchParameters, TiddlerStorageWriteCondition } from "@tiddlybase/shared/src/tiddlybase-config-schema";
-import { normalizeFirebaseReadError } from "../firebase-utils";
+import type { FirestoreTiddlerStorageOptions, LaunchParameters, PinTiddlerToStorageCondition, TiddlerStorageWriteCondition } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import { normalizeFirebaseError } from "../firebase-utils";
 import { TiddlerStorageBase } from "./tiddler-storage-base";
 
 const SENTINEL_DOC_ID = "\uffffsentinel"
@@ -71,16 +71,17 @@ export class FirestoreTiddlerStorage extends TiddlerStorageBase {
   }
 
   constructor(
+    launchParameters: LaunchParameters,
+    writeCondition: TiddlerStorageWriteCondition|undefined,
+    pinCondition: PinTiddlerToStorageCondition|undefined,
     private clientId: number,
     private firestore: Firestore,
-    writeCondition: TiddlerStorageWriteCondition|undefined,
-    launchParameters: LaunchParameters,
     collection?: string,
     pathTemplate?: string,
     private options?: FirestoreTiddlerStorageOptions,
     private changeListener?: TiddlerStorageChangeListener,
   ) {
-    super(launchParameters, writeCondition);
+    super(launchParameters, writeCondition, pinCondition);
     this.collectionPath = getFirestoreCollectionPath(
       launchParameters,
       evaluateMustacheTemplate(collection ?? "", launchParameters),
@@ -92,7 +93,7 @@ export class FirestoreTiddlerStorage extends TiddlerStorageBase {
     try {
       await this.createCollectionSentinel(this.launchParameters.userId!);
     } catch (e: any) {
-      throw normalizeFirebaseReadError(e, this.launchParameters.instance, this.collectionPath, 'firestore', 'createCollectionSentinel');
+      throw normalizeFirebaseError(e, this.launchParameters.instance, this.collectionPath, 'firestore', 'createCollectionSentinel');
     }
     try {
       this.unsubscribe = onSnapshot(collection(this.firestore, this.collectionPath), (snapshot) => {
@@ -132,7 +133,7 @@ export class FirestoreTiddlerStorage extends TiddlerStorageBase {
         });
       });
     } catch (e: any) {
-      throw normalizeFirebaseReadError(e, this.launchParameters.instance, this.collectionPath, 'firestore', 'onSnapshot');
+      throw normalizeFirebaseError(e, this.launchParameters.instance, this.collectionPath, 'firestore', 'onSnapshot');
     }
   }
 
@@ -170,13 +171,18 @@ export class FirestoreTiddlerStorage extends TiddlerStorageBase {
       });
     } catch (e) {
       console.error(`Firestore write error to ${docRef.path}`, e, updatedTiddler);
-      throw(e);
+      throw normalizeFirebaseError(e, this.launchParameters.instance, this.collectionPath, 'firestore', 'setTiddler');
     }
     return updatedTiddler;
   }
   async deleteTiddler(title: string): Promise<void> {
     const docRef = doc(this.firestore, this.collectionPath, this.getDocId(title));
-    return await deleteDoc(docRef);
+    try {
+      return await deleteDoc(docRef);
+    } catch (e) {
+      console.error(`Firestore deleting ${docRef.path}`, e);
+      throw normalizeFirebaseError(e, this.launchParameters.instance, this.collectionPath, 'firestore', 'deleteTiddler');
+    }
   }
   async getAllTiddlers(): Promise<TiddlerCollection> {
     // TODO: invoking this after writes have been issues fails to reflect

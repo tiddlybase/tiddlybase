@@ -1,6 +1,6 @@
 import { ReadOnlyTiddlerStorage, TiddlerCollection, TiddlerStorage } from "@tiddlybase/shared/src/tiddler-storage";
-import { getWriteConditionEvaluator } from "@tiddlybase/shared/src/tiddler-storage-conditions";
-import { LaunchParameters, TiddlerStorageWriteCondition } from "@tiddlybase/shared/src/tiddlybase-config-schema";
+import { ALWAYS_FALSE_CONDITION, getPinTiddlerConditionEvaluator, getWriteConditionEvaluator } from "./tiddler-storage-conditions";
+import { LaunchParameters, PinTiddlerToStorageCondition, TiddlerStorageWriteCondition } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 
 export type TiddlerStorageErrorType = 'unsupported-operation' | 'network-error' | 'unauthorized' | 'unknown';
 
@@ -10,10 +10,21 @@ export class TiddlerStorageError extends Error {
   }
 }
 
+export abstract class TiddlerReadOnlyStorageBase  implements ReadOnlyTiddlerStorage {
+  pintTiddlerConditionEvaluator: (tiddler: $tw.TiddlerFields, launchParameters: LaunchParameters) => boolean;
+  constructor(protected launchParameters: LaunchParameters, protected pinTiddlerCondition?: PinTiddlerToStorageCondition) {
+    this.pintTiddlerConditionEvaluator = getPinTiddlerConditionEvaluator(this.pinTiddlerCondition ?? ALWAYS_FALSE_CONDITION)
+  }
+  abstract getAllTiddlers (): Promise<TiddlerCollection>;
+  isTiddlerPinned (tiddler: $tw.TiddlerFields): boolean {
+    return this.pintTiddlerConditionEvaluator(tiddler, this.launchParameters);
+  }
+
+}
+
 export class ReadOnlyTiddlerStorageWrapper implements TiddlerStorage {
-  wrappedStorage: ReadOnlyTiddlerStorage;
-  constructor(wrappedStorage: ReadOnlyTiddlerStorage) {
-    this.wrappedStorage = wrappedStorage
+  constructor(private wrappedStorage: ReadOnlyTiddlerStorage) {
+
   }
   canAcceptTiddler (_tiddler: $tw.TiddlerFields) {
     return false;
@@ -30,13 +41,21 @@ export class ReadOnlyTiddlerStorageWrapper implements TiddlerStorage {
   getAllTiddlers (): Promise<TiddlerCollection> {
     return this.wrappedStorage.getAllTiddlers();
   }
+  isTiddlerPinned (tiddler: $tw.TiddlerFields): boolean {
+    return this.wrappedStorage.isTiddlerPinned(tiddler);
+  }
 
 }
 
 
-export abstract class TiddlerStorageBase implements TiddlerStorage {
+export abstract class TiddlerStorageBase extends TiddlerReadOnlyStorageBase implements TiddlerStorage {
   writeConditionEvaluator: (tiddler: $tw.TiddlerFields, launchParameters: LaunchParameters) => boolean;
-  constructor(protected launchParameters: LaunchParameters, writeCondition?: TiddlerStorageWriteCondition) {
+  constructor(
+    launchParameters: LaunchParameters,
+    writeCondition?: TiddlerStorageWriteCondition,
+    pinCondition?: PinTiddlerToStorageCondition
+  ) {
+    super(launchParameters, pinCondition);
     this.writeConditionEvaluator = getWriteConditionEvaluator(writeCondition)
   }
   canAcceptTiddler (tiddler: $tw.TiddlerFields): boolean {
@@ -45,5 +64,4 @@ export abstract class TiddlerStorageBase implements TiddlerStorage {
   abstract getTiddler (title: string): Promise<$tw.TiddlerFields | undefined>;
   abstract setTiddler (tiddler: $tw.TiddlerFields): Promise<$tw.TiddlerFields>;
   abstract deleteTiddler (title: string): Promise<void>;
-  abstract getAllTiddlers (): Promise<TiddlerCollection>;
 }

@@ -72,6 +72,7 @@ import { TIDDLYBASE_INIT_SINGLETONS_TITLE } from "@tiddlybase/shared/src/constan
         }
       }
     } else { // !inSandboxedIframe
+      // Note: we don't really support this mode any more.
       bootTiddlyWiki();
     }
 

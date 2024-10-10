@@ -17,17 +17,14 @@ export type TiddlerCollectionPathSpec = {
   pathTemplate?: string;
 };
 
-export type TiddlerStorageWriteConditionAssertion =
-  | true
-  | false
+export type CommonConditionAssertion =  true | false | "authenticated"
+
+export type TiddlerConditionAssertion =
+  CommonConditionAssertion
   | "private"
-  | "authenticated"
   | { titlePrefix: string };
 
-export type TiddlerStorageUseConditionAssertion =
-  | true
-  | false
-  | "authenticated";
+export type LaunchParametersConditionAssertion = CommonConditionAssertion;
 
 export type FirestoreTiddlerStorageOptions = Partial<{
   stripDocIDPrefix: string;
@@ -86,13 +83,14 @@ type TiddlerStorageTypeSpec =
     tiddlers: $tw.TiddlerFields[]
   };
 
-export type TiddlerStorageUseCondition = Expression<TiddlerStorageUseConditionAssertion>;
-export type TiddlerStorageWriteCondition = Expression<TiddlerStorageWriteConditionAssertion>
+export type TiddlerStorageUseCondition = Expression<LaunchParametersConditionAssertion>;
+export type TiddlerStorageWriteCondition = Expression<TiddlerConditionAssertion>;
+export type PinTiddlerToStorageCondition = Expression<TiddlerConditionAssertion>;
 
 export type TiddlerStorageSpec = TiddlerStorageTypeSpec & {
   useCondition?: TiddlerStorageUseCondition;
   writeCondition?: TiddlerStorageWriteCondition;
-  allowWriteFallback?: boolean;
+  pinTiddlerCondition?: PinTiddlerToStorageCondition;
 };
 
 export type FileStorageSpec =
@@ -102,11 +100,6 @@ export type FileStorageSpec =
 export type AuthProviderSpec =
   | {
     type: "firebase";
-    writeToFirestore?: boolean;
-    // this would actually be the type
-    // import type * as firebaseui from 'firebaseui';
-    // firebaseui.auth.Config
-    // but that seems like an unnecessary dependency here
     firebaseui?: any;
   }
   | { type: "trivial"; user?: TiddlyBaseUser };

@@ -7,7 +7,7 @@ import type { ReadOnlyFileStorage, FileStorage } from "@tiddlybase/shared/src/fi
 import type { TiddlerStorage } from "@tiddlybase/shared/src/tiddler-storage";
 import type { LaunchConfig, LaunchParameters, TiddlerStorageSpec, TiddlybaseClientConfig } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import type { TiddlyBaseUser } from "@tiddlybase/shared/src/users";
-import type { AuthProvider } from "@tiddlybase/shared/src/auth-provider";
+import type { AuthDetails, AuthProvider } from "@tiddlybase/shared/src/auth-provider";
 import type { RPC } from './types';
 
 import { initializeApp } from '@firebase/app';
@@ -24,7 +24,7 @@ import { replaceChildrenWithText, toggleVisibleDOMSection } from "./dom-utils";
 import { makeFileStorage } from "./file-storage/file-storage-factory";
 import { getNormalizedLaunchConfig } from './launch-config';
 import { readTiddlerSources } from "./tiddler-storage/tiddler-storage-factory";
-import { TIDDLYBASE_TITLE_LAUNCH_PARAMETERS, TIDDLYBASE_TITLE_PARENT_LOCATION, TIDDLYBASE_TITLE_PATH_TEMPLATE, TIDDLYBASE_TITLE_TIDDLER_PROVENANCE, TIDDLYBASE_TITLE_TIDDLER_SOURCES, TIDDLYBASE_TITLE_USER_PROFILE } from "@tiddlybase/shared/src/constants";
+import { TIDDLYBASE_TITLE_AUTH_DETAILS, TIDDLYBASE_TITLE_LAUNCH_PARAMETERS, TIDDLYBASE_TITLE_PARENT_LOCATION, TIDDLYBASE_TITLE_PATH_TEMPLATE, TIDDLYBASE_TITLE_TIDDLER_PROVENANCE, TIDDLYBASE_TITLE_TIDDLER_SOURCES, TIDDLYBASE_TITLE_USER_PROFILE } from "@tiddlybase/shared/src/constants";
 import { OptionallyEnabledChangeListenerWrapper, makeChangeListener, makeFilteringChangeListener } from './change-listener';
 import { createURL } from 'packages/shared/src/path-template-utils';
 
@@ -112,12 +112,12 @@ export class TopLevelApp {
     });
   }
 
-  async loadWiki(user?: TiddlyBaseUser) {
+  async loadWiki(user?: TiddlyBaseUser, authDetails?: AuthDetails) {
     const iframe = this.createWikiIframe(this.getIframeURL());
     this.rpc = initRPC(iframe);
     this.tiddlerStorageChangeListener = makeChangeListener(this.rpc.sandboxedAPIClient);
     this.attachDOMEventListeners()
-    await this.createParentAPI(this.rpc, user);
+    await this.createParentAPI(this.rpc, user, authDetails);
   }
 
   // TODO: this isn't called right now, but we'll want to support firebase
@@ -183,7 +183,7 @@ export class TopLevelApp {
     });
   }
 
-  async createParentAPI(rpc: RPC, user?: TiddlyBaseUser) {
+  async createParentAPI(rpc: RPC, user?: TiddlyBaseUser, authDetails?: AuthDetails) {
 
     const loadError = async (message: string) => {
       replaceChildrenWithText(document.getElementById("wiki-error-message"), message);
@@ -229,13 +229,20 @@ export class TopLevelApp {
             {
               ...user,
               title: TIDDLYBASE_TITLE_USER_PROFILE,
-            }, {
+            },
+            {
+              ...authDetails,
+              title: TIDDLYBASE_TITLE_AUTH_DETAILS,
+            },
+            {
               text: window.location.href,
               title: TIDDLYBASE_TITLE_PARENT_LOCATION
-            }, {
+            },
+            {
               ...this.launchParameters,
               title: TIDDLYBASE_TITLE_LAUNCH_PARAMETERS
-            }, {
+            },
+            {
               pathTemplate: this.config.urls!.pathTemplate,
               title: TIDDLYBASE_TITLE_PATH_TEMPLATE
             }
@@ -290,7 +297,7 @@ export class TopLevelApp {
 
   }
 
-  private onAuthChange(user?: TiddlyBaseUser) {
+  private onAuthChange(user?: TiddlyBaseUser, authDetails?: AuthDetails) {
     this.launchParameters.userId = user?.userId;
     this.tiddlywikiBootComplete = false;
     if (this.rpc) {
@@ -298,7 +305,7 @@ export class TopLevelApp {
       this.rpc.rpc.close();
       this.destroyWikiFrame()
     }
-    this.loadWiki(user).then(() => {
+    this.loadWiki(user, authDetails).then(() => {
       toggleVisibleDOMSection('wiki-container');
     })
   }
@@ -306,8 +313,8 @@ export class TopLevelApp {
 
   initApp() {
     console.log("launchParameters", this.launchParameters, "launchConfig", this.launchConfig);
-    this.authProvider.onLogin((user, _authDetails) => {
-      this.onAuthChange(user);
+    this.authProvider.onLogin((user, authDetails) => {
+      this.onAuthChange(user, authDetails);
     });
 
     this.authProvider.onLogout(() => {

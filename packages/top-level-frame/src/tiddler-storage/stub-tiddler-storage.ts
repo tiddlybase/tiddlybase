@@ -1,6 +1,9 @@
 import type { TiddlerCollection, TiddlerStorage } from "@tiddlybase/shared/src/tiddler-storage";
 
 export class StubTiddlerStorage implements TiddlerStorage {
+  isTiddlerPinned (tiddler: $tw.TiddlerFields) {
+    return false;
+  }
 
   async getTiddler (title: string) : Promise<$tw.TiddlerFields | undefined> {
     console.log(`StubTiddlerStore.getTiddler("${title}") called`);

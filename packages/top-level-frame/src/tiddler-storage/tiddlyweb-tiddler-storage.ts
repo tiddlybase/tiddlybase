@@ -2,7 +2,7 @@ import type { } from '@tiddlybase/tw5-types/src/index'
 import type {TiddlerCollection } from "@tiddlybase/shared/src/tiddler-storage";
 import { FileStorageTiddlerStorage } from './file-storage-tiddler-storage';
 import { HttpFileStorage } from '../file-storage/http-file-source';
-import { LaunchParameters, TiddlerStorageWriteCondition } from '@tiddlybase/shared/src/tiddlybase-config-schema';
+import { LaunchParameters, PinTiddlerToStorageCondition, TiddlerStorageWriteCondition } from '@tiddlybase/shared/src/tiddlybase-config-schema';
 import { TiddlerStorageBase } from './tiddler-storage-base';
 
 const DEFAULT_FILTER_EXPRESSION = "[is[tiddler]]";
@@ -58,8 +58,9 @@ export class TiddlyWebTiddlerStorage extends TiddlerStorageBase {
   constructor(
     launchParamters: LaunchParameters,
     writeCondition: TiddlerStorageWriteCondition|undefined,
+    pinCondition: PinTiddlerToStorageCondition | undefined,
     {urlPrefix, filterExpression}:{urlPrefix?:string, filterExpression?:string}={}) {
-    super(launchParamters, writeCondition);
+    super(launchParamters, writeCondition, pinCondition);
     this.urlPrefix = urlPrefix ?? DEFAULT_URL_PREFIX;
     this.filterExpression = filterExpression ?? DEFAULT_FILTER_EXPRESSION;
   }
@@ -101,6 +102,8 @@ export class TiddlyWebTiddlerStorage extends TiddlerStorageBase {
     // exclude=, prevents 'text' field from being omitted
     let urlSuffix = `recipes/default/tiddlers.json?exclude=,&filter=${encodeURIComponent(this.filterExpression)}`;
     return new FileStorageTiddlerStorage(
+      this.launchParameters,
+      this.pinTiddlerCondition,
       new HttpFileStorage(this.makeURL(urlSuffix)),
       '').getAllTiddlers();
   }
