@@ -7,7 +7,7 @@ import { LaunchParameters } from "@tiddlybase/shared/src/tiddlybase-config-schem
 
 const SEARCH_PARAMETER_SIGN_IN_FLOW = 'auth:signInFlow';
 
-export const addFirebaseUI = (launchParameters: LaunchParameters, authProvider: FirebaseAuthProvider, domParentId:string, lazyFirebaseApp:Lazy<FirebaseApp>, firebaseUIConfig:firebaseui.auth.Config, writeToFirestore:boolean) => {
+export const addFirebaseUI = (launchParameters: LaunchParameters, authProvider: FirebaseAuthProvider, domParentId:string, lazyFirebaseApp:Lazy<FirebaseApp>, firebaseUIConfig:firebaseui.auth.Config) => {
   const ui = new firebaseui.auth.AuthUI(authProvider.auth);
   authProvider.onLogout(() => {
     ui.start(domParentId, {

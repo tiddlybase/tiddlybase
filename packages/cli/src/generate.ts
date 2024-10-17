@@ -169,7 +169,6 @@ const getFirebaseClientConfig = async (project?: string): Promise<Exclude<Tiddly
 const DEFAULT_LAUNCH_CONFIG: Partial<LaunchConfig> = {
   "auth": {
     "type": "firebase",
-    "writeToFirestore": true,
     "firebaseui": {
       "signInFlow": "redirect",
       "signInOptions": [{ "provider": "google.com" }],

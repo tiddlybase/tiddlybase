@@ -6,7 +6,6 @@ export const DEFAULT_LAUNCH_CONFIG = "default";
 
 export const DEFAULT_AUTH: AuthProviderSpec = {
   type: 'firebase',
-  writeToFirestore: true,
   firebaseui: {
     "signInFlow": "redirect",
     "signInOptions": [{ "provider": "google.com" }],

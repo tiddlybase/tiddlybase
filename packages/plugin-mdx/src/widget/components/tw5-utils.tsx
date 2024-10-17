@@ -12,12 +12,12 @@ export interface NavigationEvent {
 
 export type NavigationEventHandler = (navigationEvent:NavigationEvent)=>void;
 
-const makeLinkClickHandler =
+export const makeLinkClickHandler =
   (
     targetTiddler: string,
     parentWidget?: $tw.Widget,
     navigationEventHandler?: NavigationEventHandler
-  ): React.AnchorHTMLAttributes<HTMLAnchorElement>["onClick"] =>
+  ): React.MouseEventHandler<HTMLAnchorElement> =>
   (event) => {
     // from tiddlywiki/core/modules/widgets/link.js:147
     const navigateEvent: $tw.Widget.NavigateEvent = {
@@ -65,15 +65,12 @@ const makeLinkClickHandler =
     return false;
   };
 
-export const makeWikiLink = (
+export const getWikiLinkProps = (
   context: TW5ReactContextType,
   targetTiddler: string,
-  children?: React.ReactNode,
-  navigationEventHandler?: NavigationEventHandler
-) => {
+):React.DetailedHTMLProps<React.AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement> => {
   const tiddlerExists =  context.parentWidget.wiki.tiddlerExists(targetTiddler);
   const isShadowTiddler =  context.parentWidget.wiki.isShadowTiddler(targetTiddler);
-
   const classes: string[] = [];
   // from tiddlywiki/core/modules/widgets/link.js:68
   classes.push("tc-tiddlylink");
@@ -88,17 +85,8 @@ export const makeWikiLink = (
   } else if (tiddlerExists) {
     classes.push("tc-tiddlylink-resolves");
   }
-  return (
-    <a
-      className={classes.join(" ")}
-      href={`#${encodeURIComponent(targetTiddler)}`}
-      onClick={makeLinkClickHandler(
-        targetTiddler,
-        context?.parentWidget,
-        navigationEventHandler
-      )}
-    >
-      {children ?? targetTiddler}
-    </a>
-  );
+  return {
+    className: classes.join(" "),
+    href: `#${encodeURIComponent(targetTiddler)}`,
+  };
 };

@@ -1,26 +1,11 @@
-import {
-  TW5ReactContext,
-} from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
-import { useContext } from "react";
-import { errorMsg } from "@tiddlybase/plugin-react/src/components/JSError";
-import { makeWikiLink } from "./tw5-utils";
+import { WikiLink } from "./WikiLink";
+import { ExternalLink } from "./ExternalLink";
 
-const DEFAULT_EXTERNAL_LINK_PROPS = {
-  // TiddlyWiki 5.2.7 includes https://github.com/Jermolene/TiddlyWiki5/pull/6528
-  // which adds the "_codified_" class to links.",
-  className: "tc-tiddlylink-external _codified_",
-  rel: "noopener noreferrer",
-  target: "_blank",
-};
 
-export const a = (props: React.AnchorHTMLAttributes<HTMLAnchorElement>): React.ReactElement => {
-  const context = useContext(TW5ReactContext);
-  if (context === null) {
-    return errorMsg('Cannot create a element without a TW5ReactContext');
-  }
+export const a = ({children, ...props}: React.AnchorHTMLAttributes<HTMLAnchorElement>): React.ReactElement => {
   if (
     props.className === "internal new" &&
-    typeof props.children === "string" &&
+    typeof children === "string" &&
     !!props.href
   ) {
     /*  Internal wiki link case with double-bracket syntax, eg:
@@ -32,9 +17,11 @@ export const a = (props: React.AnchorHTMLAttributes<HTMLAnchorElement>): React.R
       // note this is opposite of the TW5 convention, [[Displayed Link Title|Tiddler Title]]
       // so we'll want to switch this. (See: https://tiddlywiki.com/static/Linking%2520in%2520WikiText.html )
   */
-    return makeWikiLink(context, props.children, props.href);
+    const tiddler = children;
+    const text = props.href;
+    return <WikiLink tiddler={tiddler}>{text}</WikiLink>;
   }
-  if (props.href?.startsWith('#') && typeof props.children === 'string') {
+  if (props.href?.startsWith('#') && (typeof children === 'string')) {
     /*  Internal wiki link case with hash link href
     target tiddler: "foo bar"
     [Start](#foo%20bar) -> {
@@ -42,18 +29,10 @@ export const a = (props: React.AnchorHTMLAttributes<HTMLAnchorElement>): React.R
       href: "#foo%20bar"
     }
     */
-    const targetTiddler = decodeURIComponent(props.href.substring(1))
-    return makeWikiLink(context, targetTiddler, props.children);
+    const tiddler = decodeURIComponent(props.href.substring(1))
+    const text = children
+    return <WikiLink tiddler={tiddler}>{text}</WikiLink>;
   }
   // external link
-  return (
-    <a
-      {...{
-        ...DEFAULT_EXTERNAL_LINK_PROPS,
-        ...props,
-      }}
-    >
-      {props.children}
-    </a>
-  );
+  return <ExternalLink {...props}>{children}</ExternalLink>;
 };

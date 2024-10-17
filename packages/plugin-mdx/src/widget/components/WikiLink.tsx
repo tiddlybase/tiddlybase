@@ -1,18 +1,46 @@
-import { useContext } from "react";
+import { useContext, useCallback } from "react";
 import { TW5ReactContext } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
 import { errorMsg } from "@tiddlybase/plugin-react/src/components/JSError";
-import { NavigationEventHandler, makeWikiLink } from "./tw5-utils";
+import {
+  NavigationEventHandler,
+  getWikiLinkProps,
+  makeLinkClickHandler,
+} from "./tw5-utils";
 
-export interface WikiLinkProps {
-  tiddler: string,
-  onClick?: NavigationEventHandler,
-  children?: React.ReactNode
+export interface WikiLinkProps
+  extends React.DetailedHTMLProps<
+    React.AnchorHTMLAttributes<HTMLAnchorElement>,
+    HTMLAnchorElement
+  > {
+  tiddler: string;
+  onNavigate?: NavigationEventHandler;
 }
 
-export const WikiLink = ({tiddler, children, onClick}: WikiLinkProps) => {
+export const WikiLink = ({
+  tiddler,
+  children,
+  onNavigate,
+  ...linkProps
+}: WikiLinkProps) => {
   const context = useContext(TW5ReactContext);
+  const stableOnClick = useCallback(
+    makeLinkClickHandler(tiddler, context?.parentWidget, onNavigate),
+    [tiddler, context, onNavigate]
+  );
   if (context === null) {
-    return errorMsg('Cannot create WikiLink component without a TW5ReactContext');
+    return errorMsg(
+      "Cannot create WikiLink component without a TW5ReactContext"
+    );
   }
-  return makeWikiLink(context, tiddler, children, onClick)
-}
+  return (
+    <a
+      onClick={stableOnClick}
+      {...{
+        ...getWikiLinkProps(context, tiddler),
+        ...linkProps,
+      }}
+    >
+      {children ?? tiddler}
+    </a>
+  );
+};
