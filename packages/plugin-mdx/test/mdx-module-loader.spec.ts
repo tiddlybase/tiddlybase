@@ -357,7 +357,8 @@ asdf
     const context: MDXContext = {
       definingTiddlerTitle: 'tiddler1',
       log: (msg: string) => { logEntries.push(msg) },
-      components: {}
+      components: {},
+      absPath: (pathSuffix:string) => pathSuffix
     }
     const { loader } = setup(wikiTiddlers);
     // compile first version of tiddler

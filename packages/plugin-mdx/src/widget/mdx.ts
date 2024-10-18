@@ -6,7 +6,7 @@ import type {
 import React from "react";
 import { components as baseComponents } from "./components";
 import { mdxModuleLoader } from "./global";
-import { CompilationResult, MDXContext, MDXModuleLoader, ModuleSet } from "./mdx-module-loader";
+import { CompilationResult, makeAbsPath, MDXContext, MDXModuleLoader, ModuleSet } from "./mdx-module-loader";
 import { wrapMDXComponent } from "./mdx-util";
 
 const MIME_TYPE = "text/x-markdown";
@@ -38,7 +38,8 @@ const makeMDXContext = (
 ): MDXContext => ({
   definingTiddlerTitle,
   components: getBuiltinComponents(),
-  tiddlybase: loader.mdxTiddlybaseAPI
+  tiddlybase: loader.mdxTiddlybaseAPI,
+  absPath: makeAbsPath(definingTiddlerTitle)
 });
 
 const addTiddlerChangeHook = async (

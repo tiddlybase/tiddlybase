@@ -51,6 +51,7 @@ type CompilationResultWithChangeCount = {
 
 export type MDXContext = Record<string, any> & {
   definingTiddlerTitle: string | undefined;
+  absPath: (pathSuffix: string) => string;
   components: Record<string, any>;
   requireAsync?: RequireAsync;
 }
@@ -85,6 +86,13 @@ const getContextValues = (mdxContext: MDXContext): any[] =>
     return acc;
   }, [] as any[]);
 
+export const makeAbsPath = (basePath?: string) => (pathSuffix: string): string => {
+  if (basePath !== undefined) {
+    return pathSuffix.startsWith('.') ? absPath(`${basePath}/../${pathSuffix}`) : pathSuffix;
+  }
+  return pathSuffix;
+}
+
 export class MDXModuleLoader {
   anonymousGeneratedFunctionCounter = 0;
   // TiddlyWiki standard objects, which default to global $tw.{wiki, modules}.
@@ -115,7 +123,8 @@ export class MDXModuleLoader {
       mdxContext: context ?? {
         definingTiddlerTitle: undefined,
         components: {},
-        tiddlybase: this.mdxTiddlybaseAPI
+        tiddlybase: this.mdxTiddlybaseAPI,
+        absPath: makeAbsPath()
       }
     };
   }
@@ -144,7 +153,7 @@ export class MDXModuleLoader {
   ): RequireAsync {
     return async (requiredModuleName: string) => {
 
-      const absTiddlerName = requiredModuleName.startsWith('.') ? absPath(`${loadContext.mdxContext.definingTiddlerTitle}/../${requiredModuleName}`) : requiredModuleName;
+      const absTiddlerName = makeAbsPath(loadContext.mdxContext.definingTiddlerTitle)(requiredModuleName);
 
       const maybeExports = await this.getModuleExports({
         loadContext,
@@ -366,6 +375,7 @@ export class MDXModuleLoader {
       dependencies: new Set<string>([])
     };
     ctxt.mdxContext.requireAsync = this.getRequireAsync(ctxt);
+    ctxt.mdxContext.absPath = makeAbsPath(tiddler);
     ctxt.mdxContext.mdx = getMdxTagFn({ loader: this, moduleLoaderContext: ctxt });
     if (tiddler) {
       ctxt.mdxContext.definingTiddlerTitle = tiddler;
