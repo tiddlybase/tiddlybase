@@ -1,6 +1,5 @@
-import { WikiLink } from "./WikiLink";
+import { WikiLink, HeadingLink } from "./WikiLink";
 import { ExternalLink } from "./ExternalLink";
-
 
 export const a = ({children, ...props}: React.AnchorHTMLAttributes<HTMLAnchorElement>): React.ReactElement => {
   if (
@@ -20,6 +19,9 @@ export const a = ({children, ...props}: React.AnchorHTMLAttributes<HTMLAnchorEle
     const tiddler = children;
     const text = props.href;
     return <WikiLink tiddler={tiddler}>{text}</WikiLink>;
+  }
+  if (props.href?.startsWith('#toc-anchor-link-')) {
+    return <HeadingLink headingContent={children as string} />
   }
   if (props.href?.startsWith('#') && (typeof children === 'string')) {
     /*  Internal wiki link case with hash link href

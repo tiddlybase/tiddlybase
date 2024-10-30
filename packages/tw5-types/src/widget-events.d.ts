@@ -255,7 +255,7 @@ declare namespace $tw {
       | { type: 'tm-browser-refresh' }
       | { type: 'tm-print' }
       | { type: 'tm-home' }
-
+      | { type: 'tm-scroll', target: Element}
   }
 }
 

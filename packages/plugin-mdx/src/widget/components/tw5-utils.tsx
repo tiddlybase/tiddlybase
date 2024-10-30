@@ -90,3 +90,10 @@ export const getWikiLinkProps = (
     href: `#${encodeURIComponent(targetTiddler)}`,
   };
 };
+
+export const scrollToHeading = (tiddler: string, headingContent:string) => {
+  [...(document.querySelector(`div[data-tiddler-title='${tiddler}']`)?.querySelectorAll("h1, h2:not(.tc-title), h3, h4, h5, h6") ?? [])].filter(
+    h => (h as HTMLHeadingElement).innerText === headingContent).map(
+      elem => $tw.rootWidget.dispatchEvent(
+        {type: "tm-scroll", target: elem}))
+}

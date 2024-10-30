@@ -86,9 +86,13 @@ const getContextValues = (mdxContext: MDXContext): any[] =>
     return acc;
   }, [] as any[]);
 
+const DRAFT_OF_PREFIX="Draft of '"
+
 export const makeAbsPath = (basePath?: string) => (pathSuffix: string): string => {
   if (basePath !== undefined) {
-    return pathSuffix.startsWith('.') ? absPath(`${basePath}/../${pathSuffix}`) : pathSuffix;
+    // remove Draft of ' prefix for previews
+    const normalizedBasePath = basePath.startsWith(DRAFT_OF_PREFIX) ? basePath.substring(DRAFT_OF_PREFIX.length, basePath.length - 1) : basePath;
+    return pathSuffix.startsWith('.') ? absPath(`${normalizedBasePath}/../${pathSuffix}`) : pathSuffix;
   }
   return pathSuffix;
 }
