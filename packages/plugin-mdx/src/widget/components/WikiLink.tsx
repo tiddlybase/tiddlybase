@@ -1,11 +1,10 @@
-import { useContext, useCallback, ReactNode } from "react";
+import { useContext, useCallback } from "react";
 import { TW5ReactContext } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
 import { errorMsg } from "@tiddlybase/plugin-react/src/components/JSError";
 import {
   NavigationEventHandler,
   getWikiLinkProps,
   makeLinkClickHandler,
-  scrollToHeading
 } from "./tw5-utils";
 export {makeLinkClickHandler};
 
@@ -14,48 +13,39 @@ export interface WikiLinkProps
     React.AnchorHTMLAttributes<HTMLAnchorElement>,
     HTMLAnchorElement
   > {
-  tiddler: string;
+  tiddler?: string;
   onNavigate?: NavigationEventHandler;
+  fragment?: string;
 }
 
 export const WikiLink = ({
   tiddler,
+  fragment,
   children,
   onNavigate,
   ...linkProps
 }: WikiLinkProps) => {
   const context = useContext(TW5ReactContext);
-  const stableOnClick = useCallback(
-    makeLinkClickHandler(tiddler, context?.parentWidget, onNavigate),
-    [tiddler, context, onNavigate]
-  );
   if (context === null) {
     return errorMsg(
       "Cannot create WikiLink component without a TW5ReactContext"
     );
   }
+  const effectiveTiddler = tiddler ?? context!.parentWidget?.getVariable("currentTiddler");
+  const stableOnClick = useCallback(
+    makeLinkClickHandler(effectiveTiddler, fragment, context?.parentWidget, onNavigate),
+    [effectiveTiddler, fragment, context, onNavigate]
+  );
+
   return (
     <a
       onClick={stableOnClick}
       {...{
-        ...getWikiLinkProps(context, tiddler),
+        ...getWikiLinkProps(context, effectiveTiddler, fragment),
         ...linkProps,
       }}
     >
-      {children ?? tiddler}
+      {children ?? effectiveTiddler}
     </a>
   );
 };
-
-export const HeadingLink = ({tiddler, children, headingContent}:{tiddler?: string, children?: ReactNode, headingContent: string}) => {
-  // currentTiddler isn't always the same tiddler as the one with the headings...
-  const context = useContext(TW5ReactContext);
-  const clickHandler = useCallback((event:React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
-    const effectiveTiddler = tiddler ? tiddler : context!.parentWidget?.getVariable("currentTiddler");
-    scrollToHeading(effectiveTiddler, headingContent);
-    event.stopPropagation();
-    event.preventDefault();
-    return false;
-  }, [tiddler, headingContent]);
-  return <a href="#" onClick={clickHandler}>{children ?? tiddler ?? headingContent}</a>
-}

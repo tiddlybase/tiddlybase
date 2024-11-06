@@ -3,10 +3,12 @@ import type {} from "@tiddlybase/tw5-types/src/index";
 import {
   TW5ReactContextType,
 } from "@tiddlybase/plugin-react/src/components/TW5ReactContext";
+import {fragmentNameToURLHash} from "@tiddlybase/shared/src/fragment-utils"
 
 export interface NavigationEvent {
   from?: string;
   to: string;
+  fragment?: string;
   event: React.MouseEvent<HTMLAnchorElement, MouseEvent>;
 };
 
@@ -15,6 +17,7 @@ export type NavigationEventHandler = (navigationEvent:NavigationEvent)=>void;
 export const makeLinkClickHandler =
   (
     targetTiddler: string,
+    fragment?: string,
     parentWidget?: $tw.Widget,
     navigationEventHandler?: NavigationEventHandler
   ): React.MouseEventHandler<HTMLAnchorElement> =>
@@ -23,6 +26,7 @@ export const makeLinkClickHandler =
     const navigateEvent: $tw.Widget.NavigateEvent = {
       type: "tm-navigate",
       navigateTo: targetTiddler,
+      navigateToFragment: fragment,
       navigateFromTitle: parentWidget?.getVariable("storyTiddler"),
       navigateFromNode: this,
       navigateSuppressNavigation:
@@ -56,7 +60,8 @@ export const makeLinkClickHandler =
       navigationEventHandler({
         from: parentWidget?.getVariable("storyTiddler"),
         to: targetTiddler,
-        event: event
+        event: event,
+        fragment: fragment
       })
     }
     parentWidget?.dispatchEvent(navigateEvent);
@@ -68,6 +73,7 @@ export const makeLinkClickHandler =
 export const getWikiLinkProps = (
   context: TW5ReactContextType,
   targetTiddler: string,
+  fragment?: string
 ):React.DetailedHTMLProps<React.AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement> => {
   const tiddlerExists =  context.parentWidget.wiki.tiddlerExists(targetTiddler);
   const isShadowTiddler =  context.parentWidget.wiki.isShadowTiddler(targetTiddler);
@@ -87,13 +93,6 @@ export const getWikiLinkProps = (
   }
   return {
     className: classes.join(" "),
-    href: `#${encodeURIComponent(targetTiddler)}`,
+    href: fragmentNameToURLHash(fragment ?? ''),
   };
 };
-
-export const scrollToHeading = (tiddler: string, headingContent:string) => {
-  [...(document.querySelector(`div[data-tiddler-title='${tiddler}']`)?.querySelectorAll("h1, h2:not(.tc-title), h3, h4, h5, h6") ?? [])].filter(
-    h => (h as HTMLHeadingElement).innerText === headingContent).map(
-      elem => $tw.rootWidget.dispatchEvent(
-        {type: "tm-scroll", target: elem}))
-}

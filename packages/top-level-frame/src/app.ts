@@ -279,7 +279,7 @@ export class TopLevelApp {
         wikiViewState:WikiViewState,
         pathVariables: Record<string, string>,
         searchVariables?: Record<string, string>,
-        hash?: string
+        fragment?: string
       ) => {
         // don't allow launchConfig and instance to be specified
         const {launchConfig: _1, instance: _2, ...safePathVariables} = pathVariables;
@@ -288,7 +288,7 @@ export class TopLevelApp {
           window.location.href,
           safePathVariables,
           searchVariables,
-          hash
+          fragment
         );
         console.log("pushState", wikiViewState);
         window.history.pushState(wikiViewState, '', newURL);

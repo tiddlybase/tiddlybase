@@ -17,6 +17,7 @@ export const startup = function () {
         wikiViewState.openTiddlers.map(t => t.title),
         wikiViewState.activeTiddler
       );
+      storyStartup.scrollToFragment(wikiViewState);
     })
   }
 

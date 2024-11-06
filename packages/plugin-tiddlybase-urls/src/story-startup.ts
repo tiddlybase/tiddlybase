@@ -18,6 +18,8 @@ import { PathVariables, createURL, parseURL } from "@tiddlybase/shared/src/path-
 import { SearchVariables } from "@tiddlybase/shared/src/tiddlybase-config-schema";
 import { APIClient } from "@tiddlybase/rpc/src/types";
 import { TopLevelAPIForSandboxedWiki } from "@tiddlybase/rpc/src/top-level-api";
+import { scrollToFragment } from "@tiddlybase/plugin-tiddlybase-utils/src/scroll";
+import { urlHashToFragmentName } from "@tiddlybase/shared/src/fragment-utils"
 
 type HistoryListItem = { title: string }
 
@@ -173,7 +175,7 @@ export class StoryStartup {
     })
   };
 
-  onNavigation(tiddler: string, hash?: string) {
+  onNavigation(event:$tw.Widget.NavigateEvent) {
     /*
     The tm-navigating hook handler is called before the StoryList is updated.
     After the hook handler call, navigator calls story.addToStory synchronously.
@@ -184,13 +186,21 @@ export class StoryStartup {
     to which we are navigating. Since the scroll position is only final afterwards,
     we should wait until the animation is over.
     */
-    if (this.getActiveTiddler() !== tiddler) {
-      this.waitForAnimation(() => {
+    const tiddler = event.navigateTo;
+    const hash = event.navigateToFragment;
+    event.navigateSuppressNavigation = this.getActiveTiddler() === tiddler;
+    if ((this.getActiveTiddler() !== tiddler) || (hash !== undefined)) {
+      // tiddlerReadyPromise updates the active tiddler if necessary, otherwise does nothing.
+      const tiddlerReadyPromise = (this.getActiveTiddler() !== tiddler) ? this.waitForAnimation(() => {
         // There's a race condition here, as the address bar may have been updated
         // already while this function was waiting for the animation to comlete
         if (this.getActiveTiddler() !== tiddler) {
-          console.log("address bar update triggered by navigation", tiddler);
           this.setActiveTiddlerTitle(tiddler);
+        }
+      }) : Promise.resolve(null);
+      tiddlerReadyPromise.then(
+        () => {
+          // once the tiddler is ready, we must update the address bar
           this.updateAddressBar(
             { tiddler },
             // empty object passed so search params are cleared
@@ -198,9 +208,16 @@ export class StoryStartup {
             this.getTiddlerArguments(tiddler) ?? {},
             hash
           );
-        }
-      });
+          // If a fragment was provided, scroll to the fragment:
+          if (hash !== undefined) {
+            scrollToFragment(tiddler, hash);
+          }
+        },
+        // log any errors
+        console.error
+      );
     }
+    return event;
   };
 
   getHistoryListTiddlers(): HistoryListItem[] | null {
@@ -240,9 +257,18 @@ export class StoryStartup {
   }
 
   serializeWikiViewState(): WikiViewState {
+    let fragment: string|undefined = undefined;
+    const parentUrl = this.getParentURL()
+    if (parentUrl) {
+      const url = new URL(parentUrl)
+      if (url.hash) {
+        fragment = urlHashToFragmentName(url.hash)
+      }
+    }
+
     return {
+      fragment,
       activeTiddler: this.getActiveTiddler(),
-      scrollPosition: this.utils.getScrollPosition(),
       sidebar: this.wiki.getTiddler(TW5_TITLE_SIDEBAR)?.fields?.text !== "no",
       openTiddlers: this.getStoryList().map((title: string) => {
         const tiddlerViewState: TiddlerViewState = { title };
@@ -265,7 +291,7 @@ export class StoryStartup {
     });
   }
 
-  applyWikiViewState(wikiViewState: WikiViewState): Promise<boolean> {
+  async applyWikiViewState(wikiViewState: WikiViewState): Promise<boolean> {
     /**
      * Applies a given wikiViewState to the current wiki.
      */
@@ -314,15 +340,16 @@ export class StoryStartup {
     }
     // Apply all wiki changes
     this.wiki.addTiddlers(tiddlersToSet);
-    // Scroll to the proper position if available
-    return wikiViewState?.scrollPosition !== undefined ?
-      this.waitForAnimation(() => {
-        window.scrollTo({
-          left: wikiViewState.scrollPosition!.x,
-          top: wikiViewState.scrollPosition!.y
-        });
-        return true;
-      }) : Promise.resolve(true); // if there's no scrolling, we can resolve the resulting promise immediately
+    await this.scrollToFragment(wikiViewState)
+    return true; // if there's no scrolling, we can resolve the resulting promise immediately
+  }
+
+  async scrollToFragment(wikiViewState: WikiViewState) {
+    if (!!wikiViewState.activeTiddler && !!wikiViewState.fragment) {
+      await this.waitForAnimation(() => {
+        scrollToFragment(wikiViewState.activeTiddler!, wikiViewState.fragment!);
+      })
+    }
   }
 
   getStoryList() {
@@ -394,10 +421,7 @@ export class StoryStartup {
     this.wiki.addEventListener('change', this.handleWikiChange.bind(this));
 
     // Listen for navigate events and update addressbar accordingly
-    this.hooks.addHook("th-navigating", event => {
-      this.onNavigation(event.navigateTo);
-      return event;
-    });
+    this.hooks.addHook("th-navigating", this.onNavigation.bind(this));
 
     // listen for any clicks in case it originates from a tiddler element
     document.addEventListener('click', e => {
@@ -456,7 +480,7 @@ export class StoryStartup {
     }
   }
 
-  private getViewStateFromOpenTiddlers(tiddlerList: string[], activeTiddler?: string, searchVariables?: SearchVariables): WikiViewState {
+  private getViewStateFromOpenTiddlers(tiddlerList: string[], activeTiddler?: string, searchVariables?: SearchVariables, fragment?: string): WikiViewState {
     const tiddlers = [...tiddlerList];
     let activeTiddlerIndex = 0;
     if (activeTiddler) {
@@ -473,7 +497,8 @@ export class StoryStartup {
     }
     return {
       openTiddlers,
-      activeTiddler: activeTiddler ?? tiddlers[0]
+      activeTiddler: activeTiddler ?? tiddlers[0],
+      fragment
     }
   }
 
@@ -502,7 +527,8 @@ export class StoryStartup {
       return this.getViewStateFromOpenTiddlers(
         this.getStoryList(),
         parsed.pathVariables.tiddler,
-        parsed.searchVariables);
+        parsed.searchVariables,
+        parsed.fragment);
     }
     // Case 3: No WikiViewState or active tiddler encoded in URL, use wiki contents
     //         to determine which tiddler(s) to display.
@@ -515,14 +541,16 @@ export class StoryStartup {
         return this.getViewStateFromOpenTiddlers(
           tiddlers,
           undefined,
-          parsed.searchVariables);
+          parsed.searchVariables,
+          parsed.fragment);
       }
     }
     // fall back to displaying "GettingStarted" tiddler
     return this.getViewStateFromOpenTiddlers(
       [TW5_TITLE_GETTING_STARTED],
       undefined,
-      parsed.searchVariables);
+      parsed.searchVariables,
+      parsed.fragment);
   }
 
   getWikiViewState():WikiViewState {

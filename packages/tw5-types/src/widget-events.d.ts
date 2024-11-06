@@ -183,6 +183,7 @@ declare namespace $tw {
     export interface NavigateEvent extends TW5EventBase {
       type: 'tm-navigate';
       navigateTo: string;
+      navigateToFragment?: string; // tiddlybase extension
       navigateFromTitle?: string;
       navigateFromNode?: Node,
       navigateSuppressNavigation?: boolean
@@ -255,7 +256,7 @@ declare namespace $tw {
       | { type: 'tm-browser-refresh' }
       | { type: 'tm-print' }
       | { type: 'tm-home' }
-      | { type: 'tm-scroll', target: Element}
+      | { type: 'tm-scroll', target: Element, paramObject?: any}
   }
 }
 

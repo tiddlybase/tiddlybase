@@ -1,6 +1,6 @@
-import { WikiLink, HeadingLink } from "./WikiLink";
+import { WikiLink } from "./WikiLink";
 import { ExternalLink } from "./ExternalLink";
-
+import {urlHashToFragmentName} from "@tiddlybase/shared/src/fragment-utils"
 export const a = ({children, ...props}: React.AnchorHTMLAttributes<HTMLAnchorElement>): React.ReactElement => {
   if (
     props.className === "internal new" &&
@@ -21,19 +21,11 @@ export const a = ({children, ...props}: React.AnchorHTMLAttributes<HTMLAnchorEle
     return <WikiLink tiddler={tiddler}>{text}</WikiLink>;
   }
   if (props.href?.startsWith('#toc-anchor-link-')) {
-    return <HeadingLink headingContent={children as string} />
+    return <WikiLink fragment={children as string}>{children}</WikiLink>
   }
   if (props.href?.startsWith('#') && (typeof children === 'string')) {
-    /*  Internal wiki link case with hash link href
-    target tiddler: "foo bar"
-    [Start](#foo%20bar) -> {
-      children: "Start"
-      href: "#foo%20bar"
-    }
-    */
-    const tiddler = decodeURIComponent(props.href.substring(1))
     const text = children
-    return <WikiLink tiddler={tiddler}>{text}</WikiLink>;
+    return <WikiLink fragment={urlHashToFragmentName(props.href)}>{text}</WikiLink>;
   }
   // external link
   return <ExternalLink {...props}>{children}</ExternalLink>;

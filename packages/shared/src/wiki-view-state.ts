@@ -28,6 +28,6 @@ export interface TiddlerViewState {
 export interface WikiViewState {
   sidebar?: boolean;
   activeTiddler?: string;
+  fragment?: string;
   openTiddlers: TiddlerViewState[];
-  scrollPosition?: ScrollPosition;
 }

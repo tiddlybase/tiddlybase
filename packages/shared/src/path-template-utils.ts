@@ -1,5 +1,6 @@
 import { PathTemplate, PathTemplateComponent, PathTemplateComponentEncoding, PathTemplateVariable } from "./path-template";
 import { SearchVariables } from "./tiddlybase-config-schema";
+import {fragmentNameToURLHash, urlHashToFragmentName} from "./fragment-utils"
 
 // Regxp for at least on character, no spaces or slashes:
 const IDENTIFIER_REGEXP = "[^\\s\\/\\\\]+";
@@ -68,6 +69,7 @@ export type ParsedURL = {
   pathPrefix: string,
   pathVariables: PathVariables
   searchVariables: SearchVariables
+  fragment?: string
 }
 
 export const parseSearchVariables = (rawSearchParams: string): Record<string, string> => Object.fromEntries((new URLSearchParams(rawSearchParams)).entries());
@@ -79,7 +81,8 @@ export const parseURL = (pathTemplate: PathTemplate, url: string): ParsedURL => 
     url: parsedURL,
     pathPrefix,
     pathVariables,
-    searchVariables: parseSearchVariables(parsedURL.search)
+    searchVariables: parseSearchVariables(parsedURL.search),
+    fragment: !!parsedURL.hash ? urlHashToFragmentName(parsedURL.hash) : undefined
   }
 }
 
@@ -98,15 +101,16 @@ export const createURL = (
   baseURL: string,
   pathVariables: PathVariables,
   searchVariables?: SearchVariables,
-  hash?: string): string => {
-  const {url, pathPrefix, pathVariables: basePathVariables} = parseURL(pathTemplate, baseURL);
+  fragment?: string): string => {
+  const {url, pathPrefix, pathVariables: basePathVariables, fragment: baseFragment} = parseURL(pathTemplate, baseURL);
   const mergedPathVariables = Object.assign({}, basePathVariables, pathVariables);
+  const effectiveFragment = fragment ?? baseFragment;
   url.pathname = pathPrefix + createURLPath(pathTemplate, mergedPathVariables);
   if (searchVariables) {
     url.search = new URLSearchParams(searchVariables).toString();
   }
-  if (hash) {
-    url.hash = hash;
+  if (!!effectiveFragment) {
+    url.hash = fragmentNameToURLHash(effectiveFragment, false);
   }
   return url.href;
 }
