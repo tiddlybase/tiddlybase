@@ -34,7 +34,7 @@ export interface TopLevelUIAPI {
     wikiViewState: WikiViewState,
     pathVariables: Record<string, string>,
     searchVariables?: Record<string, string>,
-    hash?: string
+    fragment?: string
   ) => Promise<string>;
 }
 

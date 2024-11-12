@@ -18,6 +18,11 @@ export const a = ({children, ...props}: React.AnchorHTMLAttributes<HTMLAnchorEle
   */
     const tiddler = children;
     const text = props.href;
+    const tiddlerParts = tiddler.split('#');
+    if (tiddlerParts.length === 2) {
+      // the [[tiddler#fragment]] syntax
+      return <WikiLink tiddler={tiddlerParts[0]} fragment={tiddlerParts[1]}>{text}</WikiLink>;
+    }
     return <WikiLink tiddler={tiddler}>{text}</WikiLink>;
   }
   if (props.href?.startsWith('#toc-anchor-link-')) {

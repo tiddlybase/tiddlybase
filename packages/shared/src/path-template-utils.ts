@@ -102,15 +102,12 @@ export const createURL = (
   pathVariables: PathVariables,
   searchVariables?: SearchVariables,
   fragment?: string): string => {
-  const {url, pathPrefix, pathVariables: basePathVariables, fragment: baseFragment} = parseURL(pathTemplate, baseURL);
+  const {url, pathPrefix, pathVariables: basePathVariables} = parseURL(pathTemplate, baseURL);
   const mergedPathVariables = Object.assign({}, basePathVariables, pathVariables);
-  const effectiveFragment = fragment ?? baseFragment;
   url.pathname = pathPrefix + createURLPath(pathTemplate, mergedPathVariables);
   if (searchVariables) {
     url.search = new URLSearchParams(searchVariables).toString();
   }
-  if (!!effectiveFragment) {
-    url.hash = fragmentNameToURLHash(effectiveFragment, false);
-  }
+  url.hash = !!fragment ? fragmentNameToURLHash(fragment, false) : '';
   return url.href;
 }

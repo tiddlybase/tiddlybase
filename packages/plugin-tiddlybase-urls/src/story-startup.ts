@@ -19,7 +19,6 @@ import { SearchVariables } from "@tiddlybase/shared/src/tiddlybase-config-schema
 import { APIClient } from "@tiddlybase/rpc/src/types";
 import { TopLevelAPIForSandboxedWiki } from "@tiddlybase/rpc/src/top-level-api";
 import { scrollToFragment } from "@tiddlybase/plugin-tiddlybase-utils/src/scroll";
-import { urlHashToFragmentName } from "@tiddlybase/shared/src/fragment-utils"
 
 type HistoryListItem = { title: string }
 
@@ -91,7 +90,6 @@ export class StoryStartup {
           viewState: ''
         },
         this.getTiddlerArguments(tiddler),
-        // TODO: hash?
       ));
   }
 
@@ -157,7 +155,6 @@ export class StoryStartup {
       this.updateAddressBar(
         { tiddler: activeTiddler ?? '' },
         activeTiddler ? this.getTiddlerArguments(activeTiddler) : undefined
-        // TODO: hash
       );
     }
   }
@@ -176,47 +173,40 @@ export class StoryStartup {
   };
 
   onNavigation(event:$tw.Widget.NavigateEvent) {
-    /*
-    The tm-navigating hook handler is called before the StoryList is updated.
-    After the hook handler call, navigator calls story.addToStory synchronously.
-    By adding a setTimeout callback here, it will execute once the StoryList
-    has been updated with the current navigation.
-
-    The AnimationDuration determins how long it takes to scroll to the tiddler
-    to which we are navigating. Since the scroll position is only final afterwards,
-    we should wait until the animation is over.
-    */
     const tiddler = event.navigateTo;
-    const hash = event.navigateToFragment;
+    const fragment = event.navigateToFragment;
+    // navigateSuppressNavigation must be set to avoid jumping to the top of the
+    // tiddler when a fragment is set upon initial load. This caused by the
+    // the "th-page-refreshed" event being invoked due to update of
+    // $:/HistoryList
+    // see https://github.com/TiddlyWiki/TiddlyWiki5/blob/0160a4f3d34e0549f3a0591986dc8e8e01c854a7/core/modules/startup/render.js#L69
     event.navigateSuppressNavigation = this.getActiveTiddler() === tiddler;
-    if ((this.getActiveTiddler() !== tiddler) || (hash !== undefined)) {
-      // tiddlerReadyPromise updates the active tiddler if necessary, otherwise does nothing.
-      const tiddlerReadyPromise = (this.getActiveTiddler() !== tiddler) ? this.waitForAnimation(() => {
-        // There's a race condition here, as the address bar may have been updated
-        // already while this function was waiting for the animation to comlete
-        if (this.getActiveTiddler() !== tiddler) {
-          this.setActiveTiddlerTitle(tiddler);
-        }
-      }) : Promise.resolve(null);
-      tiddlerReadyPromise.then(
-        () => {
-          // once the tiddler is ready, we must update the address bar
-          this.updateAddressBar(
-            { tiddler },
-            // empty object passed so search params are cleared
-            // if no tiddler arguments exist for target tiddler
-            this.getTiddlerArguments(tiddler) ?? {},
-            hash
-          );
-          // If a fragment was provided, scroll to the fragment:
-          if (hash !== undefined) {
-            scrollToFragment(tiddler, hash);
-          }
-        },
-        // log any errors
-        console.error
+    // The AnimationDuration determins how long it takes to scroll to the tiddler
+    // to which we are navigating. Since the scroll position is only final afterwards,
+    // we should wait until the animation is over.
+    this.waitForAnimation(() => {
+      // NOTE: Nothing actually async happens in this function.
+      // The reason it must be a promise is that TiddlyWiki handles the
+      // 'tm-navigate' event synchronously, so the new tiddler is rendered
+      // immediately *after* this function returns. However, if there was a
+      // fragment provided, the browser must scroll to it when the DOM element
+      // of the newly opened tiddler is already available. By creating a
+      // promise, we can schedule the code below to run at the next tick.
+      if (this.getActiveTiddler() !== tiddler) {
+        this.setActiveTiddlerTitle(tiddler);
+      }
+      // once the tiddler is ready, we must update the address bar
+      this.updateAddressBar(
+        { tiddler },
+        // empty object passed so search params are cleared
+        // if no tiddler arguments exist for target tiddler
+        this.getTiddlerArguments(tiddler) ?? {},
+        fragment
       );
-    }
+      // If a fragment was provided, scroll to the fragment if
+      // provided, otherwise top of active tiddler
+      scrollToFragment(tiddler, fragment);
+    });
     return event;
   };
 
@@ -256,16 +246,7 @@ export class StoryStartup {
     return storyList[0];
   }
 
-  serializeWikiViewState(): WikiViewState {
-    let fragment: string|undefined = undefined;
-    const parentUrl = this.getParentURL()
-    if (parentUrl) {
-      const url = new URL(parentUrl)
-      if (url.hash) {
-        fragment = urlHashToFragmentName(url.hash)
-      }
-    }
-
+  serializeWikiViewState(fragment?: string): WikiViewState {
     return {
       fragment,
       activeTiddler: this.getActiveTiddler(),
@@ -341,13 +322,13 @@ export class StoryStartup {
     // Apply all wiki changes
     this.wiki.addTiddlers(tiddlersToSet);
     await this.scrollToFragment(wikiViewState)
-    return true; // if there's no scrolling, we can resolve the resulting promise immediately
+    return true;
   }
 
   async scrollToFragment(wikiViewState: WikiViewState) {
-    if (!!wikiViewState.activeTiddler && !!wikiViewState.fragment) {
+    if (!!wikiViewState.activeTiddler) {
       await this.waitForAnimation(() => {
-        scrollToFragment(wikiViewState.activeTiddler!, wikiViewState.fragment!);
+        scrollToFragment(wikiViewState.activeTiddler!, wikiViewState.fragment);
       })
     }
   }
@@ -389,11 +370,11 @@ export class StoryStartup {
   async updateAddressBar(
     pathVariables: PathVariables,
     searchVariables?: SearchVariables,
-    hash?: string) {
-    const wikiViewState = this.serializeWikiViewState();
+    fragment?: string) {
+    const wikiViewState = this.serializeWikiViewState(fragment);
     const newURL = await this.topLevelClient!(
       'changeURL',
-      [wikiViewState, pathVariables, searchVariables ?? {}, hash]);
+      [wikiViewState, pathVariables, searchVariables ?? {}, fragment]);
     // update parent url tiddler
     this.wiki.addTiddler({
       title: TIDDLYBASE_TITLE_PARENT_LOCATION,
@@ -474,7 +455,6 @@ export class StoryStartup {
         this.updateAddressBar(
           { tiddler: clickedTiddlerTitle },
           this.getTiddlerArguments(clickedTiddlerTitle)
-          // TODO: hash
         );
       }
     }
